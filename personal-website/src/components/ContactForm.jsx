@@ -1,19 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react'
+import { useForm, ValidationError } from '@formspree/react'
 
 function ContactForm() {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form submitted:', { firstName, lastName, email, message });
-    setFirstName('');
-    setLastName('');
-    setEmail('');
-    setMessage('');
-  };
+  const [state, handleSubmit] = useForm("mrbzvggz")
+  if (state.succeeded) {
+    return <p className="text-xl text-green-600 font-bold text-center mb-4">Thanks for your message! I will reach out as soon as possible!</p>
+  }
 
   return (
     <div className="w-1/2 border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
@@ -24,10 +16,9 @@ function ContactForm() {
             <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
             <input
               type="text"
-              placeholder="Enter first name"
+              name="firstName"
               id="firstName"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter first name"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               required
             />
@@ -36,10 +27,9 @@ function ContactForm() {
             <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
             <input
               type="text"
-              placeholder="Enter last name"
+              name="lastName"
               id="lastName"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter last name"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               required
             />
@@ -49,34 +39,35 @@ function ContactForm() {
           <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email</label>
           <input
             type="email"
-            placeholder="Enter email"
+            name="email"
             id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter email"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             required
           />
+          <ValidationError prefix="Email" field="email" errors={state.errors} />
         </div>
         <div className="mb-4">
           <label htmlFor="message" className="block text-gray-700 font-bold mb-2">Message</label>
           <textarea
             id="message"
+            name="message"
             placeholder="Enter message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
             rows="4"
             required
-          ></textarea>
+          >
+          </textarea>
+          <ValidationError prefix="Message" field="message" errors={state.errors} />
         </div>
         <div className="flex justify-center">
-        <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          Send Message
-        </button>
+          <button type="submit" disabled={state.submitting} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Send Message
+          </button>
         </div>
       </form>
     </div>
-  );
+  )
 }
 
-export default ContactForm;
+export default ContactForm
