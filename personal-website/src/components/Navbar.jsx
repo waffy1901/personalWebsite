@@ -9,6 +9,34 @@ export default function Navbar() {
         >
           Home
         </NavLink>
+
+        <NavLink
+          to='/Projects'
+          className={({ isActive }) => (isActive ? "text-slate-100 font-bold underline" : "font-bold text-slate-900 hover:text-slate-100")}
+        >
+          Projects
+        </NavLink>
+
+        <NavLink
+          to='/Experience'
+          className={({ isActive }) => (isActive ? "text-slate-100 font-bold underline" : "font-bold text-slate-900 hover:text-slate-100")}
+        >
+          Experience
+        </NavLink>
+
+        <NavLink
+          to='/Resume'
+          className={({ isActive }) => (isActive ? "text-slate-100 font-bold underline" : "font-bold text-slate-900 hover:text-slate-100")}
+        >
+          Resume
+        </NavLink>
+
+        <NavLink
+          to='/Contact'
+          className={({ isActive }) => (isActive ? "text-slate-100 font-bold underline" : "font-bold text-slate-900 hover:text-slate-100")}
+        >
+          Contact
+        </NavLink>
       </div>
     </div>
   )
