@@ -13,7 +13,7 @@ function Resume() {
         <a
           href="/waffyAhmedResume.pdf"
           download
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors font-cambria"
         >
           Download PDF
         </a>

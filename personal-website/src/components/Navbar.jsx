@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-export default function Navbar() {
+function Navbar() {
   return (
     <div className='w-full p-5 bg-[#6493bb]'>
       <div className='flex flex-row justify-start gap-6 items-center text-xl font-["Cambria",_serif]'>
@@ -41,3 +41,4 @@ export default function Navbar() {
     </div>
   )
 }
+export default Navbar
