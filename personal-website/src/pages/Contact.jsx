@@ -5,7 +5,7 @@ import ContactForm from '../components/ContactForm'
 function Contact() {
     return (
         <div className="bg-blue-200 min-h-screen">
-        <div className='flex flex-col items-center p-4 font-["Cambria",_serif]'>
+        <div className='flex flex-col items-center p-4 font-cambria'>
             <div className="w-full flex justify-center">
                 <ContactForm />
             </div>

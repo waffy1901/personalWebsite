@@ -1,5 +1,5 @@
-import React from "react";
-import ExperienceCard from "../components/ExperienceCard";
+import React from "react"
+import ExperienceCard from "../components/ExperienceCard"
 
 function Experience() {
   const experiences = [
