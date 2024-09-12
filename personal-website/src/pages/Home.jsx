@@ -4,7 +4,7 @@ import { FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa'
 
 function Home() {
   return (
-    <div className='min-h-screen flex flex-col font-["Cambria",_serif]'>
+    <div className='min-h-screen flex flex-col font-cambria'>
       <nav className='bg-blue-100 p-4 relative'>
         <div className='text-center'>
           <h1 className='text-3xl font-bold text-gray-700'>Waffy Ahmed</h1>
