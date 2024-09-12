@@ -2,6 +2,7 @@
   "name": "personal-website",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
   "dependencies": {
     "@formspree/react": "^2.5.1",
     "@react-pdf-viewer/core": "^3.12.0",
