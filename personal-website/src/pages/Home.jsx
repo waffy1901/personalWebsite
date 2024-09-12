@@ -14,7 +14,7 @@ function Home() {
           <a
             href="/waffyAhmedResume.pdf"
             download
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
           >
             Download Resume
           </a>
