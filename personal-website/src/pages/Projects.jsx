@@ -37,30 +37,30 @@ function Projects() {
 
   return (
     <div className="bg-blue-300 min-h-screen">
-    <div className="container mx-auto px-4 py-8 font-cambria">
-      <div className="flex flex-col items-center">
-        <div className="flex flex-col md:flex-row justify-center items-start gap-8 w-full mb-8">
-          {projects.slice(0, 2).map((project, index) => (
-            <div key={index} className="w-full md:w-[40%]">
-              <ProjectCard
-                title={project.title}
-                techStack={project.techStack}
-                bullets={project.bullets}
-                github={project.github}
-              />
-            </div>
-          ))}
-        </div>
-        <div className="w-full md:w-[40%]">
-          <ProjectCard
-            title={projects[2].title}
-            techStack={projects[2].techStack}
-            bullets={projects[2].bullets}
-            github={projects[2].github}
-          />
+      <div className="container mx-auto px-4 py-8 font-cambria">
+        <div className="flex flex-col items-center">
+          <div className="flex flex-col md:flex-row justify-center items-start gap-8 w-full mb-8">
+            {projects.slice(0, 2).map((project, index) => (
+              <div key={index} className="w-full md:w-[40%]">
+                <ProjectCard
+                  title={project.title}
+                  techStack={project.techStack}
+                  bullets={project.bullets}
+                  github={project.github}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="w-full md:w-[40%]">
+            <ProjectCard
+              title={projects[2].title}
+              techStack={projects[2].techStack}
+              bullets={projects[2].bullets}
+              github={projects[2].github}
+            />
+          </div>
         </div>
       </div>
-    </div>
     </div>
   )
 }

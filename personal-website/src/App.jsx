@@ -7,10 +7,10 @@ import Projects from "./pages/Projects.jsx"
 import Navbar from "./components/Navbar.jsx"
 import React from "react"
 
-export default function App() {
+function App() {
   return (
     <div className='flex flex-col w-screen h-screen'>
-      <Navbar />
+      <Navbar/>
       <div className='flex-1 overflow-auto bg-slate-100'>
 		    <Routes>
           <Route path='/' element={<Home/>}/>
@@ -23,3 +23,4 @@ export default function App() {
     </div>
   )
 }
+export default App
