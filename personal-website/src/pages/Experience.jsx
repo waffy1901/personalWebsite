@@ -4,6 +4,15 @@ import ExperienceCard from "../components/ExperienceCard"
 function Experience() {
   const experiences = [
     {
+      title: "Frontend Engineer",
+      company: "Fintech @ Georgia Tech",
+      location: "Atlanta, GA",
+      date: "September 2024 - Present",
+      bullets: [
+        "Reducing page load times by ∼35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
+      ]
+    },
+    {
       title: "Software Engineer Intern",
       company: "The Home Depot",
       location: "Atlanta, GA",
