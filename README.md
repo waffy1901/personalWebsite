@@ -1,1 +1,1 @@
-Deployed via Netlify: https://waffy-website.netlify.app/
+Deployed via Netlify: https://waffy.netlify.app/
