@@ -1,11 +1,19 @@
 import React from 'react'
 import profilePicture from '../images/profilePic.jpg'
-import { FaLinkedin, FaGithub, FaEnvelope } from 'react-icons/fa'
+import { FaLinkedin, FaGithub, FaEnvelope, FaDownload } from 'react-icons/fa'
+import gtLogo from '../images/gtLogo.png'
 
 function Home() {
   return (
     <div className='min-h-screen flex flex-col font-cambria'>
       <nav className='bg-blue-100 p-4 relative'>
+      <div className='absolute top-3 left-6'>
+        <img 
+          src={gtLogo} 
+          alt="Georgia Tech Logo" 
+          className='h-16 w-auto'  // Adjust the height as needed
+        />
+      </div>
         <div className='text-center'>
           <h1 className='text-3xl font-bold text-gray-700'>Waffy Ahmed</h1>
           <p className='text-xl text-gray-700'>Software Engineer | Georgia Tech</p>
@@ -14,8 +22,9 @@ function Home() {
           <a
             href="/waffyAhmedResume.pdf"
             download
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors inline-flex items-center"
           >
+            <FaDownload className="mr-2" />
             Download Resume
           </a>
         </div>
@@ -27,10 +36,10 @@ function Home() {
             <div className='flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto'>
               <div className='w-full md:w-1/2 flex-grow'>
                 <p className='text-lg leading-relaxed text-gray-700'>
-                  I am a senior majoring in Computer Science at Georgia Tech, set to graduate in December 2024 with 
+                  I am a senior majoring in Computer Science at the Georgia Institute of Technology, set to graduate in December 2024 with 
                   my Bachelor's. I am a problem-solver at heart. As such, software engineering is a perfect fit for me. I have plenty of prior 
                   experience. I have completed 3 internships, oversaw a team of 6 to automate a laborious and redundant task for the CDC while also working as a full-stack 
-                  software developer, and am currently working as an engineer at Fintech @ Georgia Tech. For a more in-depth overview, check out
+                  software developer, and am currently working as a frontend engineer at Fintech @ Georgia Tech. For a more in-depth overview, check out
                   the distinct sections on the navigation bar.
                 </p>
               </div>
