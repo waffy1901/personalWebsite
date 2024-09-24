@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { FaGithub } from "react-icons/fa"
 
-function ProjectCard({ title, techStack, bullets, github }) {
+function ProjectCard({ title, techStack, bullets, github, logo }) {
   const [expanded, setExpanded] = useState(false)
   const maxVisibleBullets = 2
 
@@ -11,7 +11,16 @@ function ProjectCard({ title, techStack, bullets, github }) {
         <FaGithub className="mr-1" />
         <span>Source Code</span>
       </a>
-      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <div className="flex items-center mb-4">
+        <h2 className="text-2xl font-bold mr-2">{title}</h2>
+        {logo && (
+              <img 
+                src={logo} 
+                alt={`${title} logo`} 
+                className="h-8 w-8 object-contain"
+              />
+            )}
+      </div>
       <p className="text-gray-600 mb-4">{techStack}</p>
       <div className={`overflow-hidden ${expanded ? 'h-auto' : 'h-40'}`}>
         <ul className="list-disc list-inside">

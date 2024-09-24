@@ -3,6 +3,7 @@ import { Worker, Viewer } from "@react-pdf-viewer/core"
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout"
 import "@react-pdf-viewer/core/lib/styles/index.css"
 import "@react-pdf-viewer/default-layout/lib/styles/index.css"
+import { FaDownload } from "react-icons/fa"
 
 function Resume() {
   const defaultLayoutPluginInstance = defaultLayoutPlugin()
@@ -13,8 +14,9 @@ function Resume() {
         <a
           href="/waffyAhmedResume.pdf"
           download
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors font-cambria"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors font-cambria inline-flex items-center"
         >
+          <FaDownload className="mr-2" />
           Download PDF
         </a>
       </div>
