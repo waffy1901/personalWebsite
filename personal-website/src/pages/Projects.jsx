@@ -1,5 +1,8 @@
 import React from "react"
 import ProjectCard from "../components/ProjectCard"
+import cdcLogo from "../images/cdcLogo.png"
+import jobSearchLogo from "../images/jobSearchLogo.png"
+import campusDiscoveryServiceLogo from "../images/discoveryServiceLogo.png"
 
 function Projects() {
   const projects = [
@@ -12,7 +15,8 @@ function Projects() {
         "Leveraged React to visualize discrepancy statistics and disease-specific data, along with implementing an interactive discrepancy table filtering feature based on selected statistics.",
         "Procured feedback from CDC computer scientists and representatives from 25+ state health departments via application demonstrations and integrated suggested modifications."
       ],
-      github: "https://github.com/waffy1901/CDC-Data-Reconciliation"
+      github: "https://github.com/waffy1901/CDC-Data-Reconciliation",
+      logo: cdcLogo
     },
     {
       title: "Job Search Aid",
@@ -22,7 +26,8 @@ function Projects() {
         "Integrated the Adzuna API using Kotlin to fetch jobs based on user preferences of job title, location, and radius.",
         "Employed FirebaseAuth to authenticate users via emails and passwords - incorporated Firestore to store germane user data, including saved jobs, usernames, emails, passwords, and names.",
       ],
-      github: "https://github.com/waffy1901/jobSearchAid"
+      github: "https://github.com/waffy1901/jobSearchAid",
+      logo: jobSearchLogo
     },
     {
       title: "Campus Discovery Service",
@@ -31,7 +36,8 @@ function Projects() {
         "Developed an Android application for students to explore and register for on-campus events at Georgia Tech, offering access to event capacities, details, and waitlists, in collaboration with 5 classmates.",
         "Constructed various technical diagrams (DCD, Domain Model, SD, SSD) to plan/design iterations of the application."
       ],
-      github: "https://github.com/waffy1901/campusDiscoveryService"
+      github: "https://github.com/waffy1901/campusDiscoveryService",
+      logo: campusDiscoveryServiceLogo
     },
   ]
 
@@ -47,6 +53,7 @@ function Projects() {
                   techStack={project.techStack}
                   bullets={project.bullets}
                   github={project.github}
+                  logo={project.logo}
                 />
               </div>
             ))}
@@ -57,6 +64,7 @@ function Projects() {
               techStack={projects[2].techStack}
               bullets={projects[2].bullets}
               github={projects[2].github}
+              logo={projects[2].logo}
             />
           </div>
         </div>
