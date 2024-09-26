@@ -9,7 +9,7 @@ function Contact() {
               <div className="w-full flex justify-center">
                   <ContactForm />
               </div>
-              <p className='text-lg font-bold leading-relaxed text-gray-700 mb-4 -mt-4'>Contact me directly</p>
+              <p className='text-lg font-bold leading-relaxed text-gray-700 mb-4 -mt-4'>Alternatively, connect with me here</p>
               <div className='flex justify-center space-x-4'>
                   <a 
                     href="https://www.linkedin.com/in/wa24/" 

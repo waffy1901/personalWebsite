@@ -87,20 +87,29 @@ function Experience() {
 
   return (
     <div className="bg-blue-300 min-h-screen py-4 font-cambria">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-            <h2 className="text-3xl text-center font-bold mb-6">Work Experience</h2>
-            <div className="space-y-6">
-                {workExperiences.map((exp, index) => (
-                <ExperienceCard key={index} {...exp} />
-                ))}
-            </div>
-            <h2 className="text-3xl text-center font-bold mb-6 mt-6">Extracurricular Experience</h2>
-            <div className="space-y-6">
-                {extracurricularExperiences.map((exp, index) => (
-                <ExperienceCard key={index} {...exp} />
-                ))}
-            </div>
-        </div>
+      <div className="max-w-6xl mx-auto px-4">
+        <section className="mb-4">
+          <h2 className="text-3xl text-center font-bold mb-4">Work Experience</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {workExperiences.map((exp, index) => (
+              <div key={index}> 
+                <ExperienceCard {...exp} isExtracurricular={false} />
+              </div>
+            ))}
+          </div>
+        </section>
+        
+        <section className="mb-4">
+          <h2 className="text-3xl text-center font-bold mb-4 mt-16">Extracurricular Experience</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {extracurricularExperiences.map((exp, index) => (
+              <div key={index}>
+                <ExperienceCard {...exp} isExtracurricular={true} />
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   )
 }
