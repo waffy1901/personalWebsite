@@ -1,8 +1,8 @@
-import React from "react"
-import ProjectCard from "../components/ProjectCard"
-import cdcLogo from "../images/cdcLogo.png"
-import jobSearchLogo from "../images/jobSearchLogo.png"
-import campusDiscoveryServiceLogo from "../images/discoveryServiceLogo.png"
+import React from "react";
+import ProjectCard from "../components/ProjectCard";
+import cdcLogo from "../images/cdcLogo.png";
+import jobSearchLogo from "../images/jobSearchLogo.png";
+import campusDiscoveryServiceLogo from "../images/discoveryServiceLogo.png";
 
 function Projects() {
   const projects = [
@@ -39,37 +39,25 @@ function Projects() {
       github: "https://github.com/waffy1901/campusDiscoveryService",
       logo: campusDiscoveryServiceLogo
     },
-  ]
+  ];
 
   return (
     <div className="bg-blue-300 min-h-screen">
       <div className="container mx-auto px-4 py-8 font-cambria">
-        <div className="flex flex-col items-center">
-          <div className="flex flex-col md:flex-row justify-center items-start gap-8 w-full mb-8">
-            {projects.slice(0, 2).map((project, index) => (
-              <div key={index} className="w-full md:w-[40%]">
-                <ProjectCard
-                  title={project.title}
-                  techStack={project.techStack}
-                  bullets={project.bullets}
-                  github={project.github}
-                  logo={project.logo}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="w-full md:w-[40%]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {projects.map((project, index) => (
             <ProjectCard
-              title={projects[2].title}
-              techStack={projects[2].techStack}
-              bullets={projects[2].bullets}
-              github={projects[2].github}
-              logo={projects[2].logo}
+              key={index}
+              title={project.title}
+              techStack={project.techStack}
+              bullets={project.bullets}
+              github={project.github}
+              logo={project.logo}
             />
-          </div>
+          ))}
         </div>
       </div>
     </div>
-  )
+  );
 }
-export default Projects
+export default Projects;

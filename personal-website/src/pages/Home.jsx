@@ -11,7 +11,7 @@ function Home() {
         <img 
           src={gtLogo} 
           alt="Georgia Tech Logo" 
-          className='h-16 w-auto'  // Adjust the height as needed
+          className='h-16 w-auto'
         />
       </div>
         <div className='text-center'>
