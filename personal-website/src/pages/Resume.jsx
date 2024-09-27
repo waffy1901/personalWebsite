@@ -9,7 +9,7 @@ function Resume() {
   const defaultLayoutPluginInstance = defaultLayoutPlugin()
 
   return (
-    <div className="p-8">
+    <div className="p-8 bg-[#02A8DA] bg-opacity-25">
       <div className="flex justify-center mb-4">
         <a
           href="/waffyAhmedResume.pdf"
