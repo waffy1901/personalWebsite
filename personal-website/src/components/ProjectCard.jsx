@@ -8,14 +8,14 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
   };
 
   return (
-    <div className="w-full h-full perspective">
+    <div className="w-full h-[60vh] perspective flex">
       <div
         className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
           isFlipped ? "rotate-y-180" : ""
         }`}
         onClick={handleFlip}
       >
-        <div className="absolute w-full h-full min-h-[60vh] backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col">
+        <div className="absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col">
           <a
             href={github}
             target="_blank"
@@ -47,9 +47,9 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           </p>
         </div>
 
-        <div className="absolute w-full h-full min-h-[45vh] backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col rotate-y-180">
-          <h3 className="text-xl font-semibold mb-4">Project Details</h3>
-          <div className="flex-grow overflow-y-auto pr-2">
+        <div className="absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col rotate-y-180">
+          <h3 className="text-xl font-semibold mb-4 flex-shrink-0">Project Details</h3>
+          <div className="flex-1 overflow-y-auto pr-2">
             <ul className="list-none pl-0 space-y-2">
               {bullets.map((bullet, index) => (
                 <li key={index} className="text-gray-700 flex">
@@ -59,7 +59,7 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
               ))}
             </ul>
           </div>
-          <p className="text-sm text-gray-500 mt-4">Click to flip back</p>
+          <p className="text-sm text-gray-500 mt-4 flex-shrink-0">Click to flip back</p>
         </div>
       </div>
     </div>
