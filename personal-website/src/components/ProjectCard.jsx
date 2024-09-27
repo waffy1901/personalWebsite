@@ -16,29 +16,33 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
         onClick={handleFlip}
       >
         <div className="absolute w-full h-full min-h-[60vh] backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col">
-          <div
-            className="absolute inset-0 bg-no-repeat bg-center bg-contain pointer-events-none"
-            style={{
-              backgroundImage: `url(${logo})`,
-            }}
-          ></div>
           <a
             href={github}
             target="_blank"
             rel="noopener noreferrer"
-            className="absolute top-2 right-2 flex items-center text-gray-600 hover:text-gray-800"
+            className="absolute top-2 right-2 flex items-center text-gray-600 hover:text-gray-800 z-20"
             onClick={(e) => e.stopPropagation()}
           >
             <FaGithub className="mr-1" />
             <span>Source Code</span>
           </a>
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <h2 className="text-2xl font-bold mr-2 mt-4">{title}</h2>
+          <div className="relative z-10 flex flex-col h-full">
+            <div className="flex-shrink-0">
+              <div className="flex items-center mb-4">
+                <h2 className="text-2xl font-bold mr-2 mt-4">{title}</h2>
+              </div>
+              <p className="text-gray-600 font-bold mb-4">{techStack}</p>
             </div>
-            <p className="text-gray-600 font-bold mb-4">{techStack}</p>
+            <div className="flex-grow relative">
+              <div
+                className="absolute inset-0 bg-no-repeat bg-center bg-contain pointer-events-none"
+                style={{
+                  backgroundImage: `url(${logo})`,
+                }}
+              ></div>
+            </div>
           </div>
-          <p className="relative z-10 text-sm text-gray-500 mt-auto">
+          <p className="relative z-10 text-sm text-gray-500 mt-2">
             Click to see details
           </p>
         </div>
