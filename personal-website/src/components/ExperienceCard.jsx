@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-const ExperienceCard = ({ title, company, location, date, bullets, logo, isExtracurricular }) => {
+const ExperienceCard = ({ title, company, location, date, bullets, logo, color}) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
   };
-  const cardColor = isExtracurricular ? "bg-[#FFD700] bg-opacity-85" : "bg-[#FFA500]";
 
   return (
     <div className="w-full h-[40vh] perspective">
@@ -14,7 +13,7 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, isExtra
         }`}
         onClick={handleFlip}
       >
-        <div className={`absolute w-full h-full backface-hidden ${cardColor} bg-opacity-90 rounded-lg shadow-md p-4 flex flex-col`}>
+        <div className={`absolute w-full h-full backface-hidden ${color} bg-opacity-90 rounded-lg shadow-md p-4 flex flex-col`}>
           <div className="flex flex-col flex-shrink-0">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-xl font-bold text-gray-800 max-w-[60%]">{title}</h3>
@@ -38,7 +37,7 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, isExtra
           </p>
         </div>
 
-        <div className={`absolute w-full h-full backface-hidden ${cardColor} bg-opacity-60 rounded-lg shadow-md p-4 flex flex-col rotate-y-180`}>
+        <div className={`absolute w-full h-full backface-hidden ${color} bg-opacity-85 rounded-lg shadow-md p-4 flex flex-col rotate-y-180`}>
           <h3 className="text-xl font-semibold mb-4">Experience Details</h3>
           <div className="flex-1 overflow-y-auto pr-2">
             <ul className="list-none pl-0 space-y-2">
