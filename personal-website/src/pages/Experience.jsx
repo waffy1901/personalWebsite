@@ -17,7 +17,8 @@ function Experience() {
         "Developed an internal product information page for cashiers, streamlining self-checkout processes and reducing customer wait times for associate intervention by ~25%.",
         "Leveraged Java to obtain germane product data, used React and TypeScript to effectively display product information for all registers at self-checkout, pruning customer theft by ∼$10 million annually."
       ],
-      logo: hdLogo
+      logo: hdLogo,
+      color: "bg-[#FFA500]"
     },
     {
       title: "Software Engineer Intern",
@@ -29,7 +30,8 @@ function Experience() {
         "Truncated the maximum deployment time of updates to registers from 24+ hours to 30 minutes, leveraging the HttpClient and Flow Java libraries to streamline the retrieval of polymorphic external configurations.",
         "Collaborated with cross-functional teams, including the UI/UX team, to design and construct user interface components for a new configuration process - utilizing React, Next.js, and TypeScript."
       ],
-      logo: hdLogo
+      logo: hdLogo,
+      color: "bg-[#FFA500]"
     },
     {
       title: "Firmware Engineer Intern",
@@ -40,7 +42,8 @@ function Experience() {
         "Accelerated the process of converting DCW (Data Control Words) hexadecimal values to their corresponding ASCII representations by ∼50% through efficient Python practices.",
         "Bolstered data transmission efficiency by ∼25%, collaborating with a software architect to conduct comprehensive testing of collectors and debugging of various Python scripts employing MySQL."
       ],
-      logo: landisGyrLogo
+      logo: landisGyrLogo,
+      color: "bg-white bg-opacity-100"
     },
   ]
 
@@ -53,7 +56,8 @@ function Experience() {
       bullets: [
         "Reducing page load times by ∼35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
       ],
-      logo: fintechGTLogo
+      logo: fintechGTLogo,
+      color: "bg-[#FFD700] bg-opacity-70"
     },
     {
       title: "Project Manager & Full-Stack Software Developer",
@@ -69,7 +73,8 @@ function Experience() {
         "Facilitated weekly team meetings, drove timely completion of tasks, ensured consistent team participation, and adhered to stringent deadlines under an agile framework.",
         "Constructed technical diagrams/documentation (Lo-Fi & Hi-Fi Prototypes, User Research, Minimum Marketable Features, Story Mapping, UX Report, and Detailed Design) to aid the development process.",
       ],
-      logo: cdcLogo
+      logo: cdcLogo,
+      color: "bg-white bg-opacity-100"
     },
     {
       title: "Undergraduate Teaching Assistant",
@@ -81,7 +86,8 @@ function Experience() {
         "Evaluated assignments and exams, grading 20+ students and supplying targeted feedback to enhance performance.",
         "Fostered engagement by answering 105+ questions on Piazza, the student discussion forum."
       ],
-      logo: gtComputingLogo
+      logo: gtComputingLogo,
+      color: "bg-[#FFD700] bg-opacity-70"
     },
   ]
 
