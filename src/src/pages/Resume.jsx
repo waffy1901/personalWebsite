@@ -9,7 +9,7 @@ function Resume() {
   const defaultLayoutPluginInstance = defaultLayoutPlugin()
 
   return (
-    <div className="p-8 bg-[#02A8DA] sm:bg-opacity-25">
+    <div className="p-8 bg-[#02A8DA] bg-opacity-25">
       <div className="flex justify-center mb-4">
         <a
           href="/waffyAhmedResume.pdf"
@@ -20,7 +20,7 @@ function Resume() {
           Download PDF
         </a>
       </div>
-      <div className="max-w-2xl mx-auto border border-gray-300">
+      <div className="max-w-2xl mx-auto bg-[#02A8DA] bg-opacity-25">
         <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
           <Viewer
             fileUrl="/waffyAhmedResume.pdf"
