@@ -10,12 +10,14 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
   return (
     <div className="w-full h-[80vh] perspective">
       <div
-        className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
+        className={`relative w-full h-full transition-transform duration-200 transform-style-preserve-3d cursor-pointer ${
           isFlipped ? "rotate-y-180" : ""
         }`}
         onClick={handleFlip}
       >
-        <div className="absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col">
+        <div className={`absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col ${
+          isFlipped ? "hidden" : ""
+        }`}>
           <a
             href={github}
             target="_blank"
@@ -47,7 +49,9 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           </p>
         </div>
 
-        <div className="absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col rotate-y-180">
+        <div className={`absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col rotate-y-180 ${
+          isFlipped ? "" : "hidden"
+        }`}>
           <h3 className="text-xl font-semibold mb-4">Project Details</h3>
           <div className="flex-grow max-h-full overflow-y-auto pr-2">
             <ul className="list-none pl-0 space-y-2">

@@ -6,27 +6,29 @@ import gtLogo from '../images/gtLogo.png'
 function Home() {
   return (
     <div className='min-h-screen flex flex-col font-cambria'>
-      <nav className='bg-blue-100 p-4 relative'>
-      <div className='absolute top-3 left-6'>
-        <img 
-          src={gtLogo} 
-          alt="Georgia Tech Logo" 
-          className='h-16 w-auto'
-        />
-      </div>
-        <div className='text-center'>
-          <h1 className='text-3xl font-bold text-gray-700'>Waffy Ahmed</h1>
-          <p className='text-xl text-gray-700'>Software Engineer | Georgia Tech</p>
-        </div>
-        <div className='absolute top-6 right-6'>
-          <a
-            href="/waffyAhmedResume.pdf"
-            download
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors inline-flex items-center"
-          >
-            <FaDownload className="mr-2" />
-            Download Resume
-          </a>
+      <nav className='bg-blue-100 p-4'>
+        <div className='flex flex-col sm:flex-row justify-between items-center'>
+          <div className='flex items-center mb-4 sm:mb-0'>
+            <img 
+              src={gtLogo} 
+              alt="Georgia Tech Logo" 
+              className='h-16 w-auto'
+            />
+          </div>
+          <div className='flex-grow text-center mb-4 sm:mb-0'>
+            <h1 className='text-3xl font-bold text-gray-700'>Waffy Ahmed</h1>
+            <p className='text-xl text-gray-700'>Software Engineer | Georgia Tech</p>
+          </div>
+          <div className='mb-4 sm:mb-0'>
+            <a
+              href="/waffyAhmedResume.pdf"
+              download
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors inline-flex items-center"
+            >
+              <FaDownload className="mr-2" />
+              Download Resume
+            </a>
+          </div>
         </div>
       </nav>
 
