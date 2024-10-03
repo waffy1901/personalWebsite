@@ -20,7 +20,7 @@ function Resume() {
           Download PDF
         </a>
       </div>
-      <div className="max-w-2xl mx-auto bg-[#02A8DA] bg-opacity-25 h-screen">
+      <div className="max-w-2xl mx-auto bg-[#02A8DA] bg-opacity-25">
         <Worker workerUrl={`https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`}>
           <Viewer
             fileUrl="/waffyAhmedResume.pdf"
