@@ -7,11 +7,11 @@ function ContactForm() {
     return <p className="text-xl text-green-600 font-bold text-center mb-4">Thank you for your message! I will reach out as soon as possible!</p>
   }
   return (
-    <div className="w-1/2 border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
+    <div className="w-full max-w-md mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
       <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">Contact Form</h2>
       <form onSubmit={handleSubmit}>
-        <div className="flex mb-4 space-x-4">
-          <div className="w-1/2">
+        <div className="flex flex-col sm:flex-row mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="w-full sm:w-1/2">
             <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
             <input
               type="text"
@@ -22,7 +22,7 @@ function ContactForm() {
               required
             />
           </div>
-          <div className="w-1/2">
+          <div className="w-full sm:w-1/2">
             <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
             <input
               type="text"
