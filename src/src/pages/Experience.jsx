@@ -7,15 +7,22 @@ import cdcLogo from "../images/cdcLogo.png";
 import gtComputingLogo from "../images/gtComputingLogo.png";
 
 const ExperienceGrid = ({ experiences, isExtracurricular, centerIndex }) => {
-  const gridClass = experiences.length === 1
-    ? "grid grid-cols-1 justify-items-center"
-    : "grid grid-cols-1 md:grid-cols-2 gap-8";
-
   return (
-    <div className={gridClass}>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {experiences.map((exp, index) => (
-        <div key={index} className={`w-full ${index === centerIndex ? 'md:col-span-2 flex justify-center' : ''}`}>
-          <div className={index === centerIndex ? 'md:w-1/2' : 'w-full'}>
+        <div 
+          key={index} 
+          className={`w-full ${
+            index === centerIndex 
+              ? 'md:col-span-2 flex justify-center' 
+              : ''
+          }`}
+        >
+          <div className={`w-full ${
+            index === centerIndex 
+              ? 'md:w-3/4 lg:w-1/2' 
+              : ''
+          }`}>
             <ExperienceCard {...exp} isExtracurricular={isExtracurricular} />
           </div>
         </div>
