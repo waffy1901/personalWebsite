@@ -1,13 +1,42 @@
-import React from "react"
-import ExperienceCard from "../components/ExperienceCard"
-import hdLogo from "../images/hdLogo.png"
-import landisGyrLogo from "../images/landisGyrLogo.png"
-import fintechGTLogo from "../images/fintechGTLogo.png"
-import cdcLogo from "../images/cdcLogo.png"
-import gtComputingLogo from "../images/gtComputingLogo.png"
+import React from "react";
+import ExperienceCard from "../components/ExperienceCard";
+import hdLogo from "../images/hdLogo.png";
+import landisGyrLogo from "../images/landisGyrLogo.png";
+import fintechGTLogo from "../images/fintechGTLogo.png";
+import cdcLogo from "../images/cdcLogo.png";
+import gtComputingLogo from "../images/gtComputingLogo.png";
+
+const ExperienceGrid = ({ experiences, isExtracurricular, centerIndex }) => {
+  const gridClass = experiences.length === 1
+    ? "grid grid-cols-1 justify-items-center"
+    : "grid grid-cols-1 md:grid-cols-2 gap-8";
+
+  return (
+    <div className={gridClass}>
+      {experiences.map((exp, index) => (
+        <div key={index} className={`w-full ${index === centerIndex ? 'md:col-span-2 flex justify-center' : ''}`}>
+          <div className={index === centerIndex ? 'md:w-1/2' : 'w-full'}>
+            <ExperienceCard {...exp} isExtracurricular={isExtracurricular} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 function Experience() {
   const workExperiences = [
+    {
+      title: "Incoming Software Engineer",
+      company: "The Home Depot",
+      location: "Atlanta, GA",
+      date: "January 2025",
+      bullets: [
+        "Store Checkout Organization"
+      ],
+      logo: hdLogo,
+      color: "bg-[#FFA500]"
+    },
     {
       title: "Software Engineer Intern",
       company: "The Home Depot",
@@ -45,7 +74,7 @@ function Experience() {
       logo: landisGyrLogo,
       color: "bg-white bg-opacity-100"
     },
-  ]
+  ];
 
   const extracurricularExperiences = [
     {
@@ -89,34 +118,29 @@ function Experience() {
       logo: gtComputingLogo,
       color: "bg-[#FFD700] bg-opacity-70"
     },
-  ]
+  ];
 
   return (
     <div className="bg-blue-300 min-h-screen py-4 font-cambria">
       <div className="max-w-6xl mx-auto px-4">
         <section className="mb-4">
           <h2 className="text-3xl text-center font-bold mb-4">Work Experience</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {workExperiences.map((exp, index) => (
-              <div key={index}> 
-                <ExperienceCard {...exp} isExtracurricular={false} />
-              </div>
-            ))}
-          </div>
+          <ExperienceGrid 
+            experiences={workExperiences} 
+            isExtracurricular={false} 
+          />
         </section>
         
         <section className="mb-4">
           <h2 className="text-3xl text-center font-bold mb-4 mt-16">Extracurricular Experience</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {extracurricularExperiences.map((exp, index) => (
-              <div key={index}>
-                <ExperienceCard {...exp} isExtracurricular={true} />
-              </div>
-            ))}
-          </div>
+          <ExperienceGrid 
+            experiences={extracurricularExperiences} 
+            isExtracurricular={true} 
+            centerIndex={2}
+          />
         </section>
       </div>
     </div>
-  )
+  );
 }
-export default Experience
+export default Experience;
