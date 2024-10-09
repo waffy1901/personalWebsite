@@ -64,7 +64,7 @@ function Experience() {
       bullets: [
         "Optimized the efficiency of configuring 40,000+ registers across 2,300 stores by 90%, in collaboration with 2 interns.",
         "Truncated the maximum deployment time of updates to registers from 24+ hours to 30 minutes, leveraging the HttpClient and Flow Java libraries to streamline the retrieval of polymorphic external configurations.",
-        "Collaborated with cross-functional teams, including the UI/UX team, to design and construct user interface components for a new configuration process - utilizing React, Next.js, and TypeScript."
+        "Collaborated with cross-functional teams, including the UI/UX team, designing and constructing user interface components for a new configuration process - utilizing React, Next.js, and TypeScript."
       ],
       logo: hdLogo,
       color: "bg-[#FFA500]"
@@ -91,6 +91,7 @@ function Experience() {
       date: "September 2024 - Present",
       bullets: [
         "Reducing page load times by ∼35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
+        "Implementing a cart page for a React Native grocery application, allowing users to add/remove items, adjust quantities, and view real-time total cost calculations based on cart contents."
       ],
       logo: fintechGTLogo,
       color: "bg-[#FFD700] bg-opacity-70"
@@ -104,7 +105,7 @@ function Experience() {
         "Oversaw a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health departments and the CDC, alongside doubling as a full-stack software developer.",
         "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the two datasets, saving 5000+ hours of manual reconciliation annually.",
         "Leveraged React to visualize discrepancy statistics and disease-specific data, along with implementing an interactive discrepancy table filtering feature based on selected statistics.",
-        "Procured feedback from CDC computer scientists and representatives from 25+ state health departments via application demonstrations and integrated suggested modifications.",
+        "Procured feedback from CDC computer scientists and representatives from 25+ state health departments via application demonstrations and integrated the suggested modifications.",
         "Employed FastAPI to develop an endpoint for fetching discrepancy report statistics from a SQLite statistics table.",
         "Facilitated weekly team meetings, drove timely completion of tasks, ensured consistent team participation, and adhered to stringent deadlines under an agile framework.",
         "Constructed technical diagrams/documentation (Lo-Fi & Hi-Fi Prototypes, User Research, Minimum Marketable Features, Story Mapping, UX Report, and Detailed Design) to aid the development process.",
