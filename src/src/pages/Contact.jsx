@@ -6,6 +6,9 @@ function Contact() {
     return (
         <div className="bg-[#02A8DA] bg-opacity-40 min-h-screen">
           <div className='flex flex-col items-center p-4 font-cambria'>
+              <p className="text-lg text-gray-800 mb-4 max-w-2xl text-center">
+                  I'm always excited to connect with new people! Whether you have a potential opportunity to discuss, want to expand your professional network, have feedback to share, or merely want to chat, please don't hesitate to reach out!
+              </p>
               <div className="w-full flex justify-center">
                   <ContactForm />
               </div>

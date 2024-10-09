@@ -7,7 +7,7 @@ function ContactForm() {
     return <p className="text-xl text-green-600 font-bold text-center mb-4">Thank you for your message! I will reach out as soon as possible!</p>
   }
   return (
-    <div className="w-full max-w-md mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
+    <div className="w-full max-w-md md:max-w-2xl mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
       <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">Contact Form</h2>
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col sm:flex-row mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
