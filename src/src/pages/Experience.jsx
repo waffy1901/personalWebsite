@@ -91,7 +91,8 @@ function Experience() {
       date: "September 2024 - Present",
       bullets: [
         "Reducing page load times by ∼35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
-        "Implementing a cart page for a React Native grocery application, allowing users to add/remove items, adjust quantities, and view real-time total cost calculations based on cart contents."
+        "Implementing a cart page for a React Native grocery application, allowing users to add/remove items, adjust quantities, and view real-time total cost calculations based on cart contents.",
+        "Leveraging inbuilt API for image recognition, identifying and ranking top 3 product matches for shopping carts."
       ],
       logo: fintechGTLogo,
       color: "bg-[#FFD700] bg-opacity-70"
