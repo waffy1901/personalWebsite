@@ -39,8 +39,8 @@ function Home() {
               <div className='w-full md:w-1/2 flex-grow'>
                 <p className='text-lg leading-relaxed text-gray-700'>
                   I am a senior majoring in Computer Science at the Georgia Institute of Technology, set to graduate in December 2024 with 
-                  my Bachelor's. I am a problem-solver at heart. As such, software engineering is a perfect fit for me. I have completed 3 internships, oversaw a team of 6 to automate a laborious and redundant task for the CDC while also working as a full-stack 
-                  software developer, and am currently working as a frontend engineer at Fintech @ Georgia Tech. For a more in-depth overview, check out
+                  my bachelor's degree. I am a problem-solver at heart. As such, software engineering is a perfect fit for me. I have completed 3 internships, oversaw a team of 6 to automate a laborious and redundant task for the CDC while also working as a full-stack 
+                  software developer, and recently worked as a frontend engineer at Fintech @ Georgia Tech. For a more in-depth overview, check out
                   the distinct sections on the navigation bar.
                 </p>
               </div>
