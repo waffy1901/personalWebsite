@@ -38,8 +38,7 @@ function Home() {
             <div className='flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto'>
               <div className='w-full md:w-1/2 flex-grow'>
                 <p className='text-lg leading-relaxed text-gray-700'>
-                  I am a senior majoring in Computer Science at the Georgia Institute of Technology, set to graduate in December 2024 with 
-                  my bachelor's degree. I am a problem-solver at heart. As such, software engineering is a perfect fit for me. I have completed 3 internships, oversaw a team of 6 to automate a laborious and redundant task for the CDC while also working as a full-stack 
+                  I am a recent graduate from the Georgia Institute of Technology with a Bachelor's Degree in Computer Science. I am a problem-solver at heart. As such, software engineering is a perfect fit for me. I have completed 3 internships, oversaw a team of 6 to automate a laborious and redundant task for the CDC while also working as a full-stack 
                   software developer, and recently worked as a frontend engineer at Fintech @ Georgia Tech. For a more in-depth overview, check out
                   the distinct sections on the navigation bar.
                 </p>
