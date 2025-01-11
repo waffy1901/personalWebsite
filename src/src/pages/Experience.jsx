@@ -34,10 +34,10 @@ const ExperienceGrid = ({ experiences, isExtracurricular, centerIndex }) => {
 function Experience() {
   const workExperiences = [
     {
-      title: "Incoming Software Engineer",
+      title: "Software Engineer",
       company: "The Home Depot",
       location: "Atlanta, GA",
-      date: "January 2025",
+      date: "January 2025 - Present",
       bullets: [
         "Store Checkout Organization"
       ],
