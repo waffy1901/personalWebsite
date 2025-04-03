@@ -39,7 +39,9 @@ function Experience() {
       location: "Atlanta, GA",
       date: "January 2025 - Present",
       bullets: [
-        "Store Checkout Organization"
+        "Led testing and validation efforts for enabling/disabling a legacy service using BigQuery and Postman, reducing CPU usage for booking transactions by ∼15% and ensuring seamless functionality during its phased retirement.",
+        "Delivered timely support for production and QA environments, resolving client issues related to transaction processing across 2,300+ stores leveraging Cassandra, Elastic Search, Java, BigQuery, and Postman.",
+        "Streamlined production and QA deployments by ∼10% via cleaning up and standardizing YML and properties files, enhancing maintainability and reducing technical debt."
       ],
       logo: hdLogo,
       color: "bg-[#FFA500]"
