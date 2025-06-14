@@ -39,9 +39,10 @@ function Experience() {
       location: "Atlanta, GA",
       date: "January 2025 - Present",
       bullets: [
-        "Led testing and validation efforts for enabling/disabling a legacy service using BigQuery and Postman, reducing CPU usage for booking transactions by ∼15% and ensuring seamless functionality during its phased retirement.",
-        "Delivered timely support for production and QA environments, resolving client issues related to transaction processing across 2,300+ stores leveraging Cassandra, Elastic Search, Java, BigQuery, and Postman.",
-        "Streamlined production and QA deployments by ∼10% via cleaning up and standardizing YML and properties files, enhancing maintainability and reducing technical debt."
+        "Automated Spinnaker deployment pipelines for 9 microservices with cdk8s, utilizing TypeScript, Terraform, and Google Cloud Platform for production and non-production environments, reducing deployment times by 20%.",
+        "Resolved critical transaction processing issues across 500+ stores, collaborating with cross-functional teams and leveraging Cassandra, Elasticsearch, Java, BigQuery and Postman to maintain ∼100% service availability.",
+        "Led testing and validation efforts for enabling/disabling a legacy service using BigQuery and Postman, reducing CPU usage for booking transactions by ∼25% and ensuring seamless functionality during its phased retirement.",
+        "Boosted store transaction lookup speeds by ∼15% via development of a new indexing mechanism in Java."
       ],
       logo: hdLogo,
       color: "bg-[#FFA500]"
