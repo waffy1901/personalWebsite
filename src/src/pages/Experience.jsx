@@ -40,6 +40,7 @@ function Experience() {
       date: "January 2025 - Present",
       bullets: [
         "Automated Spinnaker deployment pipelines for 9 microservices with cdk8s, utilizing TypeScript, Terraform, and Google Cloud Platform for production and non-production environments, reducing deployment times by 20%.",
+        "Implemented tiered alerting and configured Grafana dashboards for 20+ microservices, providing real-time visibility into system health and performance metrics, along with leveraging Slack for routine notifications/warnings and PagerDuty for critical issues, reducing acknowledgement time for alerts by 15%.",
         "Resolved critical transaction processing issues across 500+ stores, collaborating with cross-functional teams and leveraging Cassandra, Elasticsearch, Java, BigQuery and Postman to maintain ∼100% service availability.",
         "Led testing and validation efforts for enabling/disabling a legacy service using BigQuery and Postman, reducing CPU usage for booking transactions by ∼25% and ensuring seamless functionality during its phased retirement.",
         "Boosted store transaction lookup speeds by ∼15% via development of a new indexing mechanism in Java."
