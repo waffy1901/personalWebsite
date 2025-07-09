@@ -2,7 +2,7 @@ import React from 'react'
 import { useForm, ValidationError } from '@formspree/react'
 
 function ContactForm() {
-  const [state, handleSubmit] = useForm("mrbzvggz")
+  const [state, handleSubmit] = useForm(process.env.REACT_APP_FORMSPREE_KEY)
   if (state.succeeded) {
     return <p className="text-xl text-green-600 font-bold text-center mb-4">Thank you for your message! I will reach out as soon as possible!</p>
   }
