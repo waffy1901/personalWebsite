@@ -7,7 +7,7 @@ export default function usePageTracking() {
     if (window.gtag) {
       window.gtag("event", "page_view", {
         page_path: location.pathname + location.search,
-        send_to: "G-XFBK3G93YH",
+        send_to: process.env.REACT_APP_GA_MEASUREMENT_ID,
       });
     }
   }, [location]);

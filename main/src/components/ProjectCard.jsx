@@ -10,7 +10,7 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
   return (
     <div className="w-full h-[60vh] perspective">
       <div
-        className={`relative w-full h-full transition-transform duration-200 transform-style-preserve-3d cursor-pointer ${
+        className={`relative w-full h-full transition-transform duration-450 transform-style-preserve-3d cursor-pointer ${
           isFlipped ? "rotate-y-180" : ""
         }`}
         onClick={handleFlip}
