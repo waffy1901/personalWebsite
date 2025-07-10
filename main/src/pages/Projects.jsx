@@ -34,7 +34,8 @@ function Projects() {
       techStack: "Node.js, MongoDB, Java, XML",
       bullets: [
         "Developed an Android application for students to explore and register for on-campus events at Georgia Tech, offering access to event capacities, details, and waitlists, in collaboration with 5 classmates.",
-        "Constructed various technical diagrams (DCD, Domain Model, SD, SSD) to plan/design iterations of the application."
+        "Constructed various technical diagrams (DCD, Domain Model, SD, SSD) to plan/design iterations of the application.",
+        "Implemented secure user authentication and role-based access control, allowing event organizers and students to interact with the platform according to their permissions while protecting sensitive data."
       ],
       github: "https://github.com/waffy1901/campusDiscoveryService",
       logo: campusDiscoveryServiceLogo
