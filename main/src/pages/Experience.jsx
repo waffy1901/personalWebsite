@@ -43,7 +43,7 @@ function Experience() {
         "Resolved critical transaction processing/lookup issues across 500+ stores, collaborating with cross-functional teams and leveraging Cassandra, Elasticsearch, Java, BigQuery and Postman to maintain ∼100% service availability.",
         "Reduced lookup latency by 5% in a high-throughput system (5.5 million lookups per day) through a scalable, bucketed Elasticsearch indexing method using Java, enabling distributed lookups via partitioned indices.",
         "Improved operational responsiveness by decreasing alert acknowledgement times 30% via optimizing tiered alerting and Grafana dashboards across 20+ microservices, automating escalation via Slack and PagerDuty integrations.",
-        "Led testing and validation efforts to disable a legacy service component handling ∼27% of transaction volume (10 million daily captures/lookups) using BigQuery and Postman during a multi-team phased retirement."
+        "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (10 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams."
       ],
       logo: hdLogo,
       color: "bg-[#FFA500]"
