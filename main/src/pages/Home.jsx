@@ -2,6 +2,7 @@ import React from 'react'
 import profilePicture from '../images/profilePic.jpg'
 import { FaLinkedin, FaGithub, FaEnvelope, FaDownload } from 'react-icons/fa'
 import gtLogo from '../images/gtLogo.png'
+import DeployDates from '../components/DeployDates'
 
 function Home() {
   return (
@@ -84,6 +85,10 @@ function Home() {
                 </a>
               </div>
             </div>
+            <DeployDates
+              first="2024-09-12T14:17:00Z"
+              last="2025-08-31T15:20:00Z"
+            />
           </section>
         </div>
       </main>
