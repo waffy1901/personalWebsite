@@ -86,8 +86,8 @@ function Home() {
               </div>
             </div>
             <DeployDates
-              first="2024-09-12T14:17:00Z"
-              last="2025-08-31T15:20:00Z"
+              first="2024-09-13T19:43:00Z"
+              last="2025-09-01T19:48:00Z"
             />
           </section>
         </div>
