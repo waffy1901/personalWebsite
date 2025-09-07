@@ -21,6 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "sed -i '/^REACT_APP_DEPLOY_DATE/d' .env 2>/dev/null; echo REACT_APP_DEPLOY_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) >> .env",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
