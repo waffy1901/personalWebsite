@@ -41,9 +41,10 @@ function Experience() {
       bullets: [
         "Automated Spinnaker deployment pipelines for 10+ microservices with cdk8s, utilizing TypeScript, Terraform, and Google Cloud Platform for production and non-production environments, reducing deployment times by 25%.",
         "Resolved critical transaction processing/lookup issues across 500+ stores, collaborating with cross-functional teams and leveraging Cassandra, Elasticsearch, Java, BigQuery and Postman to maintain ∼100% service availability.",
-        "Reduced lookup latency by 5% in a high-throughput system (10 million lookups per day) through a scalable, bucketed Elasticsearch indexing method using Java, enabling distributed lookups via partitioned indices.",
+        "Reduced production incidents by 20% via implementing OpenTelemetry tracing across 8 Java-based microservices, enabling early issue detection through standardized distributed tracing and centralized observability.",
         "Improved operational responsiveness by decreasing alert acknowledgement times 30% via optimizing tiered alerting and Grafana dashboards across 20+ microservices, automating escalation via Slack and PagerDuty integrations.",
-        "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (14.5 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams."
+        "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (14.5 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
+        "Reduced lookup latency by 5% in a high-throughput system (10 million lookups per day) through a scalable, bucketed Elasticsearch indexing method using Java, enabling distributed lookups via partitioned indices.",
       ],
       logo: hdLogo,
       color: "bg-[#FFA500]"
