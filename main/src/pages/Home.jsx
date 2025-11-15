@@ -39,10 +39,12 @@ function Home() {
             <div className='flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto'>
               <div className='w-full md:w-1/2 flex-grow'>
                 <p className='text-lg leading-relaxed text-gray-700'>
-                 I am a Software Engineer at The Home Depot and a graduate of the Georgia Institute of Technology with a Bachelor’s 
-                 in Computer Science. I have completed three internships, led a team of six to automate redundant processes for the CDC 
-                 while also serving as a full-stack developer, and contributed as a frontend engineer at Fintech @ Georgia Tech. 
-                 Explore the sections above for a deeper look at my experience and projects.
+                 I’m a Software Engineer at The Home Depot and Georgia Tech graduate who builds scalable, reliable systems across the 
+                 backend and cloud infrastructure stack. My work spans Kubernetes autoscaling, distributed systems performance, 
+                 observability engineering, and deployment automation for high-throughput microservices.
+
+                 Previously, I led a team developing an end-to-end data reconciliation platform for the CDC and contributed to frontend 
+                 and full-stack projects at Georgia Tech. Explore the sections above to learn more about my experience and projects.
                 </p>
               </div>
               
@@ -50,7 +52,7 @@ function Home() {
                 <img 
                   src={profilePicture} 
                   alt="Waffy Ahmed" 
-                  className='h-[285px] w-auto object-cover rounded-lg shadow-lg'
+                  className='h-[355px] w-auto object-cover rounded-lg shadow-lg'
                 />
               </div>
             </div>
