@@ -58,7 +58,7 @@ function Home() {
             </div>
 
             <div className='flex flex-col items-center mt-4'>
-              <p className='text-lg font-bold leading-relaxed text-gray-700 mb-4'>Connect with me</p>
+              <p className='text-lg font-bold leading-relaxed text-gray-700 mb-2'>Connect with me</p>
               <div className='flex justify-center space-x-4'>
                 <a 
                   href="https://www.linkedin.com/in/wa24/" 
