@@ -1,0 +1,11 @@
+This is the personal portfolio of Waffy Ahmed, a Software Engineer at The Home Depot and a Georgia Tech graduate with a Bachelor of Science in Computer Science.
+
+The site presents professional experience focused on backend, platform, and cloud infrastructure engineering, with an emphasis on building scalable and reliable distributed systems.
+
+Key technical areas include Kubernetes autoscaling, distributed systems performance and reliability engineering, CI/CD and deployment automation, observability using OpenTelemetry, backend development in Java, and data integrity through schema transformations between XML and JSON.
+
+At The Home Depot, Waffy works on high-throughput production microservices. His work includes improving system scalability and latency, automating recovery mechanisms to reduce mean time to recovery (MTTR), modernizing legacy services as part of phased retirement efforts, and ensuring correctness of business-critical data flows.
+
+The portfolio also showcases academic and personal projects, including a data reconciliation platform built for the U.S. Centers for Disease Control and Prevention (CDC) that automated comparison of public health data across U.S. states, as well as web and mobile applications built with React and React Native.
+
+This file exists to provide a machine-readable summary of the portfolio for AI tools and automated readers, helping ensure accurate and consistent descriptions of the site’s content.

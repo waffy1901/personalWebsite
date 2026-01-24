@@ -48,11 +48,11 @@ function Home() {
                 </p>
               </div>
               
-              <div className='w-full md:w-1/2 flex justify-center items-start -mt-5'>
+              <div className='w-full md:w-1/2 flex justify-center items-start -mt-2'>
                 <img 
                   src={profilePicture} 
                   alt="Waffy Ahmed" 
-                  className='h-[355px] w-auto object-cover rounded-lg shadow-lg'
+                  className='h-[325px] w-auto object-cover rounded-lg shadow-lg'
                 />
               </div>
             </div>

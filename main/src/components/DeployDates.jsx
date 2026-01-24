@@ -14,35 +14,48 @@ function DeployDates({ first }) {
       })
     : "Unknown";
 
-  const siteUrl = "https://waffy.netlify.app/ai-summary.html";
+  const siteUrl = "https://waffy.netlify.app/ai-summary.txt";
+  const year = new Date().getFullYear();
 
   return (
-    <div className="mt-6 text-center text-gray-700">
+    <div className="mt-3 text-center text-gray-700">
       <p>Created: {firstDate}</p>
       <p>Last Updated: {lastDate}</p>
 
-      {/* AI Summary Section */}
-      <div className="mt-2 text-sm text-gray-600">
+      <div className="mt-1 text-sm text-gray-600">
         <p>Ask an AI to summarize this site</p>
-        <div className="flex justify-center gap-3 mt-1">
+        <div className="flex justify-center gap-4 mt-1">
           <a
             href={`https://chat.openai.com/?q=Summarize%20${siteUrl}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            aria-label="Summarize with ChatGPT"
           >
-            ChatGPT
+            <img
+              src="/logos/chatgpt.svg"
+              alt="ChatGPT"
+              className="h-6 w-6 opacity-80 hover:opacity-100 transition"
+            />
           </a>
+
           <a
             href={`https://claude.ai/?q=Summarize%20${siteUrl}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
+            aria-label="Summarize with Claude"
           >
-            Claude
+            <img
+              src="/logos/claude.svg"
+              alt="Claude"
+              className="h-6 w-6 opacity-80 hover:opacity-100 transition"
+            />
           </a>
         </div>
       </div>
+
+      <p className="mt-2 text-xs text-gray-500">
+        © {year} Waffy Ahmed
+      </p>
     </div>
   );
 }
