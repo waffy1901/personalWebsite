@@ -23,7 +23,7 @@ function DeployDates({ first }) {
       <p>Last Updated: {lastDate}</p>
 
       <div className="mt-1 text-sm text-gray-600">
-        <p>Ask an AI to summarize this site</p>
+        <p>View an AI-generated summary of this portfolio</p>
         <div className="flex justify-center gap-4 mt-1">
           <a
             href={`https://chat.openai.com/?q=Summarize%20${siteUrl}`}
