@@ -40,6 +40,7 @@ function Experience() {
       date: "January 2025 - Present",
       bullets: [
         "Improved scalability by deploying and validating HPA for a core service previously capped at 20 static pods, cutting mean latency 40% (121 to 72 ms) and errors 89% while boosting throughput 40% (24.9M to 34.8M reqs/wk) and reducing average CPU usage 26%, enabling dynamic scaling between 50–100 pods in production.",
+        "Reconstructed deployment workflows for abandoned legacy Java 1.8 Tomcat services supporting mission-critical transaction systems with no existing operational ownership, rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation across 8 repositories while eliminating a critical platform outage risk.",
         "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (14.5 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
         "Reduced MTTR ∼50% by implementing an automated rolling-restart Kubernetes job for 20+ microservices, eliminating slow Argo Rollouts sequences and accelerating recovery from memory-leak and state-drift issues.",
         "Automated Spinnaker deployment pipelines for 15+ microservices with cdk8s, standardizing multi-environment release workflows using TypeScript, Terraform, and GCP, reducing deployment times by 25%.",
