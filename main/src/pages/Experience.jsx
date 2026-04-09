@@ -1,28 +1,31 @@
 import React from "react";
 import ExperienceCard from "../components/ExperienceCard";
+import OwnershipCard from "../components/OwnershipCard";
+
 import hdLogo from "../images/hdLogo.png";
 import landisGyrLogo from "../images/landisGyrLogo.png";
 import fintechGTLogo from "../images/fintechGTLogo.png";
 import cdcLogo from "../images/cdcLogo.png";
 import gtComputingLogo from "../images/gtComputingLogo.png";
 
+/* =========================
+   Experience Grid
+========================= */
 const ExperienceGrid = ({ experiences, isExtracurricular, centerIndex }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       {experiences.map((exp, index) => (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`w-full ${
-            index === centerIndex 
-              ? 'md:col-span-2 flex justify-center' 
-              : ''
+            index === centerIndex ? "md:col-span-2 flex justify-center" : ""
           }`}
         >
-          <div className={`w-full ${
-            index === centerIndex 
-              ? 'md:w-3/4 lg:w-1/2' 
-              : ''
-          }`}>
+          <div
+            className={`w-full ${
+              index === centerIndex ? "md:w-3/4 lg:w-1/2" : ""
+            }`}
+          >
             <ExperienceCard {...exp} isExtracurricular={isExtracurricular} />
           </div>
         </div>
@@ -31,6 +34,9 @@ const ExperienceGrid = ({ experiences, isExtracurricular, centerIndex }) => {
   );
 };
 
+/* =========================
+   Experience Page
+========================= */
 function Experience() {
   const workExperiences = [
     {
@@ -52,7 +58,7 @@ function Experience() {
         "Improved operational responsiveness by decreasing alert acknowledgement times 30% via optimizing tiered alerting and Grafana dashboards across 20+ microservices, automating escalation via Slack and PagerDuty integrations.",
       ],
       logo: hdLogo,
-      color: "bg-[#FFA500]"
+      color: "bg-[#FFA500]",
     },
     {
       title: "Software Engineer Intern",
@@ -64,7 +70,7 @@ function Experience() {
         "Leveraged Java to obtain germane product data, used React and TypeScript to effectively display product information for all registers at self-checkout, pruning customer theft by ∼$10 million annually."
       ],
       logo: hdLogo,
-      color: "bg-[#FFA500]"
+      color: "bg-[#FFA500]",
     },
     {
       title: "Software Engineer Intern",
@@ -74,10 +80,10 @@ function Experience() {
       bullets: [
         "Optimized the efficiency of configuring 40,000+ registers across 2,300 stores by 90%, in collaboration with 2 interns.",
         "Truncated the maximum deployment time of updates to registers from 24+ hours to 30 minutes, leveraging the HttpClient and Flow Java libraries to streamline the retrieval of polymorphic external configurations.",
-        "Collaborated with cross-functional teams, including the UI/UX team, designing and constructing user interface components for a new configuration process - utilizing React, Next.js, and TypeScript."
+        "Collaborated with cross-functional teams, including the UI/UX team, designing and constructing user interface components for a new configuration process - utilizing React, Next.js, and TypeScript.",
       ],
       logo: hdLogo,
-      color: "bg-[#FFA500]"
+      color: "bg-[#FFA500]",
     },
     {
       title: "Firmware Engineer Intern",
@@ -86,10 +92,10 @@ function Experience() {
       date: "May 2022 - August 2022",
       bullets: [
         "Accelerated the process of converting DCW (Data Control Words) hexadecimal values to their corresponding ASCII representations by ∼50% through efficient Python practices.",
-        "Bolstered data transmission efficiency by ∼25%, collaborating with a software architect to conduct comprehensive testing of collectors and debugging of various Python scripts employing MySQL."
+        "Bolstered data transmission efficiency by ∼25%, collaborating with a software architect to conduct comprehensive testing of collectors and debugging of various Python scripts employing MySQL.",
       ],
       logo: landisGyrLogo,
-      color: "bg-white bg-opacity-100"
+      color: "bg-white bg-opacity-100",
     },
   ];
 
@@ -102,13 +108,13 @@ function Experience() {
       bullets: [
         "Reduced page load times by ∼35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
         "Implemented a cart page for a React Native grocery application,  allowing users to add/remove items, adjust squantities, view real-time total costs, and integrated the Stripe API for streamlined in-app credit card payments.",
-        "Leveraged an inbuilt API for image recognition, identifying and ranking the top 3 product matches for shopping carts."
+        "Leveraged an inbuilt API for image recognition, identifying and ranking the top 3 product matches for shopping carts.",
       ],
       logo: fintechGTLogo,
-      color: "bg-[#FFD700] bg-opacity-70"
+      color: "bg-[#FFD700] bg-opacity-70",
     },
     {
-      title: "Project Manager & Full-Stack Software Developer",
+      title: "Project Manager & Full-Stack Developer",
       company: "Centers for Disease Control and Prevention",
       location: "Atlanta, GA",
       date: "August 2023 - April 2024",
@@ -122,7 +128,7 @@ function Experience() {
         "Constructed technical diagrams/documentation (Lo-Fi & Hi-Fi Prototypes, User Research, Minimum Marketable Features, Story Mapping, UX Report, and Detailed Design) to aid the development process.",
       ],
       logo: cdcLogo,
-      color: "bg-white bg-opacity-100"
+      color: "bg-white bg-opacity-100",
     },
     {
       title: "Undergraduate Teaching Assistant",
@@ -132,34 +138,82 @@ function Experience() {
       bullets: [
         "Supervised and taught recitations for CS 3001 (Computing & Society) to 20+ students for 4+ hours per week.",
         "Evaluated assignments and exams, grading 20+ students and supplying targeted feedback to enhance performance.",
-        "Fostered engagement by answering 105+ questions on Piazza, the student discussion forum."
+        "Fostered engagement by answering 105+ questions on Piazza, the student discussion forum.",
       ],
       logo: gtComputingLogo,
-      color: "bg-[#FFD700] bg-opacity-70"
+      color: "bg-[#FFD700] bg-opacity-70",
     },
   ];
 
   return (
     <div className="bg-blue-300 min-h-screen py-4 font-cambria">
-      <div className="max-w-6xl mx-auto px-4">
-        <section className="mb-4">
-          <h2 className="text-3xl text-center font-bold mb-4">Work Experience</h2>
-          <ExperienceGrid 
-            experiences={workExperiences} 
-            isExtracurricular={false} 
+      <div className="max-w-6xl mx-auto px-4 space-y-10">
+
+        {/* ================= Work Experience ================= */}
+        <section>
+          <h2 className="text-3xl text-center font-bold mb-6">
+            Work Experience
+          </h2>
+
+          <ExperienceGrid
+            experiences={workExperiences}
+            isExtracurricular={false}
           />
         </section>
-        
-        <section className="mb-4">
-          <h2 className="text-3xl text-center font-bold mb-4 mt-16">Extracurricular Experience</h2>
-          <ExperienceGrid 
-            experiences={extracurricularExperiences} 
-            isExtracurricular={true} 
+
+        {/* ================= Platform Ownership ================= */}
+        <section>
+          <h2 className="text-3xl text-center font-bold mb-6">
+            Platform Ownership & Engineering Impact
+          </h2>
+
+          {/*SCOPE BAR */}
+          <div className="flex flex-wrap justify-center gap-3 mb-6">
+            {[
+              "60+ Repositories",
+              "Primary Escalation Point",
+              "Shared Auth Infrastructure",
+            ].map((chip, i) => (
+              <span
+                key={i}
+                className="px-4 py-1 text-sm font-medium bg-white/70 backdrop-blur-sm text-gray-800 rounded-full shadow-sm"
+              >
+                {chip}
+              </span>
+            ))}
+          </div>
+
+          {/* Centered Ownership Card */}
+          <div className="w-full">
+              <OwnershipCard
+                color="bg-[#FFA500] bg-opacity-90"
+                title="Software Engineer, The Home Depot"
+                items={[
+                  "Serve as a trusted operational contributor within a senior/staff-heavy platform organization, acting as a primary escalation point for infrastructure, DevOps, and CI/CD issues across shared services and ~60+ repositories.",
+                  "Act as a production quality gate reviewing and approving deployment changes to ensure release safety and operational consistency.",
+                  "Contribute to administration and continuity of shared authentication infrastructure enabling secure cross-service communication.",
+                  "Supported large-scale Kubernetes cluster rebuilds coordinating scaling, traffic migration, and Terraform-driven recovery with no service disruption.",
+                ]}
+              />
+          </div>
+        </section>
+
+        {/* ================= Extracurricular ================= */}
+        <section>
+          <h2 className="text-3xl text-center font-bold mb-8">
+            Extracurricular Experience
+          </h2>
+
+          <ExperienceGrid
+            experiences={extracurricularExperiences}
+            isExtracurricular={true}
             centerIndex={2}
           />
         </section>
+
       </div>
     </div>
   );
 }
+
 export default Experience;

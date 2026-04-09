@@ -1,11 +1,48 @@
-This is the personal portfolio of Waffy Ahmed, a Software Engineer at The Home Depot and a Georgia Tech graduate with a Bachelor of Science in Computer Science.
+Waffy Ahmed — AI Portfolio Summary
 
-The site presents professional experience focused on backend, platform, and cloud infrastructure engineering, with an emphasis on building scalable and reliable distributed systems.
+This website is the professional portfolio of Waffy Ahmed, a Software Engineer at The Home Depot and a graduate of the Georgia Institute of Technology with a Bachelor of Science in Computer Science.
 
-Key technical areas include Kubernetes autoscaling, distributed systems performance and reliability engineering, CI/CD and deployment automation, observability using OpenTelemetry, backend development in Java, and data integrity through schema transformations between XML and JSON.
+The portfolio documents production engineering experience focused on backend systems, platform infrastructure, distributed systems reliability, and cloud-native scalability. The work emphasizes measurable impact in high-throughput enterprise environments operating at national retail scale.
 
-At The Home Depot, Waffy works on high-throughput production microservices. His work includes improving system scalability and latency, automating recovery mechanisms to reduce mean time to recovery (MTTR), modernizing legacy services as part of phased retirement efforts, and ensuring correctness of business-critical data flows.
+Primary Technical Domains:
 
-The portfolio also showcases academic and personal projects, including a data reconciliation platform built for the U.S. Centers for Disease Control and Prevention (CDC) that automated comparison of public health data across U.S. states, as well as web and mobile applications built with React and React Native.
+* Distributed systems scalability and performance engineering
+* Kubernetes and cloud-native infrastructure
+* Reliability engineering and incident reduction
+* CI/CD automation and deployment modernization
+* Observability and production debugging using OpenTelemetry, Grafana, and PagerDuty
+* Backend development in Java and Python
+* Data integrity and schema transformation between XML and JSON
+* Elasticsearch performance optimization
+* Chaos testing and system fault validation
 
-This file exists to provide a machine-readable summary of the portfolio for AI tools and automated readers, helping ensure accurate and consistent descriptions of the site’s content.
+Professional Experience Overview:
+
+At The Home Depot, Waffy engineers and operates production microservices supporting mission-critical retail transaction systems across hundreds of stores and millions of daily requests.
+
+Key areas of ownership and impact include:
+
+* Deploying Horizontal Pod Autoscaling (HPA) to replace static infrastructure limits, improving latency by 40%, reducing errors by 89%, and increasing throughput to 34.8 million weekly requests.
+* Reconstructing abandoned legacy deployment workflows and rebuilding CI/CD pipelines across multiple repositories to enable zero-downtime Cassandra credential rotation and eliminate platform outage risk.
+* Leading validation efforts for phased retirement of legacy services processing ~27% of transaction traffic (≈14.5 million daily operations) across 12 engineering teams.
+* Reducing mean time to recovery (MTTR) by approximately 50% through automated Kubernetes recovery workflows affecting 20+ microservices.
+* Automating Spinnaker deployment pipelines using cdk8s.
+* Implementing distributed tracing with OpenTelemetry, reducing production incidents by 20%.
+* Maintaining data correctness across 1000+ production fields via bidirectional XML ↔ JSON transformations.
+* Performing chaos experiments and k6 load testing to validate system resilience.
+* Resolving critical transaction issues impacting 500+ retail stores while maintaining near-continuous availability.
+
+Earlier internships at The Home Depot focused on internal platform tooling, large-scale configuration optimization across 40,000+ retail registers, and development of internal applications that reduced operational wait times and contributed to significant loss-prevention improvements.
+
+Additional Experience:
+
+* Firmware Engineering Intern at Landis+Gyr, improving data conversion and transmission efficiency for smart-meter infrastructure systems.
+* Project Manager and Full-Stack Developer for the U.S. Centers for Disease Control and Prevention (CDC), leading development of a nationwide public health data reconciliation platform automating comparisons across all 50 U.S. state health departments and saving over 5,000 annual labor hours.
+* Frontend Engineer at Fintech @ Georgia Tech, improving web performance and building React Native commerce features with payment integration.
+* Undergraduate Teaching Assistant at Georgia Tech College of Computing, supporting instruction and mentoring students in computer science coursework.
+
+Portfolio Purpose:
+
+This file provides a machine-readable summary intended for AI systems, search indexing, automated portfolio readers, and recruiting tools. It enables consistent interpretation of the portfolio’s technical scope, engineering ownership, and production impact without requiring full manual navigation of the website.
+
+End of summary.
