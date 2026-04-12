@@ -1,6 +1,7 @@
 import React from "react";
 import ExperienceCard from "../components/ExperienceCard";
 import OwnershipCard from "../components/OwnershipCard";
+import { HiServer, HiShieldCheck, HiLockClosed, HiCog } from "react-icons/hi";
 
 import hdLogo from "../images/hdLogo.png";
 import landisGyrLogo from "../images/landisGyrLogo.png";
@@ -163,38 +164,54 @@ function Experience() {
 
         {/* ================= Platform Ownership ================= */}
         <section>
-          <h2 className="text-3xl text-center font-bold mb-6">
+          <h2 className="text-3xl text-center font-bold mb-2">
             Platform Ownership & Engineering Impact
           </h2>
+          <p className="text-center text-gray-600 text-sm mb-8">
+            Software Engineer · The Home Depot
+          </p>
 
-          {/*SCOPE BAR */}
-          <div className="flex flex-wrap justify-center gap-3 mb-6">
-            {[
-              "60+ Repositories",
-              "Primary Escalation Point",
-              "Shared Auth Infrastructure",
-            ].map((chip, i) => (
-              <span
-                key={i}
-                className="px-4 py-1 text-sm font-medium bg-white/70 backdrop-blur-sm text-gray-800 rounded-full shadow-sm"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-
-          {/* Centered Ownership Card */}
-          <div className="w-full">
-              <OwnershipCard
-                color="bg-[#FFA500] bg-opacity-90"
-                title="Software Engineer, The Home Depot"
-                items={[
-                  "Serve as a trusted operational contributor within a senior/staff-heavy platform organization, acting as a primary escalation point for infrastructure, DevOps, and CI/CD issues across shared services and ~60+ repositories.",
-                  "Act as a production quality gate reviewing and approving deployment changes to ensure release safety and operational consistency.",
-                  "Contribute to administration and continuity of shared authentication infrastructure enabling secure cross-service communication.",
-                  "Supported large-scale Kubernetes cluster rebuilds coordinating scaling, traffic migration, and Terraform-driven recovery with no service disruption.",
-                ]}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <OwnershipCard
+              icon={<HiServer className="text-blue-600" />}
+              title="Platform Ownership"
+              summary="Own operational health across 60+ repositories spanning shared platform services."
+              details={[
+                "First escalation point for CI/CD, infrastructure, and production issues impacting transaction capture across shared services.",
+                "Operate within a senior/staff-heavy platform organization, driving resolution across cross-team boundaries.",
+                "Triage and resolve infrastructure-level failures affecting upstream and downstream transaction-critical services.",
+              ]}
+            />
+            <OwnershipCard
+              icon={<HiShieldCheck className="text-blue-600" />}
+              title="Release Governance"
+              summary="Gate production releases by reviewing and approving deployment changes."
+              details={[
+                "Prevent misconfigurations across multi-service rollouts by reviewing Spinnaker pipelines and Kubernetes manifests.",
+                "Enforce deployment safety standards across 15+ microservices spanning multiple GCP environments.",
+                "Coordinate staged rollouts for high-risk changes, ensuring operational consistency and zero regressions.",
+              ]}
+            />
+            <OwnershipCard
+              icon={<HiLockClosed className="text-blue-600" />}
+              title="Infrastructure & Auth"
+              summary="Maintain and evolve shared authentication infrastructure for platform-wide services."
+              details={[
+                "Ensure secure cross-service communication across platform-wide shared authentication layers.",
+                "Administer credential rotation workflows, including zero-downtime Cassandra credential rotation across 8 repositories.",
+                "Contribute to continuity of foundational auth services depended on by transaction-critical systems.",
+              ]}
+            />
+            <OwnershipCard
+              icon={<HiCog className="text-blue-600" />}
+              title="Production Operations"
+              summary="Execute zero-downtime Kubernetes cluster rebuilds across dependent services."
+              details={[
+                "Coordinate traffic migration, scaling, and Terraform-based recovery during large-scale cluster rebuilds with no service disruption.",
+                "Maintain automated rolling-restart Kubernetes jobs for 20+ microservices, enabling rapid recovery from memory-leak and state-drift issues.",
+                "Support fault-tolerance validation through chaos experiments—SIGKILL terminations, CPU/memory overloads, and simulated network failures.",
+              ]}
+            />
           </div>
         </section>
 

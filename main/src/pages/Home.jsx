@@ -1,26 +1,24 @@
-import React from 'react'
-import profilePicture from '../images/profilePic.jpg'
-import { FaLinkedin, FaGithub, FaEnvelope, FaDownload } from 'react-icons/fa'
-import gtLogo from '../images/gtLogo.png'
-import DeployDates from '../components/DeployDates'
+import React from "react";
+import profilePicture from "../images/profilePic.jpg";
+import { FaLinkedin, FaGithub, FaEnvelope, FaDownload } from "react-icons/fa";
+import gtLogo from "../images/gtLogo.png";
+import DeployDates from "../components/DeployDates";
 
 function Home() {
   return (
-    <div className='min-h-screen flex flex-col font-cambria'>
-      <nav className='bg-blue-100 p-4'>
-        <div className='flex flex-col sm:flex-row justify-between items-center'>
-          <div className='flex items-center mb-4 sm:mb-0'>
-            <img 
-              src={gtLogo} 
-              alt="Georgia Tech Logo" 
-              className='h-16 w-auto'
-            />
+    <div className="min-h-screen flex flex-col font-cambria">
+      <nav className="bg-blue-100 p-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center">
+          <div className="flex items-center mb-4 sm:mb-0">
+            <img src={gtLogo} alt="Georgia Tech Logo" className="h-16 w-auto" />
           </div>
-          <div className='flex-grow text-center mb-4 sm:mb-0'>
-            <h1 className='text-3xl font-bold text-gray-700'>Waffy Ahmed</h1>
-            <p className='text-xl text-gray-700'>Software Engineer | Georgia Tech</p>
+          <div className="flex-grow text-center mb-4 sm:mb-0">
+            <h1 className="text-3xl font-bold text-gray-700">Waffy Ahmed</h1>
+            <p className="text-xl text-gray-700">
+              Software Engineer | Georgia Tech
+            </p>
           </div>
-          <div className='mb-4 sm:mb-0'>
+          <div className="mb-4 sm:mb-0">
             <a
               href="/waffyAhmedResume.pdf"
               download
@@ -33,56 +31,62 @@ function Home() {
         </div>
       </nav>
 
-      <main className='flex-grow bg-blue-100'>
-        <div className='container mx-auto px-4'>
-          <section className='py-12'>
-            <div className='flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto'>
-              <div className='w-full md:w-1/2 flex-grow'>
-                <p className='text-lg leading-relaxed text-gray-700'>
-                 I’m a Software Engineer at The Home Depot and Georgia Tech graduate who builds scalable, reliable systems across the 
-                 backend and cloud infrastructure stack. My work spans Kubernetes autoscaling, distributed systems performance, 
-                 observability engineering, and deployment automation for high-throughput microservices.
-
-                 Previously, I led a team developing an end-to-end data reconciliation platform for the CDC and contributed to frontend 
-                 and full-stack projects at Georgia Tech. Explore the sections above to learn more about my experience and projects.
+      <main className="flex-grow bg-blue-100">
+        <div className="container mx-auto px-4">
+          <section className="py-12">
+            <div className="flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto">
+              <div className="w-full md:w-1/2 flex-grow">
+                <p className="text-lg leading-relaxed text-gray-700">
+                  I'm a Software Engineer at The Home Depot, owning operational
+                  health across 60+ repositories that support
+                  transaction-critical services. My work focuses on Kubernetes
+                  autoscaling, deployment automation, observability, and
+                  incident response for high-throughput systems processing
+                  millions of transactions daily. Previously, I interned at The Home
+                  Depot twice and led a team of six building a data reconciliation
+                  platform for the CDC. I'm a Georgia Tech graduate focused on
+                  reliability engineering and building systems that don’t page
+                  you at 2 AM.
                 </p>
               </div>
-              
-              <div className='w-full md:w-1/2 flex justify-center items-start -mt-2'>
-                <img 
-                  src={profilePicture} 
-                  alt="Waffy Ahmed" 
-                  className='h-[325px] w-auto object-cover rounded-lg shadow-lg'
+
+              <div className="w-full md:w-1/2 flex justify-center items-start -mt-2">
+                <img
+                  src={profilePicture}
+                  alt="Waffy Ahmed"
+                  className="h-[325px] w-auto object-cover rounded-lg shadow-lg"
                 />
               </div>
             </div>
 
-            <div className='flex flex-col items-center mt-4'>
-              <p className='text-lg font-bold leading-relaxed text-gray-700 mb-2'>Connect with me</p>
-              <div className='flex justify-center space-x-4'>
-                <a 
-                  href="https://www.linkedin.com/in/wa24/" 
-                  target="_blank" 
+            <div className="flex flex-col items-center mt-4">
+              <p className="text-lg font-bold leading-relaxed text-gray-700 mb-2">
+                Connect with me
+              </p>
+              <div className="flex justify-center space-x-4">
+                <a
+                  href="https://www.linkedin.com/in/wa24/"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center'
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-flex items-center"
                 >
                   <FaLinkedin className="mr-2" />
                   LinkedIn
                 </a>
-                <a 
-                  href="https://github.com/waffy1901" 
-                  target="_blank" 
+                <a
+                  href="https://github.com/waffy1901"
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className='bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded inline-flex items-center'
+                  className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded inline-flex items-center"
                 >
                   <FaGithub className="mr-2" />
                   GitHub
                 </a>
-                <a 
-                  href="mailto:waffyahmed@gmail.com" 
-                  className='bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded inline-flex items-center'
+                <a
+                  href="mailto:waffyahmed@gmail.com"
+                  className="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded inline-flex items-center"
                 >
-                  <FaEnvelope className="mr-2"/>
+                  <FaEnvelope className="mr-2" />
                   Email
                 </a>
               </div>
@@ -92,6 +96,6 @@ function Home() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-export default Home
+export default Home;
