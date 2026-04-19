@@ -8,7 +8,7 @@ function DeployDates({ first }) {
     timeStyle: "short",
   });
 
-  const lastDeployEnv = process.env.REACT_APP_DEPLOY_DATE;
+  const lastDeployEnv = import.meta.env.VITE_DEPLOY_DATE;
   const lastDate = lastDeployEnv
     ? new Date(lastDeployEnv).toLocaleString(undefined, {
         dateStyle: "medium",
