@@ -1,16 +1,10 @@
 {
   "private": true,
-  "workspaces": [
-    "main"
-  ],
   "scripts": {
-    "dev": "npm run dev --workspace main",
-    "start": "npm run start --workspace main",
-    "build": "npm run build --workspace main",
-    "test": "npm run test --workspace main",
-    "preview": "npm run preview --workspace main"
-  },
-  "dependencies": {
-    "personal-website": "file:main"
+    "dev": "npm --prefix main run dev",
+    "start": "npm --prefix main run start",
+    "build": "npm --prefix main run build",
+    "test": "npm --prefix main run test",
+    "preview": "npm --prefix main run preview"
   }
 }
