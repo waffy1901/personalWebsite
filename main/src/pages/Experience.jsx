@@ -48,9 +48,11 @@ function Experience() {
       bullets: [
         "Improved scalability by deploying and validating HPA for a core service previously capped at 20 static pods, cutting mean latency 40% (121 to 72 ms) and errors 89% while boosting throughput 40% (24.9M to 34.8M reqs/wk) and reducing average CPU usage 26%, enabling dynamic scaling between 50–100 pods in production.",
         "Reconstructed deployment workflows for abandoned legacy Java 1.8 Tomcat services supporting mission-critical transaction systems with no existing operational ownership, rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation across 8 repositories while eliminating a critical platform outage risk.",
+        "Remediated ∼330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD 401 authentication failures to enable secure, reproducible container builds.",
         "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (14.5 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
         "Reduced MTTR ∼50% by implementing an automated rolling-restart Kubernetes job for 20+ microservices, eliminating slow Argo Rollouts sequences and accelerating recovery from memory-leak and state-drift issues.",
         "Automated Spinnaker deployment pipelines for 15+ microservices with cdk8s, standardizing multi-environment release workflows using TypeScript, Terraform, and GCP, reducing deployment times by 25%.",
+        "Diagnosed and resolved post–cluster-rebuild service timeouts (1s failures) by identifying stale node-level routing caused by NodePort usage; migrated internal services to ClusterIP, eliminating node dependency and restoring reliable service-to-service communication.",
         "Ensured data integrity for a legacy POS retirement initiative by implementing and validating bidirectional Java transformations between XML and JSON, enforcing round-trip schema equivalence across 1000+ production fields.",
         "Reduced lookup latency by 5% in a high-throughput system (10 million lookups per day) through a scalable, bucketed Elasticsearch indexing method using Java, enabling distributed lookups via partitioned indices.",
         "Reduced production incidents by 20% via implementing OpenTelemetry tracing across 8 Java-based microservices, enabling early issue detection through standardized distributed tracing and centralized observability.",
@@ -175,7 +177,7 @@ function Experience() {
             <OwnershipCard
               icon={<HiServer className="text-blue-600" />}
               title="Platform Ownership"
-              summary="Own operational health across 60+ repositories spanning shared platform services."
+              summary="Own operational health across 60+ shared-service repositories, staying close to CI/CD, infrastructure, and transaction-critical production issues from triage through recovery."
               details={[
                 "First escalation point for CI/CD, infrastructure, and production issues impacting transaction capture across shared services.",
                 "Operate within a senior/staff-heavy platform organization, driving resolution across cross-team boundaries.",
@@ -185,7 +187,7 @@ function Experience() {
             <OwnershipCard
               icon={<HiShieldCheck className="text-blue-600" />}
               title="Release Governance"
-              summary="Gate production releases by reviewing and approving deployment changes."
+              summary="Gate production releases by reviewing deployment changes before they reach shared environments, connecting Spinnaker, Kubernetes, and rollout standards to safer launches."
               details={[
                 "Prevent misconfigurations across multi-service rollouts by reviewing Spinnaker pipelines and Kubernetes manifests.",
                 "Enforce deployment safety standards across 15+ microservices spanning multiple GCP environments.",
@@ -195,7 +197,7 @@ function Experience() {
             <OwnershipCard
               icon={<HiLockClosed className="text-blue-600" />}
               title="Infrastructure & Auth"
-              summary="Maintain and evolve shared authentication infrastructure for platform-wide services."
+              summary="Maintain shared authentication infrastructure across platform services, keeping credential rotation, service-to-service communication, and legacy continuity work reliable."
               details={[
                 "Ensure secure cross-service communication across platform-wide shared authentication layers.",
                 "Administer credential rotation workflows, including zero-downtime Cassandra credential rotation across 8 repositories.",
@@ -205,7 +207,7 @@ function Experience() {
             <OwnershipCard
               icon={<HiCog className="text-blue-600" />}
               title="Production Operations"
-              summary="Execute zero-downtime Kubernetes cluster rebuilds across dependent services."
+              summary="Lead production operations patterns for high-throughput services, from zero-downtime Kubernetes rebuilds to automated recovery paths for recurring runtime issues."
               details={[
                 "Coordinate traffic migration, scaling, and Terraform-based recovery during large-scale cluster rebuilds with no service disruption.",
                 "Maintain automated rolling-restart Kubernetes jobs for 20+ microservices, enabling rapid recovery from memory-leak and state-drift issues.",

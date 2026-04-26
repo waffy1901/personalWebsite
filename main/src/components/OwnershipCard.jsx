@@ -3,42 +3,76 @@ import React, { useState } from "react";
 const OwnershipCard = ({ title, summary, icon, details }) => {
   const [isHovered, setIsHovered] = useState(false);
 
+  const handleBlur = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) {
+      setIsHovered(false);
+    }
+  };
+
   return (
-    <div
+    <article
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={handleBlur}
+      tabIndex={0}
       className={`
-        relative rounded-xl p-6 cursor-default
-        border transition-all duration-500 ease-out
-        backdrop-blur-md
-        ${isHovered
-          ? "bg-white/60 border-white/80 shadow-lg -translate-y-1"
-          : "bg-white/30 border-white/40 shadow-sm"
-        }
+        relative min-h-[190px] cursor-default overflow-visible rounded-xl outline-none
+        transition-all duration-500 ease-out
+        focus-visible:ring-2 focus-visible:ring-blue-600
+        focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300
+        ${isHovered ? "z-20" : "z-0"}
       `}
-      style={{ minHeight: isHovered ? "auto" : "160px" }}
     >
-      {/* Icon + Title */}
-      <div className="flex items-center gap-3 mb-3">
-        <span className="text-2xl flex-shrink-0">{icon}</span>
-        <h3 className="text-lg font-bold text-gray-800 leading-tight">
-          {title}
-        </h3>
-      </div>
-
-      {/* Summary line — always visible */}
-      <p className="text-sm text-gray-600 leading-relaxed">
-        {summary}
-      </p>
-
-      {/* Detail bullets — revealed on hover */}
       <div
         className={`
-          overflow-hidden transition-all duration-500 ease-out
-          ${isHovered ? "max-h-[500px] opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"}
+          relative min-h-[190px] p-6 border backdrop-blur-md
+          transition-all duration-500 ease-out
+          ${isHovered
+            ? "rounded-t-xl rounded-b-none bg-white/60 border-white/80 shadow-lg md:-translate-y-1"
+            : "rounded-xl bg-white/30 border-white/40 shadow-sm"
+          }
         `}
       >
-        <div className="border-t border-gray-300/50 pt-3">
+        {/* Icon + Title */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-2xl flex-shrink-0">{icon}</span>
+          <h3 className="text-lg font-bold text-gray-800 leading-tight">
+            {title}
+          </h3>
+        </div>
+
+        {/* Summary line — always visible */}
+        <p className="text-sm text-gray-600 leading-relaxed">
+          {summary}
+        </p>
+
+        {/* Subtle hover indicator */}
+        <div
+          className={`
+            absolute bottom-3 right-4 text-xs text-gray-400
+            transition-opacity duration-300
+            ${isHovered ? "opacity-0" : "opacity-100"}
+          `}
+        >
+          Hover for details
+        </div>
+      </div>
+
+      {/* Detail bullets — revealed on hover without changing desktop grid row height */}
+      <div
+        className={`
+          relative z-30 w-full overflow-hidden rounded-b-xl border-x border-b
+          border-white/80 bg-white shadow-xl backdrop-blur-md
+          transition-all duration-500 ease-out
+          md:absolute md:left-0 md:right-0 md:top-[calc(100%-1px)]
+          ${isHovered
+            ? "max-h-[520px] opacity-100 translate-y-0 pointer-events-auto"
+            : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
+          }
+        `}
+      >
+        <div className="mx-6 border-t border-gray-300/50 py-4">
           <ul className="space-y-2">
             {details.map((detail, i) => (
               <li
@@ -58,18 +92,7 @@ const OwnershipCard = ({ title, summary, icon, details }) => {
           </ul>
         </div>
       </div>
-
-      {/* Subtle hover indicator */}
-      <div
-        className={`
-          absolute bottom-3 right-4 text-xs text-gray-400
-          transition-opacity duration-300
-          ${isHovered ? "opacity-0" : "opacity-100"}
-        `}
-      >
-        Hover for details
-      </div>
-    </div>
+    </article>
   );
 };
 
