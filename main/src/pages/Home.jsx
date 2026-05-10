@@ -1,10 +1,34 @@
-import React from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import profilePicture from "../images/profilePic.jpg";
 import { FaLinkedin, FaGithub, FaEnvelope, FaDownload } from "react-icons/fa";
 import gtLogo from "../images/gtLogo.png";
 import DeployDates from "../components/DeployDates";
 
 function Home() {
+  const introRef = useRef(null);
+  const [introHeight, setIntroHeight] = useState(null);
+
+  useLayoutEffect(() => {
+    const intro = introRef.current;
+    if (!intro) return undefined;
+
+    const updateIntroHeight = () => {
+      setIntroHeight(Math.ceil(intro.getBoundingClientRect().height));
+    };
+
+    updateIntroHeight();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateIntroHeight);
+      return () => window.removeEventListener("resize", updateIntroHeight);
+    }
+
+    const resizeObserver = new ResizeObserver(updateIntroHeight);
+    resizeObserver.observe(intro);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col font-cambria">
       <nav className="bg-blue-100 p-4">
@@ -36,7 +60,7 @@ function Home() {
           <section className="py-12">
             <div className="flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto">
               <div className="w-full md:w-1/2 flex-grow">
-                <p className="text-lg leading-relaxed text-gray-700">
+                <p ref={introRef} className="text-lg leading-relaxed text-gray-700">
                   I'm a Software Engineer at The Home Depot, owning operational
                   health across 60+ repositories that support
                   transaction-critical services. My work focuses on Kubernetes
@@ -54,7 +78,8 @@ function Home() {
                 <img
                   src={profilePicture}
                   alt="Waffy Ahmed"
-                  className="h-[325px] w-auto object-cover rounded-lg shadow-lg"
+                  className="w-auto max-w-full object-cover rounded-lg shadow-lg"
+                  style={introHeight ? { height: `${introHeight}px` } : undefined}
                 />
               </div>
             </div>
