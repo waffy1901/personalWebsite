@@ -16,7 +16,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "prebuild": "sed -i.bak '/^VITE_DEPLOY_DATE=/d' .env 2>/dev/null; rm -f .env.bak; echo VITE_DEPLOY_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) >> .env",
+    "prebuild": "sed -i.bak -e '/^VITE_DEPLOY_DATE=/d' -e '/^VITE_SITE_URL=/d' .env 2>/dev/null; rm -f .env.bak; SITE_URL=${DEPLOY_PRIME_URL:-${URL:-https://waffy.netlify.app}}; printf \"VITE_DEPLOY_DATE=%s\\nVITE_SITE_URL=%s\\n\" \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \"$SITE_URL\" >> .env",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests"
