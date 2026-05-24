@@ -55,7 +55,7 @@ function DeployDates({ first }) {
         await navigator.clipboard.writeText(prompt);
         setCopiedProvider(provider.name);
         setTimeout(() => setCopiedProvider(null), 900);
-      } catch (err) {
+      } catch {
         console.error("Clipboard copy failed");
       }
 

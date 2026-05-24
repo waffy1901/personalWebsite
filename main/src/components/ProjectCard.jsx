@@ -6,14 +6,25 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
   };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleFlip();
+    }
+  };
 
   return (
     <div className="w-full h-[60vh] perspective">
       <div
-        className={`relative w-full h-full transition-transform duration-450 transform-style-preserve-3d cursor-pointer ${
+        className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
           isFlipped ? "rotate-y-180" : ""
         }`}
         onClick={handleFlip}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isFlipped}
+        aria-label={`${isFlipped ? "Hide" : "Show"} details for ${title}`}
       >
         <div className={`absolute w-full h-full backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col ${
           isFlipped ? "hidden" : ""
