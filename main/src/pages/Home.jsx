@@ -61,14 +61,14 @@ function Home() {
             <div className="flex flex-col md:flex-row justify-center items-start gap-8 max-w-4xl mx-auto">
               <div className="w-full md:w-1/2 flex-grow">
                 <p ref={introRef} className="text-lg leading-relaxed text-gray-700">
-                  I'm a Software Engineer at The Home Depot, owning operational
+                  I&apos;m a Software Engineer at The Home Depot, owning operational
                   health across 60+ repositories that support
                   transaction-critical services. My work focuses on Kubernetes
                   autoscaling, deployment automation, observability, and
                   incident response for high-throughput systems processing
                   millions of transactions daily. Previously, I interned at The Home
                   Depot twice and led a team of six building a data reconciliation
-                  platform for the CDC. I'm a Georgia Tech graduate focused on
+                  platform for the CDC. I&apos;m a Georgia Tech graduate focused on
                   reliability engineering and building systems that don’t page
                   you at 2 AM.
                 </p>

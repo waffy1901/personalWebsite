@@ -5,6 +5,12 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
   const [copySuccess, setCopySuccess] = useState(false);
 
   const handleFlip = () => setIsFlipped(!isFlipped);
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleFlip();
+    }
+  };
 
   const handleCopy = (e) => {
     e.stopPropagation(); // prevent flip
@@ -20,6 +26,11 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
           isFlipped ? "rotate-y-180" : ""
         }`}
         onClick={handleFlip}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-pressed={isFlipped}
+        aria-label={`${isFlipped ? "Hide" : "Show"} details for ${title} at ${company}`}
       >
         {/* Front Side */}
         <div className={`absolute w-full h-full backface-hidden ${color} bg-opacity-90 rounded-lg shadow-md p-4 flex flex-col`}>
@@ -48,7 +59,9 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
           {/* Copy Button Top-Right */}
           <div className="absolute top-4 right-4 z-10 flex flex-col items-center group">
             <button
+              type="button"
               onClick={handleCopy}
+              aria-label="Copy experience bullets"
               className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-110 transform transition-all duration-200 flex items-center justify-center"
             >
               {/* Clipboard Icon */}
