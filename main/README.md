@@ -1,37 +1,42 @@
-# Personal Website
+# Portfolio App
 
-This project now runs on [Vite](https://vite.dev/) with React and Tailwind CSS.
+This directory contains the Vite React application for [waffy.netlify.app](https://waffy.netlify.app/).
 
-## Available Scripts
+The app powers Waffy Ahmed's professional portfolio, including experience, projects, resume, contact form, deploy metadata, and an AI-readable summary file.
 
-In the project directory, you can run:
+## Stack
 
-### `npm run dev`
+- React 18
+- Vite
+- Tailwind CSS
+- React Router
+- Formspree
+- Vitest and Testing Library
+- ESLint
 
-Starts the Vite development server. Open the local URL shown in the terminal to view the app.
+## Scripts
 
-### `npm start`
-
-Alias for `npm run dev`.
-
-### `npm test`
-
-Runs the test suite with Vitest.
-
-### `npm run build`
-
-Builds the app for production into the `dist` folder.
-
-### `npm run preview`
-
-Serves the production build locally for verification.
+```bash
+npm run dev      # Start the local Vite server
+npm run lint     # Run ESLint
+npm test         # Run Vitest
+npm run build    # Build the production app into dist/
+npm run preview  # Serve the production build locally
+```
 
 ## Environment Variables
 
-Vite exposes client-side environment variables only when they use the `VITE_` prefix. This app expects:
+```text
+VITE_GA_MEASUREMENT_ID
+VITE_FORMSPREE_KEY
+VITE_DEPLOY_DATE
+VITE_SITE_URL
+```
 
-- `VITE_GA_MEASUREMENT_ID`
-- `VITE_DEPLOY_DATE`
-- `VITE_FORMSPREE_KEY`
+`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are maintained by the `prebuild` script. Provide analytics and Formspree values through a local `.env` file or Netlify environment variables.
 
-The `prebuild` script refreshes `VITE_DEPLOY_DATE` automatically before each production build.
+## Notes
+
+- Static public assets live in `public/`.
+- The resume route uses a static PNG preview for consistent mobile/tablet rendering, while preserving direct PDF open/download links.
+- `_redirects` keeps React Router routes working on Netlify.
