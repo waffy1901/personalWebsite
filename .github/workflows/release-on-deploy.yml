@@ -1,0 +1,74 @@
+name: Create deployment release
+
+"on":
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and create release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: main/package-lock.json
+
+      - name: Install dependencies
+        working-directory: main
+        run: npm ci
+
+      - name: Lint
+        working-directory: main
+        run: npm run lint
+
+      - name: Test
+        working-directory: main
+        run: npm test
+
+      - name: Build
+        working-directory: main
+        run: npm run build
+
+      - name: Create GitHub release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const shortSha = context.sha.slice(0, 7);
+            const timestamp = new Date()
+              .toISOString()
+              .replace(/[-:]/g, "")
+              .replace(/\.\d{3}Z$/, "Z");
+            const tagName = `deploy-${timestamp}-${shortSha}`;
+            const releaseName = `Deployment ${timestamp} (${shortSha})`;
+
+            const body = [
+              `Automated release for deployment commit ${context.sha}.`,
+              "",
+              `- Branch: ${context.ref.replace("refs/heads/", "")}`,
+              `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              "- Site: https://waffy.netlify.app",
+            ].join("\n");
+
+            await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tagName,
+              target_commitish: context.sha,
+              name: releaseName,
+              body,
+              draft: false,
+              prerelease: false,
+              generate_release_notes: true,
+            });
