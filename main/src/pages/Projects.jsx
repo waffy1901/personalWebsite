@@ -1,4 +1,5 @@
 import React from "react";
+import { FaCodeBranch, FaDatabase, FaMobileAlt } from "react-icons/fa";
 import ProjectCard from "../components/ProjectCard";
 import cdcLogo from "../images/cdcLogo.png";
 import jobSearchLogo from "../images/jobSearchLogo.png";
@@ -45,6 +46,45 @@ function Projects() {
   return (
     <div className="bg-blue-300 min-h-screen">
       <div className="container mx-auto px-4 py-8 font-cambria">
+        <header className="mx-auto mb-10 max-w-6xl">
+          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+            <div className="relative pl-5">
+              <span className="absolute left-0 top-1 h-[calc(100%-0.5rem)] w-1 rounded bg-blue-800" />
+              <h1 className="max-w-3xl text-4xl font-bold leading-tight text-gray-900 sm:text-5xl">
+                Practical builds for real workflows
+              </h1>
+              <p className="mt-4 max-w-2xl text-lg leading-relaxed text-gray-700">
+                Public health reconciliation, job search support, and campus
+                discovery tools built with full-stack and mobile-first thinking.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 text-center text-gray-800 md:min-w-[18rem]">
+              <div className="px-2">
+                <FaCodeBranch className="mx-auto mb-2 text-blue-800" />
+                <p className="text-2xl font-bold">3</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-600">
+                  Repos
+                </p>
+              </div>
+              <div className="px-2">
+                <FaDatabase className="mx-auto mb-2 text-blue-800" />
+                <p className="text-2xl font-bold">2</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-600">
+                  Data Apps
+                </p>
+              </div>
+              <div className="px-2">
+                <FaMobileAlt className="mx-auto mb-2 text-blue-800" />
+                <p className="text-2xl font-bold">2</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-gray-600">
+                  Mobile
+                </p>
+              </div>
+            </div>
+          </div>
+        </header>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {projects.map((project, index) => (
             <ProjectCard

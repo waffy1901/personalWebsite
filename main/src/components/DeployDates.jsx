@@ -2,14 +2,21 @@ import React, { useState } from "react";
 
 function DeployDates({ first }) {
   const [copiedProvider, setCopiedProvider] = useState(null);
+  const [localPreviewDate] = useState(() => new Date());
 
   const firstDate = new Date(first).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
+  const isDevPreview = import.meta.env.DEV;
   const lastDeployEnv = import.meta.env.VITE_DEPLOY_DATE;
-  const lastDate = lastDeployEnv
+  const lastDate = isDevPreview
+    ? localPreviewDate.toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : lastDeployEnv
     ? new Date(lastDeployEnv).toLocaleString(undefined, {
         dateStyle: "medium",
         timeStyle: "short",

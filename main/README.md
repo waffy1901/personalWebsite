@@ -33,10 +33,10 @@ VITE_DEPLOY_DATE
 VITE_SITE_URL
 ```
 
-`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are maintained by the `prebuild` script. Provide analytics and Formspree values through a local `.env` file or Netlify environment variables.
+`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are injected by the build script without rewriting local `.env` files. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Provide analytics and Formspree values through a local `.env` file or Netlify environment variables.
 
 ## Notes
 
 - Static public assets live in `public/`.
-- The resume route uses a static PNG preview for consistent mobile/tablet rendering, while preserving direct PDF open/download links.
+- The resume route embeds the PDF when the browser supports inline PDF display, while preserving direct PDF open/download links.
 - `_redirects` keeps React Router routes working on Netlify.

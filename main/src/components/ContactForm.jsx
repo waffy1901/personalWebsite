@@ -2,7 +2,27 @@ import React from 'react'
 import { useForm, ValidationError } from '@formspree/react'
 
 function ContactForm() {
-  const [state, handleSubmit] = useForm(import.meta.env.VITE_FORMSPREE_KEY)
+  const formKey = import.meta.env.VITE_FORMSPREE_KEY
+
+  if (!formKey) {
+    return (
+      <div className="w-full max-w-md md:max-w-2xl mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100 text-center">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">Contact Form</h2>
+        <p className="text-gray-700">
+          The contact form is unavailable right now. Please email me at{" "}
+          <a className="font-bold text-blue-700 underline" href="mailto:waffyahmed@gmail.com">
+            waffyahmed@gmail.com
+          </a>.
+        </p>
+      </div>
+    )
+  }
+
+  return <ContactFormFields formKey={formKey} />
+}
+
+function ContactFormFields({ formKey }) {
+  const [state, handleSubmit] = useForm(formKey)
   if (state.succeeded) {
     return <p className="text-xl text-green-600 font-bold text-center mb-4">Thank you for your message! I will reach out as soon as possible!</p>
   }
@@ -68,4 +88,5 @@ function ContactForm() {
     </div>
   )
 }
+
 export default ContactForm

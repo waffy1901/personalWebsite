@@ -6,6 +6,9 @@ function Contact() {
     return (
         <div className="bg-[#02A8DA] bg-opacity-40 min-h-screen">
           <div className='flex flex-col items-center p-4 font-cambria'>
+              <h1 className="mb-4 text-center text-3xl font-bold text-gray-800">
+                  Let&apos;s connect
+              </h1>
               <p className="text-lg text-gray-800 mb-4 max-w-2xl text-center">
                   I&apos;m always excited to connect with new people! Whether you have a potential opportunity to discuss, want to expand your professional network, have feedback to share, or merely want to chat, please don&apos;t hesitate to reach out!
               </p>
@@ -13,7 +16,7 @@ function Contact() {
                   <ContactForm />
               </div>
               <p className='text-lg font-bold leading-relaxed text-gray-700 mb-4 -mt-4'>Alternatively, connect with me here</p>
-              <div className='flex justify-center space-x-4'>
+              <div className='flex flex-wrap justify-center gap-3'>
                   <a 
                     href="https://www.linkedin.com/in/wa24/" 
                     target="_blank" 
