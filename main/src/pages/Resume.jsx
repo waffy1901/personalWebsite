@@ -6,8 +6,8 @@ const resumePreview = "/resume-preview.png"
 
 function Resume() {
   return (
-    <div className="min-h-screen bg-[#02A8DA] bg-opacity-25 p-4 font-cambria">
-      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col gap-4">
+    <div className="min-h-[calc(100dvh-2.25rem)] bg-[#02A8DA] bg-opacity-25 px-3 py-4 font-cambria sm:p-4">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <div className="flex flex-wrap items-center justify-center gap-3">
           <a
             href={resumePdf}
@@ -33,12 +33,12 @@ function Resume() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open Waffy Ahmed resume PDF"
-          className="block flex-1 rounded border border-blue-200 bg-white p-2 shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
+          className="mx-auto block w-full max-w-[900px] rounded border border-blue-200 bg-white p-1.5 shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2 sm:p-2"
         >
           <img
             src={resumePreview}
             alt="Preview of Waffy Ahmed's resume"
-            className="mx-auto h-auto w-full max-w-[900px] rounded-sm"
+            className="h-auto w-full rounded-sm"
           />
         </a>
       </div>
