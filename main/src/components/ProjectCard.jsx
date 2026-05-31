@@ -6,19 +6,29 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
   const cardId = useId();
   const titleId = `${cardId}-title`;
   const detailsId = `${cardId}-details`;
+  const cardTransform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
+  const faceStyle = {
+    WebkitBackfaceVisibility: "hidden",
+    backfaceVisibility: "hidden",
+  };
 
   return (
     <article className="w-full min-h-[27rem] perspective">
       <div
-        className={`relative min-h-[27rem] w-full transition-transform duration-500 transform-style-preserve-3d ${
-          isFlipped ? "rotate-y-180" : ""
-        }`}
+        className="relative min-h-[27rem] w-full transform-style-preserve-3d transition-transform duration-500 will-change-transform"
+        style={{
+          WebkitTransform: cardTransform,
+          WebkitTransformStyle: "preserve-3d",
+          transform: cardTransform,
+          transformStyle: "preserve-3d",
+        }}
       >
         <div
           aria-hidden={isFlipped}
-          className={`absolute inset-0 backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col ${
-            isFlipped ? "pointer-events-none" : ""
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg bg-[#FFD700] bg-opacity-60 p-6 shadow-md backface-hidden ${
+            isFlipped ? "pointer-events-none opacity-0" : "opacity-100"
           }`}
+          style={faceStyle}
         >
           <a
             href={github}
@@ -65,9 +75,14 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           role="region"
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
-          className={`absolute inset-0 backface-hidden bg-[#FFD700] bg-opacity-60 rounded-lg shadow-md p-6 flex flex-col rotate-y-180 ${
-            isFlipped ? "" : "pointer-events-none"
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg bg-[#FFD700] bg-opacity-60 p-6 shadow-md backface-hidden rotate-y-180 ${
+            isFlipped ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
+          style={{
+            ...faceStyle,
+            WebkitTransform: "rotateY(180deg)",
+            transform: "rotateY(180deg)",
+          }}
         >
           <h3 id={`${detailsId}-heading`} className="text-xl font-semibold mb-4">Project Details</h3>
           <div className="flex-grow max-h-full overflow-y-auto pr-2">
