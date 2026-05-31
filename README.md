@@ -71,7 +71,7 @@ VITE_DEPLOY_DATE
 VITE_SITE_URL
 ```
 
-`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are refreshed by the `prebuild` script during production builds. Formspree and Google Analytics values should be provided through the local `.env` file or Netlify environment settings.
+`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are injected by the build script during production builds without rewriting local `.env` files. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Formspree and Google Analytics values should be provided through the local `.env` file or Netlify environment settings.
 
 ## Deployment
 

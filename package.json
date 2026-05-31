@@ -1,4 +1,5 @@
 {
+  "name": "personal-website-root",
   "private": true,
   "scripts": {
     "dev": "npm --prefix main run dev",
