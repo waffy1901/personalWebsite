@@ -154,9 +154,9 @@ function Experience() {
 
         {/* ================= Work Experience ================= */}
         <section>
-          <h2 className="text-3xl text-center font-bold mb-6">
+          <h1 className="text-3xl text-center font-bold mb-6">
             Work Experience
-          </h2>
+          </h1>
 
           <ExperienceGrid
             experiences={workExperiences}

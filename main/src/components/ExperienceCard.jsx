@@ -1,42 +1,44 @@
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
+import { FaArrowLeft, FaCheck, FaClipboard, FaInfoCircle } from "react-icons/fa";
 
 const ExperienceCard = ({ title, company, location, date, bullets, logo, color }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [copySuccess, setCopySuccess] = useState(false);
+  const [copyStatus, setCopyStatus] = useState(null);
+  const cardId = useId();
+  const titleId = `${cardId}-title`;
+  const detailsId = `${cardId}-details`;
 
-  const handleFlip = () => setIsFlipped(!isFlipped);
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleFlip();
+  const handleCopy = async () => {
+    try {
+      if (!navigator.clipboard) {
+        throw new Error("Clipboard API unavailable");
+      }
+      await navigator.clipboard.writeText(bullets.join("\n"));
+      setCopyStatus("success");
+    } catch {
+      setCopyStatus("error");
+    } finally {
+      setTimeout(() => setCopyStatus(null), 1200);
     }
   };
 
-  const handleCopy = (e) => {
-    e.stopPropagation(); // prevent flip
-    navigator.clipboard.writeText(bullets.join("\n"));
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 800); // quick fade-out
-  };
-
   return (
-    <div className="w-full h-[40vh] perspective">
+    <article className="w-full min-h-[23rem] perspective">
       <div
-        className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
+        className={`relative min-h-[23rem] w-full transition-transform duration-500 transform-style-preserve-3d ${
           isFlipped ? "rotate-y-180" : ""
         }`}
-        onClick={handleFlip}
-        onKeyDown={handleKeyDown}
-        role="button"
-        tabIndex={0}
-        aria-pressed={isFlipped}
-        aria-label={`${isFlipped ? "Hide" : "Show"} details for ${title} at ${company}`}
       >
         {/* Front Side */}
-        <div className={`absolute w-full h-full backface-hidden ${color} bg-opacity-90 rounded-lg shadow-md p-4 flex flex-col`}>
+        <div
+          aria-hidden={isFlipped}
+          className={`absolute inset-0 backface-hidden ${color} bg-opacity-90 rounded-lg shadow-md p-4 flex flex-col ${
+            isFlipped ? "pointer-events-none" : ""
+          }`}
+        >
           <div className="flex flex-col flex-shrink-0">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-xl font-bold text-gray-800 max-w-[60%]">{title}</h3>
+              <h3 id={titleId} className="text-xl font-bold text-gray-800 max-w-[60%]">{title}</h3>
               <p className="text-lg text-gray-600">{date}</p>
             </div>
             <div className="flex justify-between items-center mb-2">
@@ -44,60 +46,67 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
               <p className="text-lg text-gray-600">{location}</p>
             </div>
           </div>
-          <div className="flex-grow relative mt-2">
-            <div
-              className="absolute inset-0 bg-no-repeat bg-center bg-contain"
-              style={{ backgroundImage: `url(${logo})` }}
-            ></div>
+          <div className="flex flex-1 items-center justify-center py-4">
+            <img
+              src={logo}
+              alt=""
+              aria-hidden="true"
+              className="max-h-36 max-w-[70%] object-contain"
+            />
           </div>
-          <p className="text-sm text-gray-500 mt-2">Click to see details</p>
+          <button
+            type="button"
+            onClick={() => setIsFlipped(true)}
+            tabIndex={isFlipped ? -1 : 0}
+            aria-label={`Show details for ${title} at ${company}`}
+            aria-expanded={isFlipped}
+            aria-controls={detailsId}
+            className="mt-auto inline-flex w-full items-center justify-center rounded bg-white/85 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 sm:w-fit sm:justify-start sm:py-2"
+          >
+            <FaInfoCircle className="mr-2" />
+            Details
+          </button>
         </div>
 
         {/* Back Side */}
-        <div className={`absolute w-full h-full backface-hidden ${color} bg-opacity-85 rounded-lg shadow-md p-4 flex flex-col rotate-y-180 relative`}>
+        <div
+          id={detailsId}
+          role="region"
+          aria-hidden={!isFlipped}
+          aria-labelledby={`${detailsId}-heading`}
+          className={`absolute inset-0 backface-hidden ${color} bg-opacity-85 rounded-lg shadow-md p-4 flex flex-col rotate-y-180 ${
+            isFlipped ? "" : "pointer-events-none"
+          }`}
+        >
           
           {/* Copy Button Top-Right */}
           <div className="absolute top-4 right-4 z-10 flex flex-col items-center group">
             <button
               type="button"
               onClick={handleCopy}
-              aria-label="Copy experience bullets"
+              tabIndex={isFlipped ? 0 : -1}
+              aria-label={`Copy ${title} details`}
               className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-110 transform transition-all duration-200 flex items-center justify-center"
             >
-              {/* Clipboard Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`h-5 w-5 transition-opacity duration-200 ${copySuccess ? "opacity-0" : "opacity-100"}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V7a2 2 0 012-2h3.586a1 1 0 01.707.293l1.414 1.414a1 1 0 00.707.293H17a2 2 0 012 2v11a2 2 0 01-2 2z" />
-              </svg>
-
-              {/* Checkmark Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`h-5 w-5 absolute inset-0 text-green-400 transition-opacity duration-200 ${copySuccess ? "opacity-100" : "opacity-0"}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <FaClipboard
+                className={`h-5 w-5 transition-opacity duration-200 ${copyStatus === "success" ? "opacity-0" : "opacity-100"}`}
+              />
+              <FaCheck
+                className={`absolute h-5 w-5 text-green-500 transition-opacity duration-200 ${copyStatus === "success" ? "opacity-100" : "opacity-0"}`}
+              />
             </button>
 
             {/* Tooltip */}
             <span
               className={`mt-1 text-xs text-gray-700 bg-white/90 px-2 py-1 rounded shadow-sm transform transition-all duration-200
-                ${copySuccess ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"} 
+                ${copyStatus ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"} 
                 group-hover:opacity-100 group-hover:translate-y-0`}
             >
-              {copySuccess ? "Copied!" : "Copy Bullets"}
+              {copyStatus === "success" ? "Copied!" : copyStatus === "error" ? "Copy failed" : "Copy"}
             </span>
           </div>
 
-          <h3 className="text-xl font-semibold mb-4 mt-1">Experience Details</h3>
+          <h3 id={`${detailsId}-heading`} className="text-xl font-semibold mb-4 mt-1 pr-14">Experience Details</h3>
 
           {/* Scrollable bullets area */}
           <div className="flex-1 overflow-y-auto pr-2 pt-2">
@@ -111,10 +120,19 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
             </ul>
           </div>
 
-          <p className="text-sm text-gray-500 mt-2">Click to flip back</p>
+          <button
+            type="button"
+            onClick={() => setIsFlipped(false)}
+            tabIndex={isFlipped ? 0 : -1}
+            aria-label={`Hide details for ${title} at ${company}`}
+            className="mt-3 inline-flex w-full items-center justify-center rounded bg-white/85 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 sm:w-fit sm:justify-start sm:py-2"
+          >
+            <FaArrowLeft className="mr-2" />
+            Back
+          </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

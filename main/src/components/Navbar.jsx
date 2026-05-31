@@ -2,8 +2,8 @@ import { NavLink } from "react-router-dom";
 
 function Navbar() {
   return (
-    <div className="w-full bg-[#6493bb] px-6 py-2">
-      <div className='flex flex-row justify-start gap-4 items-center text-base font-["Cambria",_serif]'>
+    <div className="w-full bg-[#6493bb] px-4 py-2">
+      <div className='flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm sm:text-base font-["Cambria",_serif]'>
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -16,7 +16,7 @@ function Navbar() {
         </NavLink>
 
         <NavLink
-          to="/Projects"
+          to="/projects"
           className={({ isActive }) =>
             isActive
               ? "text-slate-100 font-bold underline"
@@ -27,7 +27,7 @@ function Navbar() {
         </NavLink>
 
         <NavLink
-          to="/Experience"
+          to="/experience"
           className={({ isActive }) =>
             isActive
               ? "text-slate-100 font-bold underline"
@@ -38,7 +38,7 @@ function Navbar() {
         </NavLink>
 
         <NavLink
-          to="/Resume"
+          to="/resume"
           className={({ isActive }) =>
             isActive
               ? "text-slate-100 font-bold underline"
@@ -49,7 +49,7 @@ function Navbar() {
         </NavLink>
 
         <NavLink
-          to="/Contact"
+          to="/contact"
           className={({ isActive }) =>
             isActive
               ? "text-slate-100 font-bold underline"

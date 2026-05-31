@@ -88,7 +88,7 @@ function Home() {
               <p className="text-lg font-bold leading-relaxed text-gray-700 mb-2">
                 Connect with me
               </p>
-              <div className="flex justify-center space-x-4">
+              <div className="flex flex-wrap justify-center gap-3">
                 <a
                   href="https://www.linkedin.com/in/wa24/"
                   target="_blank"
