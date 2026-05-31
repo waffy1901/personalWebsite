@@ -99,6 +99,7 @@ describe("App routes", () => {
       screen.getByRole("heading", { name: /contact form/i })
     ).toBeInTheDocument()
     expect(screen.getByLabelText(/email/i)).toBeRequired()
+    expect(screen.getByLabelText(/message/i)).toHaveValue("")
   })
 
   it("redirects legacy uppercase routes to lowercase pages", async () => {

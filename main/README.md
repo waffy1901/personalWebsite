@@ -38,5 +38,5 @@ VITE_SITE_URL
 ## Notes
 
 - Static public assets live in `public/`.
-- The resume route embeds the PDF when the browser supports inline PDF display, while preserving direct PDF open/download links.
+- The resume route shows a PNG resume preview while preserving direct PDF open/download links.
 - `_redirects` keeps React Router routes working on Netlify.
