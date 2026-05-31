@@ -5,3 +5,11 @@
 
 [build.environment]
   NODE_VERSION = "22"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'self'; frame-ancestors 'none'; script-src 'self' https://www.googletagmanager.com; connect-src 'self' https://formspree.io https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com; img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; form-action 'self' https://formspree.io; frame-src 'self'; upgrade-insecure-requests"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"

@@ -1,4 +1,8 @@
 import React from "react"
+import { FaDownload, FaExternalLinkAlt } from "react-icons/fa"
+
+const resumePdf = "/waffyAhmedResume.pdf"
+const resumePreview = "/resume-preview.png"
 
 function Resume() {
   return (
@@ -6,38 +10,37 @@ function Resume() {
       <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-4xl flex-col gap-4">
         <div className="flex flex-wrap items-center justify-center gap-3">
           <a
-            href="/waffyAhmedResume.pdf"
+            href={resumePdf}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded bg-blue-600 px-4 py-2 font-bold text-white transition-colors hover:bg-blue-700"
+            className="inline-flex items-center rounded bg-blue-600 px-4 py-2 font-bold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
           >
+            <FaExternalLinkAlt className="mr-2" aria-hidden="true" />
             Open PDF
           </a>
           <a
-            href="/waffyAhmedResume.pdf"
+            href={resumePdf}
             download
-            className="rounded bg-slate-800 px-4 py-2 font-bold text-white transition-colors hover:bg-slate-900"
+            className="inline-flex items-center rounded bg-slate-800 px-4 py-2 font-bold text-white transition-colors hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
           >
+            <FaDownload className="mr-2" aria-hidden="true" />
             Download Resume
           </a>
         </div>
 
-        <object
-          data="/waffyAhmedResume.pdf"
-          type="application/pdf"
-          aria-label="Waffy Ahmed resume PDF"
-          className="min-h-[75vh] flex-1 rounded border border-blue-200 bg-white shadow-lg"
+        <a
+          href={resumePdf}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Open Waffy Ahmed resume PDF"
+          className="block flex-1 rounded border border-blue-200 bg-white p-2 shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
         >
-          <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 bg-white p-6 text-center text-gray-700">
-            <p>Your browser cannot display this PDF inline.</p>
-            <a
-              href="/waffyAhmedResume.pdf"
-              className="font-bold text-blue-700 underline"
-            >
-              Open the resume PDF
-            </a>
-          </div>
-        </object>
+          <img
+            src={resumePreview}
+            alt="Preview of Waffy Ahmed's resume"
+            className="mx-auto h-auto w-full max-w-[900px] rounded-sm"
+          />
+        </a>
       </div>
     </div>
   )

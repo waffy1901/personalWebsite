@@ -81,6 +81,12 @@ describe("App routes", () => {
       "href",
       "/waffyAhmedResume.pdf"
     )
+    expect(
+      screen.getByRole("img", { name: /preview of waffy ahmed's resume/i })
+    ).toHaveAttribute("src", "/resume-preview.png")
+    expect(
+      screen.queryByText(/your browser cannot display this pdf inline/i)
+    ).not.toBeInTheDocument()
   })
 
   it("renders the contact route", () => {
