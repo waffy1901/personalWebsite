@@ -1,15 +1,15 @@
-name: Dev CI
+name: Main PR CI
 
 "on":
   pull_request:
     branches:
-      - dev
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: dev-ci-${{ github.event.pull_request.number || github.ref }}
+  group: main-pr-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
