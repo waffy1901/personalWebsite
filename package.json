@@ -2,11 +2,11 @@
   "name": "personal-website-root",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix main run dev",
-    "start": "npm --prefix main run start",
-    "build": "npm --prefix main run build",
-    "lint": "npm --prefix main run lint",
-    "test": "npm --prefix main run test",
-    "preview": "npm --prefix main run preview"
+    "dev": "npm --prefix main run dev --",
+    "start": "npm --prefix main run start --",
+    "build": "npm --prefix main run build --",
+    "lint": "npm --prefix main run lint --",
+    "test": "npm --prefix main run test --",
+    "preview": "npm --prefix main run preview --"
   }
 }
