@@ -12,6 +12,7 @@ This site presents my software engineering experience, selected projects, resume
 
 - Career overview with current software engineering work at The Home Depot
 - Experience cards covering production operations, infrastructure, observability, and backend systems work
+- Case study pages for selected reliability, deployment recovery, and data reconciliation work
 - Project summaries for CDC data reconciliation, job search tooling, and campus discovery software
 - Mobile-friendly resume preview with direct PDF open/download actions
 - Contact form powered by Formspree

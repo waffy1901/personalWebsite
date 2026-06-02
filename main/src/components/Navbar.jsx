@@ -38,6 +38,17 @@ function Navbar() {
         </NavLink>
 
         <NavLink
+          to="/case-studies"
+          className={({ isActive }) =>
+            isActive
+              ? "text-slate-100 font-bold underline"
+              : "font-bold text-slate-900 hover:text-slate-100"
+          }
+        >
+          Case Studies
+        </NavLink>
+
+        <NavLink
           to="/resume"
           className={({ isActive }) =>
             isActive

@@ -26,7 +26,7 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
         <div
           aria-hidden={isFlipped}
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg bg-[#FFD700] bg-opacity-60 p-6 shadow-md backface-hidden ${
-            isFlipped ? "pointer-events-none opacity-0" : "opacity-100"
+            isFlipped ? "pointer-events-none" : ""
           }`}
           style={faceStyle}
         >
@@ -76,7 +76,7 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg bg-[#FFD700] bg-opacity-60 p-6 shadow-md backface-hidden rotate-y-180 ${
-            isFlipped ? "opacity-100" : "pointer-events-none opacity-0"
+            isFlipped ? "" : "pointer-events-none"
           }`}
           style={{
             ...faceStyle,

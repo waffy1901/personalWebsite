@@ -74,6 +74,34 @@ describe("App routes", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders the case studies route", () => {
+    renderRoute("/case-studies")
+
+    expect(
+      screen.getByRole("heading", { name: /selected engineering case studies/i })
+    ).toBeInTheDocument()
+    const [firstCaseStudyLink] = screen.getAllByRole("link", {
+      name: /read case study/i,
+    })
+    expect(firstCaseStudyLink).toHaveAttribute(
+      "href",
+      "/case-studies/kubernetes-autoscaling"
+    )
+  })
+
+  it("renders a case study detail route", () => {
+    renderRoute("/case-studies/kubernetes-autoscaling")
+
+    expect(
+      screen.getByRole("heading", {
+        name: /kubernetes autoscaling for transaction-critical services/i,
+      })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: /engineering path/i })
+    ).toBeInTheDocument()
+  })
+
   it("renders the resume route", () => {
     renderRoute("/resume")
 
