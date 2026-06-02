@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { portfolioUrls } from "../data/profile";
 
 function DeployDates({ first }) {
   const [copiedProvider, setCopiedProvider] = useState(null);
@@ -23,10 +24,9 @@ function DeployDates({ first }) {
       })
     : "Unknown";
 
-  const siteUrl = "https://waffy.netlify.app/ai-summary.txt";
   const year = new Date().getFullYear();
 
-  const prompt = `Summarize ${siteUrl}`;
+  const prompt = `Summarize ${portfolioUrls.aiSummary}`;
 
   /**
    * AI Provider Configuration
