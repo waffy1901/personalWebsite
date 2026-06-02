@@ -1,8 +1,6 @@
 import React from "react"
 import { FaDownload, FaExternalLinkAlt } from "react-icons/fa"
-
-const resumePdf = "/waffyAhmedResume.pdf"
-const resumePreview = "/resume-preview.png"
+import { resume } from "../data/profile"
 
 function Resume() {
   return (
@@ -10,7 +8,7 @@ function Resume() {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <div className="flex flex-wrap items-center justify-center gap-3">
           <a
-            href={resumePdf}
+            href={resume.pdf}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center rounded bg-blue-600 px-4 py-2 font-bold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
@@ -19,7 +17,7 @@ function Resume() {
             Open PDF
           </a>
           <a
-            href={resumePdf}
+            href={resume.pdf}
             download
             className="inline-flex items-center rounded bg-slate-800 px-4 py-2 font-bold text-white transition-colors hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
           >
@@ -29,14 +27,14 @@ function Resume() {
         </div>
 
         <a
-          href={resumePdf}
+          href={resume.pdf}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open Waffy Ahmed resume PDF"
           className="mx-auto block w-full max-w-[900px] rounded border border-blue-200 bg-white p-1.5 shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2 sm:p-2"
         >
           <img
-            src={resumePreview}
+            src={resume.preview}
             alt="Preview of Waffy Ahmed's resume"
             className="h-auto w-full rounded-sm"
           />
