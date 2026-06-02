@@ -242,6 +242,17 @@ React Router and publishes the following primary routes:
 
 * / - Home page with profile summary, Georgia Tech branding, social/contact
   links, resume download, deploy metadata, and AI-summary actions.
+* /case-studies - selected engineering case studies for reliability,
+  deployment recovery, and data reconciliation work.
+* /case-studies/kubernetes-autoscaling - deeper writeup on deploying and
+  validating Kubernetes Horizontal Pod Autoscaling for a transaction-critical
+  production service.
+* /case-studies/legacy-deployment-recovery - deeper writeup on reconstructing
+  deployment workflows for legacy Java/Tomcat services and enabling
+  zero-downtime Cassandra credential rotation.
+* /case-studies/cdc-data-reconciliation - deeper writeup on the CDC data
+  reconciliation platform, stakeholder feedback, and public health data
+  comparison workflow.
 * /projects - project cards for CDC Data Reconciliation, Job Search Aid, and
   Campus Discovery Service, each with tech stack, detail view, logo, and GitHub
   source link.

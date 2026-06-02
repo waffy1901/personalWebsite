@@ -2,7 +2,7 @@
 
 This directory contains the Vite React application for [waffy.netlify.app](https://waffy.netlify.app/).
 
-The app powers Waffy Ahmed's professional portfolio, including experience, projects, resume, contact form, deploy metadata, and an AI-readable summary file.
+The app powers Waffy Ahmed's professional portfolio, including experience, case studies, projects, resume, contact form, deploy metadata, and an AI-readable summary file.
 
 ## Stack
 
