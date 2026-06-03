@@ -1,5 +1,5 @@
 import React from "react"
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -102,6 +102,24 @@ describe("App routes", () => {
     ).toBeInTheDocument()
   })
 
+  it("updates route-level SEO metadata", async () => {
+    renderRoute("/case-studies/kubernetes-autoscaling")
+
+    await waitFor(() =>
+      expect(document.title).toBe(
+        "Kubernetes Autoscaling for Transaction-Critical Services | Waffy Ahmed"
+      )
+    )
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://waffy.netlify.app/case-studies/kubernetes-autoscaling"
+    )
+    expect(document.querySelector('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      "Kubernetes Autoscaling for Transaction-Critical Services | Waffy Ahmed"
+    )
+  })
+
   it("renders the resume route", () => {
     renderRoute("/resume")
 
@@ -138,6 +156,13 @@ describe("App routes", () => {
         name: /practical builds for real workflows/i,
       })
     ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(document.title).toBe("Projects | Waffy Ahmed")
+    )
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://waffy.netlify.app/projects"
+    )
   })
 
   it("renders a not found route", () => {

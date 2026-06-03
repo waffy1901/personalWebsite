@@ -7,9 +7,25 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
   const titleId = `${cardId}-title`;
   const detailsId = `${cardId}-details`;
   const cardTransform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
+  const flipVisibilityDelay = "250ms";
   const faceStyle = {
     WebkitBackfaceVisibility: "hidden",
     backfaceVisibility: "hidden",
+    transitionProperty: "visibility",
+    transitionDuration: "0s",
+    transitionDelay: flipVisibilityDelay,
+  };
+  const frontFaceStyle = {
+    ...faceStyle,
+    WebkitTransform: "rotateY(0deg)",
+    transform: "rotateY(0deg)",
+    visibility: isFlipped ? "hidden" : "visible",
+  };
+  const backFaceStyle = {
+    ...faceStyle,
+    WebkitTransform: "rotateY(180deg)",
+    transform: "rotateY(180deg)",
+    visibility: isFlipped ? "visible" : "hidden",
   };
 
   return (
@@ -28,7 +44,7 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg bg-[#FFD700] bg-opacity-60 p-6 shadow-md backface-hidden ${
             isFlipped ? "pointer-events-none" : ""
           }`}
-          style={faceStyle}
+          style={frontFaceStyle}
         >
           <a
             href={github}
@@ -78,11 +94,7 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg bg-[#FFD700] bg-opacity-60 p-6 shadow-md backface-hidden rotate-y-180 ${
             isFlipped ? "" : "pointer-events-none"
           }`}
-          style={{
-            ...faceStyle,
-            WebkitTransform: "rotateY(180deg)",
-            transform: "rotateY(180deg)",
-          }}
+          style={backFaceStyle}
         >
           <h3 id={`${detailsId}-heading`} className="text-xl font-semibold mb-4">Project Details</h3>
           <div className="flex-grow max-h-full overflow-y-auto pr-2">
