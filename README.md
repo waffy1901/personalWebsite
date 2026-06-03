@@ -16,7 +16,8 @@ This site presents my software engineering experience, selected projects, resume
 - Project summaries for CDC data reconciliation, job search tooling, and campus discovery software
 - Mobile-friendly resume preview with direct PDF open/download actions
 - Contact form powered by Formspree
-- AI-readable portfolio summary at `/ai-summary.txt`
+- SEO metadata with sitemap, canonical route metadata, and JSON-LD profile data
+- AI-readable portfolio summary at `/ai-summary.txt` and LLM entry point at `/llms.txt`
 - Netlify deployment with SPA redirects and automated deploy metadata
 
 ## Tech Stack

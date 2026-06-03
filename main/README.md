@@ -2,7 +2,7 @@
 
 This directory contains the Vite React application for [waffy.netlify.app](https://waffy.netlify.app/).
 
-The app powers Waffy Ahmed's professional portfolio, including experience, case studies, projects, resume, contact form, deploy metadata, and an AI-readable summary file.
+The app powers Waffy Ahmed's professional portfolio, including experience, case studies, projects, resume, contact form, deploy metadata, route-level SEO metadata, and AI-readable discovery files.
 
 ## Stack
 
@@ -38,5 +38,6 @@ VITE_SITE_URL
 ## Notes
 
 - Static public assets live in `public/`.
+- `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt`, and `public/ai-summary.txt` support search and AI-agent discovery.
 - The resume route shows a PNG resume preview while preserving direct PDF open/download links.
 - `_redirects` keeps React Router routes working on Netlify.

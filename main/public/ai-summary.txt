@@ -263,6 +263,10 @@ React Router and publishes the following primary routes:
 * /contact - Formspree-backed contact form, fallback email path, and LinkedIn,
   GitHub, and email links.
 * /ai-summary.txt - this AI-readable portfolio summary.
+* /llms.txt - a short LLM-oriented entry point linking to the canonical
+  summary, sitemap, resume, case studies, and contact routes.
+* /sitemap.xml - XML sitemap listing canonical portfolio routes and AI-readable
+  text resources.
 
 Legacy uppercase routes such as /Resume, /Projects, /Experience, and /Contact
 redirect to lowercase routes in the React app. Netlify redirects also preserve
@@ -291,6 +295,9 @@ Frontend Implementation Context:
 * AI-summary UX: the home page links AI readers to the public ai-summary.txt
   via ChatGPT and Claude actions. ChatGPT opens a prefilled summarize prompt;
   Claude copies the prompt and opens Claude.
+* SEO and AI discovery: the site publishes sitemap.xml, robots.txt with a
+  sitemap pointer, llms.txt, route-level canonical metadata, Open Graph/Twitter
+  metadata updates, and JSON-LD profile data in the document head.
 * Analytics: optional Google Analytics page-view tracking is enabled when
   VITE_GA_MEASUREMENT_ID is provided. The app sends page_view events on route
   changes without automatic duplicate page views.
