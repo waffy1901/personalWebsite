@@ -37,11 +37,11 @@ VITE_SITE_URL
 
 ## Analytics
 
-Set `VITE_GA_MEASUREMENT_ID` to enable Google Analytics. The app sends manual SPA `page_view` events and tracks resume, social, project, case-study, and contact-form engagement events through `src/utils/analytics.js`.
+Set `VITE_GA_MEASUREMENT_ID` to enable Google Analytics. The app sends manual SPA `page_view` events and tracks resume, social, project, case-study, and contact-form engagement events through `src/utils/analytics.js`. Recommended key-event setup is documented in `../docs/analytics.md`.
 
 ## Notes
 
 - Static public assets live in `public/`.
-- `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt`, and `public/ai-summary.txt` support search and AI-agent discovery.
+- `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt`, `public/ai-summary.txt`, and `public/portfolio.json` support search and AI-agent discovery.
 - The resume route shows a PNG resume preview while preserving direct PDF open/download links.
 - `_redirects` keeps React Router routes working on Netlify.
