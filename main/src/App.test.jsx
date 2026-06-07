@@ -2,6 +2,7 @@ import React from "react"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
+import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "./App.jsx"
 
@@ -118,6 +119,21 @@ describe("App routes", () => {
       "content",
       "Kubernetes Autoscaling for Transaction-Critical Services | Waffy Ahmed"
     )
+  })
+
+  it("publishes ProfilePage structured data with a main entity", () => {
+    const indexHtml = readFileSync("index.html", "utf8")
+    const indexDocument = new DOMParser().parseFromString(indexHtml, "text/html")
+    const jsonLd = JSON.parse(
+      indexDocument.querySelector("#portfolio-jsonld").textContent
+    )
+    const profilePage = jsonLd["@graph"].find(
+      (item) => item["@type"] === "ProfilePage"
+    )
+
+    expect(profilePage.mainEntity).toEqual({
+      "@id": "https://waffy.netlify.app/#person",
+    })
   })
 
   it("renders the resume route", () => {
