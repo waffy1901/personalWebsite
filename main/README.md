@@ -35,6 +35,10 @@ VITE_SITE_URL
 
 `VITE_DEPLOY_DATE` and `VITE_SITE_URL` are injected by the build script without rewriting local `.env` files. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Provide analytics and Formspree values through a local `.env` file or Netlify environment variables.
 
+## Analytics
+
+Set `VITE_GA_MEASUREMENT_ID` to enable Google Analytics. The app sends manual SPA `page_view` events and tracks resume, social, project, case-study, and contact-form engagement events through `src/utils/analytics.js`.
+
 ## Notes
 
 - Static public assets live in `public/`.

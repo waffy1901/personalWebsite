@@ -2,6 +2,7 @@ import React from "react"
 import { Link } from "react-router-dom"
 import { FaArrowRight, FaChartLine } from "react-icons/fa"
 import { caseStudies, caseStudiesPage } from "../data/caseStudies"
+import { trackEvent } from "../utils/analytics"
 
 const logoFrameClassByTheme = {
   "home-depot": "border-orange-500 bg-[#F96302]",
@@ -91,6 +92,13 @@ function CaseStudies() {
 
               <Link
                 to={`/case-studies/${caseStudy.slug}`}
+                onClick={() =>
+                  trackEvent("case_study_card_click", {
+                    case_study_slug: caseStudy.slug,
+                    case_study_title: caseStudy.title,
+                    placement: "case_studies_grid",
+                  })
+                }
                 className="mt-5 inline-flex w-fit items-center rounded bg-blue-700 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
               >
                 Read case study

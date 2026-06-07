@@ -1,7 +1,8 @@
 import React, { useId, useState } from "react";
 import { FaArrowLeft, FaGithub, FaInfoCircle } from "react-icons/fa";
+import { trackEvent, trackLinkClick } from "../utils/analytics";
 
-function ProjectCard({ title, techStack, bullets, github, logo }) {
+function ProjectCard({ id, title, techStack, bullets, github, logo }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const cardId = useId();
   const titleId = `${cardId}-title`;
@@ -51,6 +52,15 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
             target="_blank"
             rel="noopener noreferrer"
             tabIndex={isFlipped ? -1 : 0}
+            onClick={() =>
+              trackLinkClick("project_source_click", {
+                href: github,
+                label: "Source Code",
+                placement: "project_card",
+                project_id: id,
+                project_title: title,
+              })
+            }
             className="absolute top-2 right-2 flex items-center text-gray-600 hover:text-gray-800 z-20"
           >
             <FaGithub className="mr-1" />
@@ -74,7 +84,14 @@ function ProjectCard({ title, techStack, bullets, github, logo }) {
           </div>
           <button
             type="button"
-            onClick={() => setIsFlipped(true)}
+            onClick={() => {
+              trackEvent("project_details_open", {
+                placement: "project_card",
+                project_id: id,
+                project_title: title,
+              })
+              setIsFlipped(true)
+            }}
             tabIndex={isFlipped ? -1 : 0}
             aria-label={`Show details for ${title}`}
             aria-expanded={isFlipped}

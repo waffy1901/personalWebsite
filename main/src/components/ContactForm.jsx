@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useForm, ValidationError } from '@formspree/react'
+import { trackEvent, trackLinkClick } from '../utils/analytics'
 
 function ContactForm() {
   const formKey = import.meta.env.VITE_FORMSPREE_KEY
@@ -10,7 +11,17 @@ function ContactForm() {
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Contact Form</h2>
         <p className="text-gray-700">
           The contact form is unavailable right now. Please email me at{" "}
-          <a className="font-bold text-blue-700 underline" href="mailto:waffyahmed@gmail.com">
+          <a
+            className="font-bold text-blue-700 underline"
+            href="mailto:waffyahmed@gmail.com"
+            onClick={() =>
+              trackLinkClick("contact_email_click", {
+                href: "mailto:waffyahmed@gmail.com",
+                label: "waffyahmed@gmail.com",
+                placement: "contact_form_fallback",
+              })
+            }
+          >
             waffyahmed@gmail.com
           </a>.
         </p>
@@ -23,13 +34,28 @@ function ContactForm() {
 
 function ContactFormFields({ formKey }) {
   const [state, handleSubmit] = useForm(formKey)
+  const handleTrackedSubmit = (event) => {
+    trackEvent("contact_form_submit", {
+      placement: "contact_form",
+    })
+    return handleSubmit(event)
+  }
+
+  useEffect(() => {
+    if (state.succeeded) {
+      trackEvent("contact_form_success", {
+        placement: "contact_form",
+      })
+    }
+  }, [state.succeeded])
+
   if (state.succeeded) {
     return <p className="text-xl text-green-600 font-bold text-center mb-4">Thank you for your message! I will reach out as soon as possible!</p>
   }
   return (
     <div className="w-full max-w-md md:max-w-2xl mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
       <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">Contact Form</h2>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleTrackedSubmit}>
         <div className="flex flex-col sm:flex-row mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
           <div className="w-full sm:w-1/2">
             <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
