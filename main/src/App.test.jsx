@@ -187,6 +187,14 @@ describe("App routes", () => {
       })
     )
 
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: /hide details for cdc data reconciliation/i,
+        })
+      ).toHaveFocus()
+    )
+
     expect(getAnalyticsEvents("project_source_click")).toEqual([
       [
         "event",
@@ -209,6 +217,16 @@ describe("App routes", () => {
         }),
       ],
     ])
+
+    await user.keyboard("{Escape}")
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: /show details for cdc data reconciliation/i,
+        })
+      ).toHaveFocus()
+    )
   })
 
   it("tracks resume and social link interactions", async () => {
@@ -293,6 +311,28 @@ describe("App routes", () => {
     expect(profilePage.mainEntity).toEqual({
       "@id": "https://waffy.netlify.app/#person",
     })
+  })
+
+  it("publishes structured portfolio JSON for AI-readable profile data", () => {
+    const portfolioJson = JSON.parse(
+      readFileSync("public/portfolio.json", "utf8")
+    )
+
+    expect(portfolioJson.person.name).toBe("Waffy Ahmed")
+    expect(portfolioJson.links.resume).toBe(
+      "https://waffy.netlify.app/waffyAhmedResume.pdf"
+    )
+    expect(portfolioJson.analyticsEvents.keyEventCandidates).toEqual([
+      "resume_download",
+      "contact_form_success",
+      "project_source_click",
+      "case_study_link_click",
+    ])
+    expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.slug)).toEqual([
+      "kubernetes-autoscaling",
+      "legacy-deployment-recovery",
+      "cdc-data-reconciliation",
+    ])
   })
 
   it("renders the resume route", () => {

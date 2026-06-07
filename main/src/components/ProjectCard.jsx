@@ -1,38 +1,110 @@
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { FaArrowLeft, FaGithub, FaInfoCircle } from "react-icons/fa";
 import { trackEvent, trackLinkClick } from "../utils/analytics";
 
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updatePreference();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", updatePreference);
+      return () => mediaQuery.removeEventListener("change", updatePreference);
+    }
+
+    mediaQuery.addListener?.(updatePreference);
+    return () => mediaQuery.removeListener?.(updatePreference);
+  }, []);
+
+  return prefersReducedMotion;
+}
+
 function ProjectCard({ id, title, techStack, bullets, github, logo }) {
   const [isFlipped, setIsFlipped] = useState(false);
+  const detailsButtonRef = useRef(null);
+  const backButtonRef = useRef(null);
+  const shouldRestoreDetailsFocusRef = useRef(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const cardId = useId();
-  const titleId = `${cardId}-title`;
   const detailsId = `${cardId}-details`;
-  const cardTransform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
-  const flipVisibilityDelay = "250ms";
+  const cardTransform = prefersReducedMotion
+    ? "none"
+    : isFlipped
+    ? "rotateY(180deg)"
+    : "rotateY(0deg)";
+  const frontTransform = prefersReducedMotion ? "none" : "rotateY(0deg)";
+  const backTransform = prefersReducedMotion ? "none" : "rotateY(180deg)";
+  const hiddenFaceDelay = prefersReducedMotion ? "0ms" : "250ms";
   const faceStyle = {
     WebkitBackfaceVisibility: "hidden",
     backfaceVisibility: "hidden",
     transitionProperty: "visibility",
     transitionDuration: "0s",
-    transitionDelay: flipVisibilityDelay,
   };
   const frontFaceStyle = {
     ...faceStyle,
-    WebkitTransform: "rotateY(0deg)",
-    transform: "rotateY(0deg)",
+    WebkitTransform: frontTransform,
+    transform: frontTransform,
+    transitionDelay: isFlipped ? hiddenFaceDelay : "0ms",
     visibility: isFlipped ? "hidden" : "visible",
   };
   const backFaceStyle = {
     ...faceStyle,
-    WebkitTransform: "rotateY(180deg)",
-    transform: "rotateY(180deg)",
+    WebkitTransform: backTransform,
+    transform: backTransform,
+    transitionDelay: isFlipped ? "0ms" : hiddenFaceDelay,
     visibility: isFlipped ? "visible" : "hidden",
   };
 
+  useEffect(() => {
+    if (isFlipped) {
+      backButtonRef.current?.focus();
+      return;
+    }
+
+    if (shouldRestoreDetailsFocusRef.current) {
+      shouldRestoreDetailsFocusRef.current = false;
+      detailsButtonRef.current?.focus();
+    }
+  }, [isFlipped]);
+
+  const showDetails = () => {
+    trackEvent("project_details_open", {
+      placement: "project_card",
+      project_id: id,
+      project_title: title,
+    });
+    setIsFlipped(true);
+  };
+
+  const hideDetails = () => {
+    shouldRestoreDetailsFocusRef.current = true;
+    setIsFlipped(false);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape" && isFlipped) {
+      event.stopPropagation();
+      hideDetails();
+    }
+  };
+
   return (
-    <article className="w-full min-h-[27rem] perspective">
+    <article
+      aria-label={`${title} project`}
+      className="w-full min-h-[27rem] perspective"
+      onKeyDown={handleKeyDown}
+    >
       <div
-        className="relative min-h-[27rem] w-full transform-style-preserve-3d transition-transform duration-500 will-change-transform"
+        className="relative min-h-[27rem] w-full transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none"
         style={{
           WebkitTransform: cardTransform,
           WebkitTransformStyle: "preserve-3d",
@@ -69,7 +141,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
           <div className="relative z-10 flex flex-col h-full">
             <div className="flex-shrink-0">
               <div className="flex items-center mb-4">
-                <h2 id={titleId} className="text-2xl font-bold mr-2 mt-4">{title}</h2>
+                <h2 className="text-2xl font-bold mr-2 mt-4">{title}</h2>
               </div>
               <p className="text-gray-600 font-bold mb-4">{techStack}</p>
             </div>
@@ -83,15 +155,9 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
             </div>
           </div>
           <button
+            ref={detailsButtonRef}
             type="button"
-            onClick={() => {
-              trackEvent("project_details_open", {
-                placement: "project_card",
-                project_id: id,
-                project_title: title,
-              })
-              setIsFlipped(true)
-            }}
+            onClick={showDetails}
             tabIndex={isFlipped ? -1 : 0}
             aria-label={`Show details for ${title}`}
             aria-expanded={isFlipped}
@@ -113,7 +179,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
           }`}
           style={backFaceStyle}
         >
-          <h3 id={`${detailsId}-heading`} className="text-xl font-semibold mb-4">Project Details</h3>
+          <h3 id={`${detailsId}-heading`} className="text-xl font-semibold mb-4">{title} details</h3>
           <div className="flex-grow max-h-full overflow-y-auto pr-2">
             <ul className="list-none pl-0 space-y-2">
               {bullets.map((bullet, index) => (
@@ -125,8 +191,9 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
             </ul>
           </div>
           <button
+            ref={backButtonRef}
             type="button"
-            onClick={() => setIsFlipped(false)}
+            onClick={hideDetails}
             tabIndex={isFlipped ? 0 : -1}
             aria-label={`Hide details for ${title}`}
             className="mt-4 inline-flex w-full items-center justify-center rounded bg-white/85 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 sm:w-fit sm:justify-start sm:py-2"

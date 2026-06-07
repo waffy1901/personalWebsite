@@ -17,7 +17,7 @@ This site presents my software engineering experience, selected projects, resume
 - Mobile-friendly resume preview with direct PDF open/download actions
 - Contact form powered by Formspree
 - SEO metadata with sitemap, canonical route metadata, and JSON-LD profile data
-- AI-readable portfolio summary at `/ai-summary.txt` and LLM entry point at `/llms.txt`
+- AI-readable portfolio summary at `/ai-summary.txt`, LLM entry point at `/llms.txt`, and structured data at `/portfolio.json`
 - Netlify deployment with SPA redirects and automated deploy metadata
 
 ## Tech Stack
@@ -90,6 +90,8 @@ When `VITE_GA_MEASUREMENT_ID` is set, the app loads Google Analytics with manual
 - `contact_form_submit`
 - `contact_form_success`
 - `contact_email_click`
+
+Recommended GA4 key events are documented in [docs/analytics.md](./docs/analytics.md). The highest-signal candidates are `resume_download`, `contact_form_success`, `project_source_click`, and `case_study_link_click`.
 
 ## Deployment
 
