@@ -1,5 +1,6 @@
 import { FaEnvelope, FaGithub, FaLinkedin } from "react-icons/fa";
 import { socialLinks } from "../data/profile";
+import { trackLinkClick } from "../utils/analytics";
 
 const socialIconById = {
   linkedin: FaLinkedin,
@@ -13,7 +14,10 @@ const socialClassById = {
   email: "bg-gray-800 hover:bg-gray-900",
 };
 
-function SocialLinks({ className = "flex flex-wrap justify-center gap-3" }) {
+function SocialLinks({
+  className = "flex flex-wrap justify-center gap-3",
+  placement = "social_links",
+}) {
   return (
     <div className={className}>
       {socialLinks.map((link) => {
@@ -25,6 +29,14 @@ function SocialLinks({ className = "flex flex-wrap justify-center gap-3" }) {
             {...(link.external
               ? { target: "_blank", rel: "noopener noreferrer" }
               : {})}
+            onClick={() =>
+              trackLinkClick("social_link_click", {
+                href: link.href,
+                label: link.label,
+                placement,
+                social_platform: link.id,
+              })
+            }
             className={`${socialClassById[link.id]} text-white font-bold py-2 px-4 rounded inline-flex items-center`}
           >
             <Icon className="mr-2" />

@@ -17,7 +17,7 @@ function Contact() {
                   <ContactForm />
               </div>
               <p className='text-lg font-bold leading-relaxed text-gray-700 mb-4 -mt-4'>Alternatively, connect with me here</p>
-              <SocialLinks />
+              <SocialLinks placement="contact" />
           </div>
         </div>
     )

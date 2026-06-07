@@ -2,6 +2,7 @@ import React from "react"
 import { Link, useParams } from "react-router-dom"
 import { FaArrowLeft, FaArrowRight, FaExternalLinkAlt } from "react-icons/fa"
 import { getCaseStudyBySlug } from "../data/caseStudies"
+import { trackLinkClick } from "../utils/analytics"
 import NotFound from "./NotFound"
 
 const logoFrameClassByTheme = {
@@ -145,6 +146,15 @@ function CaseStudy() {
                   <Link
                     key={link.label}
                     to={link.to}
+                    onClick={() =>
+                      trackLinkClick("case_study_link_click", {
+                        href: link.to,
+                        label: link.label,
+                        placement: "case_study_related_links",
+                        case_study_slug: caseStudy.slug,
+                        link_type: "internal",
+                      })
+                    }
                     className="inline-flex items-center rounded bg-blue-700 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
                   >
                     {link.label}
@@ -156,6 +166,15 @@ function CaseStudy() {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() =>
+                      trackLinkClick("case_study_link_click", {
+                        href: link.href,
+                        label: link.label,
+                        placement: "case_study_related_links",
+                        case_study_slug: caseStudy.slug,
+                        link_type: "external",
+                      })
+                    }
                     className="inline-flex items-center rounded bg-slate-800 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
                   >
                     {link.label}

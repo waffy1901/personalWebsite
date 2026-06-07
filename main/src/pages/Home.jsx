@@ -3,6 +3,7 @@ import { FaDownload } from "react-icons/fa";
 import DeployDates from "../components/DeployDates";
 import SocialLinks from "../components/SocialLinks";
 import { deployInfo, profile, resume } from "../data/profile";
+import { trackEvent } from "../utils/analytics";
 
 function Home() {
   const introRef = useRef(null);
@@ -50,6 +51,11 @@ function Home() {
             <a
               href={resume.pdf}
               download
+              onClick={() =>
+                trackEvent("resume_download", {
+                  placement: "home_header",
+                })
+              }
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-green-600 transition-colors inline-flex items-center"
             >
               <FaDownload className="mr-2" />
@@ -83,7 +89,7 @@ function Home() {
               <p className="text-lg font-bold leading-relaxed text-gray-700 mb-2">
                 Connect with me
               </p>
-              <SocialLinks />
+              <SocialLinks placement="home" />
             </div>
             <DeployDates first={deployInfo.firstPublishedAt} />
           </section>

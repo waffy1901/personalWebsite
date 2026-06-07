@@ -1,6 +1,7 @@
 import React from "react"
 import { FaDownload, FaExternalLinkAlt } from "react-icons/fa"
 import { resume } from "../data/profile"
+import { trackEvent } from "../utils/analytics"
 
 function Resume() {
   return (
@@ -11,6 +12,11 @@ function Resume() {
             href={resume.pdf}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() =>
+              trackEvent("resume_open", {
+                placement: "resume_actions",
+              })
+            }
             className="inline-flex items-center rounded bg-blue-600 px-4 py-2 font-bold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
           >
             <FaExternalLinkAlt className="mr-2" aria-hidden="true" />
@@ -19,6 +25,11 @@ function Resume() {
           <a
             href={resume.pdf}
             download
+            onClick={() =>
+              trackEvent("resume_download", {
+                placement: "resume_actions",
+              })
+            }
             className="inline-flex items-center rounded bg-slate-800 px-4 py-2 font-bold text-white transition-colors hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2"
           >
             <FaDownload className="mr-2" aria-hidden="true" />
@@ -31,6 +42,11 @@ function Resume() {
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Open Waffy Ahmed resume PDF"
+          onClick={() =>
+            trackEvent("resume_open", {
+              placement: "resume_preview",
+            })
+          }
           className="mx-auto block w-full max-w-[900px] rounded border border-blue-200 bg-white p-1.5 shadow-lg transition-shadow hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2 sm:p-2"
         >
           <img

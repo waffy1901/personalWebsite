@@ -25,6 +25,22 @@ const renderRoute = (route) =>
     </MemoryRouter>
   )
 
+const getAnalyticsCalls = () =>
+  (window.dataLayer || []).map((call) => Array.from(call))
+
+const getAnalyticsEvents = (eventName) =>
+  getAnalyticsCalls().filter(
+    ([command, trackedEventName]) =>
+      command === "event" && trackedEventName === eventName
+  )
+
+const clickWithoutNavigation = async (user, element) => {
+  element.addEventListener("click", (event) => event.preventDefault(), {
+    once: true,
+  })
+  await user.click(element)
+}
+
 beforeEach(() => {
   vi.stubEnv("VITE_FORMSPREE_KEY", "test-form-key")
   vi.stubGlobal(
@@ -38,6 +54,10 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  document.getElementById("google-analytics-script")?.remove()
+  delete window.__portfolioGaInitialized
+  delete window.dataLayer
+  delete window.gtag
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
@@ -119,6 +139,145 @@ describe("App routes", () => {
       "content",
       "Kubernetes Autoscaling for Transaction-Critical Services | Waffy Ahmed"
     )
+  })
+
+  it("sends analytics page views when analytics is configured", async () => {
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderRoute("/projects")
+
+    await waitFor(() =>
+      expect(document.getElementById("google-analytics-script")).toHaveAttribute(
+        "src",
+        "https://www.googletagmanager.com/gtag/js?id=G-TEST123"
+      )
+    )
+    await waitFor(() =>
+      expect(getAnalyticsCalls()).toEqual(
+        expect.arrayContaining([
+          ["config", "G-TEST123", { send_page_view: false }],
+          [
+            "event",
+            "page_view",
+            expect.objectContaining({
+              page_path: "/projects",
+              send_to: "G-TEST123",
+            }),
+          ],
+        ])
+      )
+    )
+  })
+
+  it("tracks project source and details interactions", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderRoute("/projects")
+
+    await waitFor(() =>
+      expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
+    )
+
+    const [sourceCodeLink] = screen.getAllByRole("link", {
+      name: /source code/i,
+    })
+    await clickWithoutNavigation(user, sourceCodeLink)
+    await user.click(
+      screen.getByRole("button", {
+        name: /show details for cdc data reconciliation/i,
+      })
+    )
+
+    expect(getAnalyticsEvents("project_source_click")).toEqual([
+      [
+        "event",
+        "project_source_click",
+        expect.objectContaining({
+          link_domain: "github.com",
+          project_id: "cdc-data-reconciliation",
+          send_to: "G-TEST123",
+        }),
+      ],
+    ])
+    expect(getAnalyticsEvents("project_details_open")).toEqual([
+      [
+        "event",
+        "project_details_open",
+        expect.objectContaining({
+          project_id: "cdc-data-reconciliation",
+          project_title: "CDC Data Reconciliation",
+          send_to: "G-TEST123",
+        }),
+      ],
+    ])
+  })
+
+  it("tracks resume and social link interactions", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderRoute("/")
+
+    await waitFor(() =>
+      expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
+    )
+
+    await clickWithoutNavigation(
+      user,
+      screen.getByRole("link", { name: /download resume/i })
+    )
+    await clickWithoutNavigation(
+      user,
+      screen.getByRole("link", { name: /linkedin/i })
+    )
+
+    expect(getAnalyticsEvents("resume_download")).toEqual([
+      [
+        "event",
+        "resume_download",
+        expect.objectContaining({
+          placement: "home_header",
+          send_to: "G-TEST123",
+        }),
+      ],
+    ])
+    expect(getAnalyticsEvents("social_link_click")).toEqual([
+      [
+        "event",
+        "social_link_click",
+        expect.objectContaining({
+          link_domain: "www.linkedin.com",
+          placement: "home",
+          social_platform: "linkedin",
+          send_to: "G-TEST123",
+        }),
+      ],
+    ])
+  })
+
+  it("tracks contact form submissions", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderRoute("/contact")
+
+    await waitFor(() =>
+      expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
+    )
+
+    await user.type(screen.getByLabelText(/first name/i), "Waffy")
+    await user.type(screen.getByLabelText(/last name/i), "Ahmed")
+    await user.type(screen.getByLabelText(/email/i), "waffy@example.com")
+    await user.type(screen.getByLabelText(/message/i), "Hello from the test.")
+    await user.click(screen.getByRole("button", { name: /send message/i }))
+
+    expect(getAnalyticsEvents("contact_form_submit")).toEqual([
+      [
+        "event",
+        "contact_form_submit",
+        expect.objectContaining({
+          placement: "contact_form",
+          send_to: "G-TEST123",
+        }),
+      ],
+    ])
   })
 
   it("publishes ProfilePage structured data with a main entity", () => {
