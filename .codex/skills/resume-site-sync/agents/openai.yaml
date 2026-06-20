@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resume Site Sync"
+  short_description: "Sync resume assets and links"
+  default_prompt: "Use $resume-site-sync to update my resume assets and portfolio references."

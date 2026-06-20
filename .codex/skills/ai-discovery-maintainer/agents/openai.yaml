@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Discovery Maintainer"
+  short_description: "Maintain AI-readable portfolio data"
+  default_prompt: "Use $ai-discovery-maintainer to refresh my portfolio AI-discovery files."

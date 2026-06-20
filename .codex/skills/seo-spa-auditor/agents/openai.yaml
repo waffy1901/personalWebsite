@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEO SPA Auditor"
+  short_description: "Audit portfolio SPA SEO routes"
+  default_prompt: "Use $seo-spa-auditor to audit my portfolio SEO and route metadata."

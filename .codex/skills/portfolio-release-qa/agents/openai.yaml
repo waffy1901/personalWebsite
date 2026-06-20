@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Release QA"
+  short_description: "Run portfolio pre-release checks"
+  default_prompt: "Use $portfolio-release-qa to verify my portfolio before shipping."
