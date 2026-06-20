@@ -1,0 +1,40 @@
+name: Auto assign PRs
+
+"on":
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - unassigned
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  assign:
+    name: Assign PR to Waffy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Assign pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const assignee = "waffy1901";
+            const existingAssignees = context.payload.pull_request.assignees.map(
+              ({ login }) => login
+            );
+
+            if (existingAssignees.includes(assignee)) {
+              core.info(`PR is already assigned to @${assignee}.`);
+              return;
+            }
+
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              assignees: [assignee],
+            });
