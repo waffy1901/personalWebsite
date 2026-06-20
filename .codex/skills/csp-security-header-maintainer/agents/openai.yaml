@@ -1,0 +1,4 @@
+interface:
+  display_name: "CSP Security Header Maintainer"
+  short_description: "Maintain CSP and security headers"
+  default_prompt: "Use $csp-security-header-maintainer to update portfolio security headers safely."

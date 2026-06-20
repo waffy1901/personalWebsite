@@ -1,0 +1,4 @@
+interface:
+  display_name: "GA4 Portfolio Analytics"
+  short_description: "Audit portfolio GA4 tracking"
+  default_prompt: "Use $ga4-portfolio-analytics to add or audit portfolio analytics events."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Content Sync"
+  short_description: "Keep portfolio content aligned"
+  default_prompt: "Use $portfolio-content-sync to update my portfolio content consistently."
