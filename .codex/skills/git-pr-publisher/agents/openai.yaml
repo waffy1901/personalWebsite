@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git PR Publisher"
+  short_description: "Publish a focused branch as a PR"
+  default_prompt: "Use $git-pr-publisher to stage, commit, push this branch, and open a PR against main."
