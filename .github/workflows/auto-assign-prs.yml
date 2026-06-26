@@ -10,7 +10,7 @@ name: Auto assign PRs
 
 permissions:
   issues: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   assign:

@@ -113,3 +113,5 @@ deploy-YYYYMMDDTHHMMSSZ-<short-sha>
 ```
 
 This gives each production deployment a durable GitHub release record tied to the commit that produced it.
+
+The release workflow uses the `NETLIFY_AUTH_TOKEN` repository secret to verify the matching Netlify production deploy before publishing a release. Token rotation and reminder setup are documented in [docs/netlify-token-rotation.md](./docs/netlify-token-rotation.md).

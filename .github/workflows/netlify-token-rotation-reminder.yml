@@ -1,0 +1,268 @@
+name: Netlify token rotation reminder
+
+"on":
+  schedule:
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+    inputs:
+      force_issue:
+        description: "Create or update the reminder issue even outside the warning window."
+        required: false
+        default: false
+        type: boolean
+      expiration_date:
+        description: "Optional YYYY-MM-DD override for manual testing."
+        required: false
+        type: string
+      warning_days:
+        description: "Comma-separated day thresholds before expiration."
+        required: false
+        default: "60,30,14,7,0"
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: netlify-token-rotation-reminder
+  cancel-in-progress: false
+
+jobs:
+  remind:
+    name: Check Netlify token expiration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create or update reminder issue
+        uses: actions/github-script@v7
+        env:
+          EXPIRATION_OVERRIDE: ${{ github.event.inputs.expiration_date || '' }}
+          FORCE_ISSUE: ${{ github.event.inputs.force_issue || 'false' }}
+          NETLIFY_AUTH_TOKEN_EXPIRES_AT: ${{ vars.NETLIFY_AUTH_TOKEN_EXPIRES_AT }}
+          WARNING_DAYS: ${{ github.event.inputs.warning_days || '60,30,14,7,0' }}
+        with:
+          script: |
+            const marker = "<!-- netlify-auth-token-rotation-reminder -->";
+            const secretName = "NETLIFY_AUTH_TOKEN";
+            const variableName = "NETLIFY_AUTH_TOKEN_EXPIRES_AT";
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            const forceIssue = ["1", "true", "yes"].includes(
+              (process.env.FORCE_ISSUE || "").toLowerCase()
+            );
+            const warningDays = parseWarningDays(process.env.WARNING_DAYS);
+            const expirationInput = (
+              process.env.EXPIRATION_OVERRIDE ||
+              process.env.NETLIFY_AUTH_TOKEN_EXPIRES_AT ||
+              ""
+            ).trim();
+
+            async function findReminderIssue() {
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner,
+                repo,
+                state: "all",
+                per_page: 100,
+              });
+
+              return issues
+                .filter((issue) => !issue.pull_request)
+                .filter((issue) => (issue.body || "").includes(marker))
+                .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0];
+            }
+
+            async function upsertReminderIssue({ title, body, state }) {
+              const existing = await findReminderIssue();
+
+              if (existing) {
+                await github.rest.issues.update({
+                  owner,
+                  repo,
+                  issue_number: existing.number,
+                  title,
+                  body,
+                  state,
+                  ...(state === "closed" ? { state_reason: "completed" } : {}),
+                });
+                core.info(`Updated reminder issue #${existing.number}.`);
+                return;
+              }
+
+              if (state === "closed") {
+                core.info("No reminder issue is open and the token is outside the warning window.");
+                return;
+              }
+
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+              });
+              core.info(`Created reminder issue #${created.data.number}.`);
+            }
+
+            function parseWarningDays(value) {
+              const parsed = (value || "60,30,14,7,0")
+                .split(",")
+                .map((part) => Number.parseInt(part.trim(), 10))
+                .filter((day) => Number.isInteger(day) && day >= 0);
+
+              return [...new Set(parsed)].sort((a, b) => b - a);
+            }
+
+            function parseDate(value) {
+              const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+              if (!match) {
+                return null;
+              }
+
+              const [, year, month, day] = match.map(Number);
+              const date = new Date(Date.UTC(year, month - 1, day));
+
+              if (
+                date.getUTCFullYear() !== year ||
+                date.getUTCMonth() !== month - 1 ||
+                date.getUTCDate() !== day
+              ) {
+                return null;
+              }
+
+              return date;
+            }
+
+            function daysUntil(date) {
+              const now = new Date();
+              const todayUtc = Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate()
+              );
+              const msPerDay = 24 * 60 * 60 * 1000;
+
+              return Math.round((date.getTime() - todayUtc) / msPerDay);
+            }
+
+            function statusLine(daysRemaining) {
+              if (daysRemaining < 0) {
+                return `expired ${Math.abs(daysRemaining)} day(s) ago`;
+              }
+              if (daysRemaining === 0) {
+                return "expires today";
+              }
+
+              return `expires in ${daysRemaining} day(s)`;
+            }
+
+            function reminderBody({ expirationDate, daysRemaining, status }) {
+              const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+              return `${marker}
+            ## Summary
+
+            The repository secret \`${secretName}\` ${status}. This token is used by the deployment release workflow to read Netlify production deploy status before publishing release notes.
+
+            - Expiration date: \`${expirationDate}\`
+            - Days remaining: \`${daysRemaining}\`
+            - Metadata source: repository variable \`${variableName}\`
+            - Reminder workflow run: ${runUrl}
+
+            ## Rotation checklist
+
+            - Create a new Netlify personal access token.
+            - Update the repository secret \`${secretName}\` with the new token value.
+            - Update the repository variable \`${variableName}\` to the new expiration date.
+            - Run the deployment release workflow manually, or confirm the next production deployment can read Netlify deploy status.
+            - Close this issue once the secret and expiration metadata are both updated.
+
+            ## Safety notes
+
+            Do not paste the token value into this issue, logs, commits, pull requests, or documentation. \`NETLIFY_SITE_ID\` does not need the same annual rotation treatment, but keep it distinct from the auth token.`;
+            }
+
+            function configurationBody({ problem }) {
+              const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+
+              return `${marker}
+            ## Summary
+
+            The Netlify token rotation reminder could not calculate an expiration date.
+
+            Problem: ${problem}
+
+            ## Required setup
+
+            - Keep the repository secret \`${secretName}\` configured with the current Netlify token.
+            - Add or update the repository variable \`${variableName}\` with a \`YYYY-MM-DD\` value.
+            - For the current token, use \`2027-06-26\` unless the token has already been rotated.
+            - Re-run the reminder workflow manually after updating the variable.
+
+            ## Workflow run
+
+            ${runUrl}
+
+            ## Safety notes
+
+            Do not paste the token value into this issue, logs, commits, pull requests, or documentation.`;
+            }
+
+            if (warningDays.length === 0) {
+              await upsertReminderIssue({
+                title: "Configure Netlify token reminder thresholds",
+                body: configurationBody({
+                  problem: "`WARNING_DAYS` did not include any non-negative integer thresholds.",
+                }),
+                state: "open",
+              });
+              return;
+            }
+
+            const expirationDate = parseDate(expirationInput);
+            if (!expirationDate) {
+              await upsertReminderIssue({
+                title: "Configure Netlify auth token expiration reminder",
+                body: configurationBody({
+                  problem: `\`${variableName}\` is missing or is not a valid \`YYYY-MM-DD\` date.`,
+                }),
+                state: "open",
+              });
+              return;
+            }
+
+            const formattedExpirationDate = expirationDate.toISOString().slice(0, 10);
+            const daysRemaining = daysUntil(expirationDate);
+            const maxWarningDays = Math.max(...warningDays);
+            const shouldRemind = forceIssue || daysRemaining <= maxWarningDays;
+
+            if (!shouldRemind) {
+              await upsertReminderIssue({
+                title: "Netlify auth token rotation is current",
+                body: reminderBody({
+                  expirationDate: formattedExpirationDate,
+                  daysRemaining,
+                  status: statusLine(daysRemaining),
+                }),
+                state: "closed",
+              });
+              core.info(
+                `${secretName} ${statusLine(daysRemaining)}, outside the ${maxWarningDays}-day warning window.`
+              );
+              return;
+            }
+
+            const title =
+              daysRemaining < 0
+                ? "Rotate expired Netlify auth token"
+                : `Rotate Netlify auth token by ${formattedExpirationDate}`;
+
+            await upsertReminderIssue({
+              title,
+              body: reminderBody({
+                expirationDate: formattedExpirationDate,
+                daysRemaining,
+                status: statusLine(daysRemaining),
+              }),
+              state: "open",
+            });
