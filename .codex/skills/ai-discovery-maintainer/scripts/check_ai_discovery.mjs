@@ -40,10 +40,10 @@ if (portfolio) {
 }
 
 for (const url of [
-  "https://waffy.netlify.app/ai-summary.txt",
-  "https://waffy.netlify.app/portfolio.json",
-  "https://waffy.netlify.app/sitemap.xml",
-  "https://waffy.netlify.app/waffyAhmedResume.pdf",
+  "https://waffy.dev/ai-summary.txt",
+  "https://waffy.dev/portfolio.json",
+  "https://waffy.dev/sitemap.xml",
+  "https://waffy.dev/waffyAhmedResume.pdf",
 ]) {
   requireText("llms.txt", llms, url)
 }

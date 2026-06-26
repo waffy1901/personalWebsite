@@ -24,12 +24,12 @@
     }
   },
   "links": {
-    "site": "https://waffy.netlify.app/",
-    "resume": "https://waffy.netlify.app/waffyAhmedResume.pdf",
+    "site": "https://waffy.dev/",
+    "resume": "https://waffy.dev/waffyAhmedResume.pdf",
     "linkedin": "https://www.linkedin.com/in/wa24/",
     "github": "https://github.com/waffy1901",
-    "aiSummary": "https://waffy.netlify.app/ai-summary.txt",
-    "llms": "https://waffy.netlify.app/llms.txt"
+    "aiSummary": "https://waffy.dev/ai-summary.txt",
+    "llms": "https://waffy.dev/llms.txt"
   },
   "skills": [
     "Kubernetes",
@@ -62,7 +62,7 @@
       "timeframe": "2025",
       "category": "Platform Reliability",
       "summary": "Validated and deployed HPA for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
-      "url": "https://waffy.netlify.app/case-studies/kubernetes-autoscaling",
+      "url": "https://waffy.dev/case-studies/kubernetes-autoscaling",
       "metrics": [
         "40% lower mean latency",
         "89% fewer errors",
@@ -86,7 +86,7 @@
       "timeframe": "2026",
       "category": "Deployment Automation",
       "summary": "Rebuilt deployment workflows for abandoned Java 1.8 Tomcat services so mission-critical repositories could support zero-downtime Cassandra credential rotation.",
-      "url": "https://waffy.netlify.app/case-studies/legacy-deployment-recovery",
+      "url": "https://waffy.dev/case-studies/legacy-deployment-recovery",
       "metrics": [
         "8 repositories recovered",
         "0 planned downtime",
@@ -110,7 +110,7 @@
       "timeframe": "2023-2024",
       "category": "Full-Stack Data Systems",
       "summary": "Led a team of six building a full-stack reconciliation platform for infectious disease case-count discrepancies between state health departments and CDC datasets.",
-      "url": "https://waffy.netlify.app/case-studies/cdc-data-reconciliation",
+      "url": "https://waffy.dev/case-studies/cdc-data-reconciliation",
       "metrics": [
         "5000+ hours saved annually",
         "50 state health departments",

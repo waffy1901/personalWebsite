@@ -2,7 +2,7 @@
 
 Professional portfolio for Waffy Ahmed, a software engineer focused on reliability engineering, Kubernetes, deployment automation, observability, and high-throughput production systems.
 
-Live site: [waffy.netlify.app](https://waffy.netlify.app/)
+Live site: [waffy.dev](https://waffy.dev/)
 
 ## Overview
 
@@ -73,7 +73,7 @@ VITE_DEPLOY_DATE
 VITE_SITE_URL
 ```
 
-`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are injected by the build script during production builds without rewriting local `.env` files. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Formspree and Google Analytics values should be provided through the local `.env` file or Netlify environment settings.
+`VITE_DEPLOY_DATE` is injected by the build script during production builds without rewriting local `.env` files. The production build pins `VITE_SITE_URL` to `https://waffy.dev`, so Netlify should not override it with an environment variable. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Formspree and Google Analytics values should be provided through the local `.env` file or Netlify environment settings.
 
 ## Analytics
 

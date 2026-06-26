@@ -2,7 +2,7 @@
 
 ## Scope
 
-These instructions apply to the whole repository. This is Waffy Ahmed's React/Vite portfolio for `https://waffy.netlify.app/`.
+These instructions apply to the whole repository. This is Waffy Ahmed's React/Vite portfolio for `https://waffy.dev/`.
 
 ## Working Agreements
 
