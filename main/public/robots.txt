@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://waffy.netlify.app/sitemap.xml
+Sitemap: https://waffy.dev/sitemap.xml

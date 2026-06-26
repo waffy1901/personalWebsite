@@ -50,7 +50,7 @@ export const projects = [
     bullets: [
       "Engineered an Android application to aid job seekers by providing resources such as FAQs, resume templates, etc.",
       "Integrated the Adzuna API using Kotlin to fetch jobs based on user preferences of job title, location, and radius.",
-      "Employed FirebaseAuth to authenticate users via emails and passwords - incorporated Firestore to store germane user data, including saved jobs, usernames, emails, passwords, and names.",
+      "Handled sign-in with FirebaseAuth, then used Firestore for profile metadata, saved jobs, and user preferences.",
     ],
     github: "https://github.com/waffy1901/jobSearchAid",
     logo: jobSearchLogo,

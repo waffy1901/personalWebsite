@@ -1,6 +1,6 @@
 # Portfolio App
 
-This directory contains the Vite React application for [waffy.netlify.app](https://waffy.netlify.app/).
+This directory contains the Vite React application for [waffy.dev](https://waffy.dev/).
 
 The app powers Waffy Ahmed's professional portfolio, including experience, case studies, projects, resume, contact form, deploy metadata, route-level SEO metadata, and AI-readable discovery files.
 
@@ -33,7 +33,7 @@ VITE_DEPLOY_DATE
 VITE_SITE_URL
 ```
 
-`VITE_DEPLOY_DATE` and `VITE_SITE_URL` are injected by the build script without rewriting local `.env` files. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Provide analytics and Formspree values through a local `.env` file or Netlify environment variables.
+`VITE_DEPLOY_DATE` is injected by the build script without rewriting local `.env` files. The production build pins `VITE_SITE_URL` to `https://waffy.dev`, so Netlify should not override it with an environment variable. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Provide analytics and Formspree values through a local `.env` file or Netlify environment variables.
 
 ## Analytics
 

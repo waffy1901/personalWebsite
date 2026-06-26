@@ -47,6 +47,6 @@ export const deployInfo = {
 }
 
 export const portfolioUrls = {
-  site: "https://waffy.netlify.app",
-  aiSummary: "https://waffy.netlify.app/ai-summary.txt",
+  site: "https://waffy.dev",
+  aiSummary: "https://waffy.dev/ai-summary.txt",
 }

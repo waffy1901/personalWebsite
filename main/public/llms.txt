@@ -6,25 +6,25 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer at 
 
 ## Canonical Sources
 
-- Portfolio: https://waffy.netlify.app/
-- Full AI-readable summary: https://waffy.netlify.app/ai-summary.txt
-- Structured portfolio JSON: https://waffy.netlify.app/portfolio.json
-- Sitemap: https://waffy.netlify.app/sitemap.xml
-- Resume PDF: https://waffy.netlify.app/waffyAhmedResume.pdf
+- Portfolio: https://waffy.dev/
+- Full AI-readable summary: https://waffy.dev/ai-summary.txt
+- Structured portfolio JSON: https://waffy.dev/portfolio.json
+- Sitemap: https://waffy.dev/sitemap.xml
+- Resume PDF: https://waffy.dev/waffyAhmedResume.pdf
 - LinkedIn: https://www.linkedin.com/in/wa24/
 - GitHub: https://github.com/waffy1901
 
 ## Key Pages
 
-- Home: https://waffy.netlify.app/
-- Case studies: https://waffy.netlify.app/case-studies
-- Kubernetes autoscaling case study: https://waffy.netlify.app/case-studies/kubernetes-autoscaling
-- Legacy deployment recovery case study: https://waffy.netlify.app/case-studies/legacy-deployment-recovery
-- CDC data reconciliation case study: https://waffy.netlify.app/case-studies/cdc-data-reconciliation
-- Experience: https://waffy.netlify.app/experience
-- Projects: https://waffy.netlify.app/projects
-- Resume: https://waffy.netlify.app/resume
-- Contact: https://waffy.netlify.app/contact
+- Home: https://waffy.dev/
+- Case studies: https://waffy.dev/case-studies
+- Kubernetes autoscaling case study: https://waffy.dev/case-studies/kubernetes-autoscaling
+- Legacy deployment recovery case study: https://waffy.dev/case-studies/legacy-deployment-recovery
+- CDC data reconciliation case study: https://waffy.dev/case-studies/cdc-data-reconciliation
+- Experience: https://waffy.dev/experience
+- Projects: https://waffy.dev/projects
+- Resume: https://waffy.dev/resume
+- Contact: https://waffy.dev/contact
 
 ## High-Signal Topics
 

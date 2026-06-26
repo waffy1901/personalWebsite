@@ -13,15 +13,15 @@ The portfolio already signals care through React/Vite structure, routing, SEO, a
 
 ## Highest Priority
 
-### 1. Fix Trust-Risk Wording
+### 1. Keep Trust-Risk Wording Tight
 
-The Job Search Aid project copy should not imply that Firestore stores user passwords.
+The Job Search Aid project copy has been revised so it does not imply that Firestore stores user passwords.
 
 Recommended wording:
 
 > Used FirebaseAuth for email/password authentication and Firestore for user profile metadata, saved jobs, and preferences.
 
-Why it matters: even imprecise wording here can create a serious security trust concern.
+Why it matters: even imprecise wording here can create a serious security trust concern. Keep future edits aligned with this distinction.
 
 ### 2. Add Homepage Metrics Strip
 
@@ -37,15 +37,15 @@ Suggested metrics:
 
 Why it matters: the homepage currently reads as "solid engineer," while the experience data supports "platform/reliability engineer with production ownership." The homepage should make that leap immediately.
 
-### 3. Custom Domain
+### 3. Custom Domain Follow-Through
 
-Move from `waffy.netlify.app` to a personal domain such as:
+The portfolio now uses `waffy.dev` as its canonical domain. Keep the old
+`waffy.netlify.app` address only as a compatibility source for permanent
+redirects, especially resume links that may already be shared externally.
 
-- `waffyahmed.dev`
-- `waffyahmed.com`
-- another clean personal domain
-
-Why it matters: this is one of the biggest credibility-polish items left, and it does not require a large code change.
+Why it matters: the credibility-polish win is mostly complete, but the
+post-migration checks still matter: Search Console, link previews, analytics,
+and legacy resume redirects should all continue to behave cleanly.
 
 ## High-ROI Content Work
 
@@ -197,14 +197,15 @@ Possible fixes:
 - generate CSP from the current JSON-LD
 - move structured data generation into a more maintainable path if needed
 
-### 16. Clarify Release Workflow Semantics
+### 16. Maintain Release Workflow Semantics
 
-The current release workflow may prove that GitHub Actions built successfully, but not necessarily that Netlify production deployed successfully.
+The release workflow now waits for Netlify's production deploy readback before creating a deployment release.
 
-Options:
+Keep this guardrail intact:
 
-- rename releases to "verified main build" releases
-- create deployment releases only after confirming Netlify production deploy success
+- require `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` GitHub secrets
+- confirm the live Netlify production deploy is ready for the pushed commit
+- smoke-check canonical metadata and the legacy resume redirect before release creation
 
 ### 17. Delete Stale Files
 

@@ -133,7 +133,7 @@ describe("App routes", () => {
     )
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://waffy.netlify.app/case-studies/kubernetes-autoscaling"
+      "https://waffy.dev/case-studies/kubernetes-autoscaling"
     )
     expect(document.querySelector('meta[property="og:title"]')).toHaveAttribute(
       "content",
@@ -309,7 +309,7 @@ describe("App routes", () => {
     )
 
     expect(profilePage.mainEntity).toEqual({
-      "@id": "https://waffy.netlify.app/#person",
+      "@id": "https://waffy.dev/#person",
     })
   })
 
@@ -320,7 +320,7 @@ describe("App routes", () => {
 
     expect(portfolioJson.person.name).toBe("Waffy Ahmed")
     expect(portfolioJson.links.resume).toBe(
-      "https://waffy.netlify.app/waffyAhmedResume.pdf"
+      "https://waffy.dev/waffyAhmedResume.pdf"
     )
     expect(portfolioJson.analyticsEvents.keyEventCandidates).toEqual([
       "resume_download",
@@ -376,7 +376,7 @@ describe("App routes", () => {
     )
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://waffy.netlify.app/projects"
+      "https://waffy.dev/projects"
     )
   })
 

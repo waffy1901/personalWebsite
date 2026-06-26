@@ -21,7 +21,7 @@ const caseStudyRoutes = extract(caseStudies, /slug:\s*"([^"]+)"/g).map((slug) =>
 const routes = unique([...literalRoutes, ...caseStudyRoutes])
 
 for (const route of routes) {
-  const url = route === "/" ? "https://waffy.netlify.app/" : `https://waffy.netlify.app${route}`
+  const url = route === "/" ? "https://waffy.dev/" : `https://waffy.dev${route}`
   if (!sitemap.includes(`<loc>${url}</loc>`)) errors.push(`sitemap.xml missing ${url}`)
 }
 
@@ -47,7 +47,7 @@ for (const required of [
   if (!indexHtml.includes(required)) errors.push(`index.html missing ${required}`)
 }
 
-if (!robots.includes("Sitemap: https://waffy.netlify.app/sitemap.xml")) {
+if (!robots.includes("Sitemap: https://waffy.dev/sitemap.xml")) {
   errors.push("robots.txt missing canonical sitemap pointer")
 }
 

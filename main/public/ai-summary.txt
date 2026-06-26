@@ -4,7 +4,7 @@ Canonical Identity:
 
 Waffy Ahmed is a Software Engineer at The Home Depot and a Georgia Institute
 of Technology graduate with a Bachelor of Science in Computer Science
-(December 2024). His portfolio is published at https://waffy.netlify.app/ and
+(December 2024). His portfolio is published at https://waffy.dev/ and
 is designed to present production engineering experience, selected software
 projects, resume access, and direct contact paths in a fast React single-page
 application.
@@ -14,7 +14,7 @@ Primary public contact channels shown by the portfolio:
 * Email: waffyahmed@gmail.com
 * LinkedIn: https://www.linkedin.com/in/wa24/
 * GitHub: https://github.com/waffy1901
-* Resume PDF: https://waffy.netlify.app/waffyAhmedResume.pdf
+* Resume PDF: https://waffy.dev/waffyAhmedResume.pdf
 
 High-Level Positioning:
 

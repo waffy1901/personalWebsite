@@ -32,10 +32,10 @@ if (errors.length === 0) {
   if (!resumePage.includes("resume.pdf") || !resumePage.includes("resume.preview")) {
     errors.push("Resume.jsx should render from resume.pdf and resume.preview")
   }
-  if (portfolio.links?.resume !== "https://waffy.netlify.app/waffyAhmedResume.pdf") {
+  if (portfolio.links?.resume !== "https://waffy.dev/waffyAhmedResume.pdf") {
     errors.push("portfolio.json resume link is not canonical")
   }
-  if (!llms.includes("https://waffy.netlify.app/waffyAhmedResume.pdf")) {
+  if (!llms.includes("https://waffy.dev/waffyAhmedResume.pdf")) {
     errors.push("llms.txt missing canonical resume PDF link")
   }
   if (!redirects.includes("/waffyahmedresume.pdf /waffyAhmedResume.pdf 301")) {
