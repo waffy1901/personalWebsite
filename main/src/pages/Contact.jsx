@@ -32,7 +32,7 @@ function Contact() {
             <p className="mt-3 text-sm leading-relaxed text-slate-300">
               LinkedIn, GitHub, and email stay available for quick professional conversations.
             </p>
-            <SocialLinks placement="contact" className="mt-5 grid gap-2" />
+            <SocialLinks placement="contact" surface="dark" className="mt-5 grid gap-2" />
           </aside>
         </section>
       </PageContainer>

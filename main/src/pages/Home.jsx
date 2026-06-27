@@ -16,7 +16,6 @@ import {
   PageContainer,
   PageShell,
   PresentationPanel,
-  SignalCard,
   StackChips,
   StatusBadge,
   SystemDiagram,
@@ -27,8 +26,8 @@ import { trackEvent } from "../utils/analytics";
 
 const impactMetrics = [
   {
-    value: "34.8M",
-    label: "weekly requests",
+    value: "40%",
+    label: "lower latency",
     detail: "Validated autoscaling under production load.",
   },
   {
@@ -58,23 +57,7 @@ const focusAreas = [
   "High-throughput systems",
 ];
 
-const heroSignals = [
-  {
-    label: "Problem",
-    title: "Production systems cannot depend on guesswork.",
-    detail: "Traffic, releases, incidents, and legacy paths need evidence-rich ownership.",
-  },
-  {
-    label: "Approach",
-    title: "Trace the system before changing it.",
-    detail: "I pair deployment work with observability, validation, and rollback-aware thinking.",
-  },
-  {
-    label: "Outcome",
-    title: "Make reliability legible to technical and hiring audiences.",
-    detail: "The portfolio surfaces impact first, then keeps the engineering trail inspectable.",
-  },
-];
+
 
 const autoscalingNodes = [
   {
@@ -159,6 +142,10 @@ function Home() {
                   Software engineer focused on Kubernetes, deployment automation,
                   observability, and high-throughput backend systems.
                 </p>
+                <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+                  <FaMapMarkerAlt className="h-3 w-3 text-[#F96302]" aria-hidden="true" />
+                  Atlanta, GA
+                </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <a
@@ -195,31 +182,11 @@ function Home() {
                   />
                 </div>
 
-                <div className="absolute left-4 top-4 rounded-2xl border border-white/15 bg-[#0B1220]/90 px-4 py-3 text-sm shadow-[0_18px_40px_rgba(0,0,0,0.28)] backdrop-blur">
-                  <p className="font-black">Software Engineer</p>
-                  <p className="mt-1 flex items-center gap-2 text-slate-300">
-                    <FaMapMarkerAlt className="h-3 w-3 text-[#F96302]" aria-hidden="true" />
-                    Atlanta, GA
-                  </p>
-                </div>
 
-                <div className="absolute -right-1 bottom-24 rounded-2xl border border-white/15 bg-white px-4 py-3 text-[#0B1220] shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
-                  <p className="text-3xl font-black">34.8M</p>
-                  <p className="text-xs font-black uppercase text-slate-600">weekly requests</p>
-                </div>
-
-                <div className="absolute -left-1 bottom-8 rounded-2xl border border-white/15 bg-[#0B1220] px-4 py-3 text-white shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
-                  <p className="text-3xl font-black text-[#F96302]">500+</p>
-                  <p className="text-xs font-black uppercase text-slate-300">stores supported</p>
-                </div>
               </aside>
             </div>
 
-            <div className="relative z-10 mt-8 grid gap-4 lg:grid-cols-3">
-              {heroSignals.map((signal) => (
-                <SignalCard key={signal.label} {...signal} />
-              ))}
-            </div>
+
           </PresentationPanel>
         </PageContainer>
       </section>

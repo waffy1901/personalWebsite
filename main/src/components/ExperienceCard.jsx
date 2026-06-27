@@ -29,18 +29,21 @@ const ExperienceCard = ({
     ? "border-[#F96302]/35 bg-[#F96302]"
     : "border-[#2563EB]/35 bg-[#2563EB]";
   const cardHeightClass = featured
-    ? "min-h-[34rem] lg:h-full lg:min-h-[42rem]"
+    ? "min-h-[30rem] lg:min-h-[36rem]"
     : "min-h-[24rem]";
   const logoBayClass = useStandaloneLogo
-    ? "my-5 flex flex-1 items-center justify-center"
+    ? "my-5 flex flex-1 items-start justify-center pt-4 lg:pt-6"
     : featured
     ? "my-5 flex flex-1 items-start justify-center rounded-2xl border p-8 pt-10"
     : "my-5 flex flex-1 items-center justify-center rounded-2xl border p-6";
   const logoImageClass = useStandaloneLogo
-    ? "h-56 w-56 object-contain"
+    ? "h-44 w-44 object-contain sm:h-52 sm:w-52"
     : featured
     ? "max-h-52 max-w-[82%] object-contain shadow-[0_18px_42px_rgba(11,18,32,0.28)]"
     : "max-h-32 max-w-[70%] object-contain";
+  const detailsButtonClass = featured
+    ? "mc-button-light mt-3 w-full sm:w-fit"
+    : "mc-button-light mt-auto w-full sm:w-fit";
 
   const handleCopy = async () => {
     try {
@@ -57,7 +60,7 @@ const ExperienceCard = ({
   };
 
   return (
-    <article className={`w-full ${cardHeightClass} perspective`}>
+    <article className={`w-full ${featured ? "lg:self-center" : ""} ${cardHeightClass} perspective`}>
       <div
         className={`relative ${cardHeightClass} w-full transition-transform duration-500 transform-style-preserve-3d motion-reduce:transition-none ${
           isFlipped ? "rotate-y-180" : ""
@@ -106,7 +109,7 @@ const ExperienceCard = ({
             aria-label={`Show details for ${title} at ${company}`}
             aria-expanded={isFlipped}
             aria-controls={detailsId}
-            className="mc-button-light mt-auto w-full sm:w-fit"
+            className={detailsButtonClass}
           >
             <FaInfoCircle className="mr-2" aria-hidden="true" />
             Details
