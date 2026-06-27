@@ -1,28 +1,24 @@
-import React from "react"
-import { Link } from "react-router-dom"
+import React from "react";
+import { Link } from "react-router-dom";
+import { PageContainer, PageShell, StatusBadge } from "../components/MissionControl.jsx";
 
 function NotFound() {
   return (
-    <main className="min-h-screen bg-blue-100 px-4 py-16 font-cambria">
-      <section className="mx-auto flex max-w-2xl flex-col items-center text-center">
-        <p className="mb-3 text-sm font-bold uppercase tracking-wide text-blue-700">
-          404
-        </p>
-        <h1 className="mb-4 text-4xl font-bold text-gray-800">
-          Page not found
-        </h1>
-        <p className="mb-6 text-lg leading-relaxed text-gray-700">
-          That page does not exist, but the portfolio is still right here.
-        </p>
-        <Link
-          to="/"
-          className="rounded bg-blue-600 px-4 py-2 font-bold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
-        >
-          Go home
-        </Link>
-      </section>
-    </main>
-  )
+    <PageShell>
+      <PageContainer className="flex min-h-[60dvh] items-center justify-center">
+        <section className="mc-panel max-w-2xl p-8 text-center">
+          <StatusBadge tone="orange">404</StatusBadge>
+          <h1 className="mt-5 text-4xl font-black text-[#0B1220]">Page not found</h1>
+          <p className="mt-4 text-lg leading-relaxed text-slate-600">
+            That route is outside the portfolio map, but the main site is ready.
+          </p>
+          <Link to="/" className="mc-button-light mt-6">
+            Go home
+          </Link>
+        </section>
+      </PageContainer>
+    </PageShell>
+  );
 }
 
-export default NotFound
+export default NotFound;

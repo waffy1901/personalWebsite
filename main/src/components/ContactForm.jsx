@@ -7,12 +7,12 @@ function ContactForm() {
 
   if (!formKey) {
     return (
-      <div className="w-full max-w-md md:max-w-2xl mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100 text-center">
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Contact Form</h2>
-        <p className="text-gray-700">
+      <div className="w-full rounded-2xl border border-white/10 bg-white/[0.08] p-6 text-center text-white">
+        <h2 className="mb-4 text-2xl font-black text-white">Contact Form</h2>
+        <p className="text-slate-300">
           The contact form is unavailable right now. Please email me at{" "}
           <a
-            className="font-bold text-blue-700 underline"
+            className="font-black text-[#FFB077] underline"
             href="mailto:waffyahmed@gmail.com"
             onClick={() =>
               trackLinkClick("contact_email_click", {
@@ -50,62 +50,82 @@ function ContactFormFields({ formKey }) {
   }, [state.succeeded])
 
   if (state.succeeded) {
-    return <p className="text-xl text-green-600 font-bold text-center mb-4">Thank you for your message! I will reach out as soon as possible!</p>
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-6 text-center">
+        <p className="text-xl font-black text-emerald-300">
+          Thank you for your message! I will reach out as soon as possible!
+        </p>
+      </div>
+    )
   }
   return (
-    <div className="w-full max-w-md md:max-w-2xl mx-auto border border-gray-300 rounded-lg p-6 mb-8 shadow-lg bg-blue-100">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">Contact Form</h2>
+    <div className="w-full rounded-2xl border border-white/10 bg-white/[0.08] p-6 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+      <h2 className="mb-5 text-center text-2xl font-black text-white">Contact Form</h2>
       <form onSubmit={handleTrackedSubmit}>
-        <div className="flex flex-col sm:flex-row mb-4 space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className="w-full sm:w-1/2">
-            <label htmlFor="firstName" className="block text-gray-700 font-bold mb-2">First Name</label>
+        <div className="mb-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="firstName" className="mb-2 block font-black text-slate-200">First Name</label>
             <input
               type="text"
               name="firstName"
               id="firstName"
               placeholder="Enter first name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="mc-field"
               required
             />
           </div>
-          <div className="w-full sm:w-1/2">
-            <label htmlFor="lastName" className="block text-gray-700 font-bold mb-2">Last Name</label>
+          <div>
+            <label htmlFor="lastName" className="mb-2 block font-black text-slate-200">Last Name</label>
             <input
               type="text"
               name="lastName"
               id="lastName"
               placeholder="Enter last name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="mc-field"
               required
             />
           </div>
         </div>
         <div className="mb-4">
-          <label htmlFor="email" className="block text-gray-700 font-bold mb-2">Email</label>
+          <label htmlFor="email" className="mb-2 block font-black text-slate-200">Email</label>
           <input
             type="email"
             name="email"
             id="email"
             placeholder="Enter email"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="mc-field"
             required
           />
-          <ValidationError prefix="Email" field="email" errors={state.errors} />
+          <ValidationError
+            prefix="Email"
+            field="email"
+            errors={state.errors}
+            className="mt-2 text-sm font-bold text-[#FFB077]"
+          />
         </div>
         <div className="mb-4">
-          <label htmlFor="message" className="block text-gray-700 font-bold mb-2">Message</label>
+          <label htmlFor="message" className="mb-2 block font-black text-slate-200">Message</label>
           <textarea
             id="message"
             name="message"
             placeholder="Enter message"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="mc-field min-h-36"
             rows="4"
             required
           />
-          <ValidationError prefix="Message" field="message" errors={state.errors} />
+          <ValidationError
+            prefix="Message"
+            field="message"
+            errors={state.errors}
+            className="mt-2 text-sm font-bold text-[#FFB077]"
+          />
         </div>
-        <div className="flex justify-center">
-          <button type="submit" disabled={state.submitting} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={state.submitting}
+            className="mc-button-primary px-5 disabled:cursor-not-allowed disabled:opacity-60"
+          >
             Send Message
           </button>
         </div>

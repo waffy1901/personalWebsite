@@ -35,7 +35,6 @@ export const workExperiences = [
       "Improved operational responsiveness by decreasing alert acknowledgement times 30% via optimizing tiered alerting and Grafana dashboards across 20+ microservices, automating escalation via Slack and PagerDuty integrations.",
     ],
     logo: hdLogo,
-    color: "bg-[#FFA500]",
   },
   {
     id: "home-depot-intern-2024",
@@ -48,7 +47,6 @@ export const workExperiences = [
       "Leveraged Java to obtain germane product data, used React and TypeScript to effectively display product information for all registers at self-checkout, pruning customer theft by \u223c$10 million annually.",
     ],
     logo: hdLogo,
-    color: "bg-[#FFA500]",
   },
   {
     id: "home-depot-intern-2023",
@@ -62,7 +60,6 @@ export const workExperiences = [
       "Collaborated with cross-functional teams, including the UI/UX team, designing and constructing user interface components for a new configuration process - utilizing React, Next.js, and TypeScript.",
     ],
     logo: hdLogo,
-    color: "bg-[#FFA500]",
   },
   {
     id: "landis-gyr-firmware-intern",
@@ -75,7 +72,6 @@ export const workExperiences = [
       "Bolstered data transmission efficiency by \u223c25%, collaborating with a software architect to conduct comprehensive testing of collectors and debugging of various Python scripts employing MySQL.",
     ],
     logo: landisGyrLogo,
-    color: "bg-white bg-opacity-100",
   },
 ]
 
@@ -143,7 +139,6 @@ export const extracurricularExperiences = [
       "Leveraged an inbuilt API for image recognition, identifying and ranking the top 3 product matches for shopping carts.",
     ],
     logo: fintechGTLogo,
-    color: "bg-[#FFD700] bg-opacity-70",
   },
   {
     id: "cdc-project-manager-full-stack-developer",
@@ -161,7 +156,6 @@ export const extracurricularExperiences = [
       "Constructed technical diagrams/documentation (Lo-Fi & Hi-Fi Prototypes, User Research, Minimum Marketable Features, Story Mapping, UX Report, and Detailed Design) to aid the development process.",
     ],
     logo: cdcLogo,
-    color: "bg-white bg-opacity-100",
   },
   {
     id: "gt-undergraduate-teaching-assistant",
@@ -175,6 +169,5 @@ export const extracurricularExperiences = [
       "Fostered engagement by answering 105+ questions on Piazza, the student discussion forum.",
     ],
     logo: gtComputingLogo,
-    color: "bg-[#FFD700] bg-opacity-70",
   },
 ]

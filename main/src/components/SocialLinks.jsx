@@ -9,9 +9,9 @@ const socialIconById = {
 };
 
 const socialClassById = {
-  linkedin: "bg-blue-600 hover:bg-blue-700",
-  github: "bg-gray-800 hover:bg-gray-900",
-  email: "bg-gray-800 hover:bg-gray-900",
+  linkedin: "border-[#2563EB]/30 bg-[#2563EB]/10 text-[#1d4ed8] hover:bg-[#2563EB]/15",
+  github: "border-slate-300 bg-white text-[#0B1220] hover:bg-[#E8EDF2]",
+  email: "border-[#F96302]/30 bg-[#F96302]/10 text-[#b94600] hover:bg-[#F96302]/15",
 };
 
 function SocialLinks({
@@ -37,9 +37,9 @@ function SocialLinks({
                 social_platform: link.id,
               })
             }
-            className={`${socialClassById[link.id]} text-white font-bold py-2 px-4 rounded inline-flex items-center`}
+            className={`${socialClassById[link.id]} inline-flex items-center rounded-md border px-3 py-2 text-sm font-black transition focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2`}
           >
-            <Icon className="mr-2" />
+            <Icon className="mr-2" aria-hidden="true" />
             {link.label}
           </a>
         );
