@@ -93,6 +93,10 @@ When `VITE_GA_MEASUREMENT_ID` is set, the app loads Google Analytics with manual
 
 Recommended GA4 key events are documented in [docs/analytics.md](./docs/analytics.md). The highest-signal candidates are `resume_download`, `contact_form_success`, `project_source_click`, and `case_study_link_click`.
 
+## Security Automation
+
+Lightweight GitHub-side checks cover Dependabot updates, npm audit, the existing CodeQL/default setup, secret scanning settings, and deployed security-header verification. Setup and ownership notes are documented in [docs/security-automation.md](./docs/security-automation.md).
+
 ## Deployment
 
 The site is deployed on Netlify using [netlify.toml](./netlify.toml):

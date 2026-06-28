@@ -1,0 +1,104 @@
+name: Deployed security headers
+
+"on":
+  schedule:
+    - cron: "37 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployed-security-headers
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify waffy.dev headers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check production headers
+        env:
+          SITE_URL: https://waffy.dev/
+        run: |
+          set -euo pipefail
+
+          headers_file="$(mktemp)"
+          status_code="$(curl --silent --show-error --location --head \
+            --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 30 \
+            --dump-header "$headers_file" --output /dev/null \
+            --write-out "%{http_code}" "$SITE_URL")"
+
+          if [ "$status_code" != "200" ]; then
+            echo "Expected HTTP 200 from ${SITE_URL}, got ${status_code}."
+            cat "$headers_file"
+            exit 1
+          fi
+
+          headers="$(tr -d '\r' < "$headers_file")"
+
+          get_header() {
+            local header_name
+            header_name="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+            printf '%s\n' "$headers" | awk -v name="$header_name" '
+              BEGIN { FS = ":" }
+              tolower($1) == name {
+                sub(/^[^:]*:[[:space:]]*/, "", $0)
+                print
+                exit
+              }
+            '
+          }
+
+          require_header_value() {
+            local header_name="$1"
+            local expected_value="$2"
+            local actual_value
+            actual_value="$(get_header "$header_name")"
+
+            if [ "$actual_value" != "$expected_value" ]; then
+              echo "Unexpected ${header_name} header."
+              echo "Expected: ${expected_value}"
+              echo "Actual:   ${actual_value:-<missing>}"
+              exit 1
+            fi
+          }
+
+          require_header_fragment() {
+            local header_name="$1"
+            local required_fragment="$2"
+            local actual_value
+            actual_value="$(get_header "$header_name")"
+
+            if [[ "$actual_value" != *"$required_fragment"* ]]; then
+              echo "Missing ${header_name} fragment: ${required_fragment}"
+              echo "Actual: ${actual_value:-<missing>}"
+              exit 1
+            fi
+          }
+
+          require_header_value "x-content-type-options" "nosniff"
+          require_header_value "referrer-policy" "strict-origin-when-cross-origin"
+
+          for permission in "camera=()" "microphone=()" "geolocation=()" "payment=()" "usb=()"; do
+            require_header_fragment "permissions-policy" "$permission"
+          done
+
+          for directive in \
+            "default-src 'self'" \
+            "base-uri 'self'" \
+            "object-src 'self'" \
+            "frame-ancestors 'none'" \
+            "script-src 'self' 'sha256-Gx10dm3GfPuh4U4BdlEImysQ7gQn3/l7ezIPDjQbD38=' https://www.googletagmanager.com" \
+            "connect-src 'self' https://formspree.io https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com" \
+            "img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com" \
+            "style-src 'self' 'unsafe-inline'" \
+            "font-src 'self' data:" \
+            "form-action 'self' https://formspree.io" \
+            "frame-src 'self'" \
+            "upgrade-insecure-requests"; do
+            require_header_fragment "content-security-policy" "$directive"
+          done
+
+          echo "Production security headers match expected policy."
