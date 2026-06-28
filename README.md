@@ -1,121 +1,173 @@
-# Waffy Ahmed Portfolio
+# Waffy Ahmed — Software Engineering Portfolio
 
-Professional portfolio for Waffy Ahmed, a software engineer focused on reliability engineering, Kubernetes, deployment automation, observability, and high-throughput production systems.
+Personal portfolio showcasing my work in platform engineering, cloud infrastructure, reliability, Kubernetes, GCP, Terraform, observability, CI/CD, and distributed systems.
 
-Live site: [waffy.dev](https://waffy.dev/)
+**Live site:** [waffy.dev](https://waffy.dev/)
 
 ## Overview
 
-This site presents my software engineering experience, selected projects, resume, and contact information in a fast, responsive React application. The content emphasizes production ownership, platform reliability, cloud-native infrastructure, CI/CD automation, incident response, and measurable engineering impact.
+This repository contains the source for my professional portfolio. The site highlights production engineering work, selected projects, technical case studies, measurable outcomes, and the systems-thinking behind my approach to software delivery and reliability.
+
+The portfolio is designed for both human visitors and machine-readable discovery, with structured metadata, route-specific SEO content, and dedicated AI-readable artifacts.
 
 ## Highlights
 
-- Career overview with current software engineering work at The Home Depot
-- Experience cards covering production operations, infrastructure, observability, and backend systems work
-- Case study pages for selected reliability, deployment recovery, and data reconciliation work
-- Project summaries for CDC data reconciliation, job search tooling, and campus discovery software
-- Mobile-friendly resume preview with direct PDF open/download actions
+- Career overview centered on platform engineering, reliability, and production ownership
+- Experience stories covering Kubernetes, GCP, Terraform, CI/CD, observability, incident response, and backend systems
+- Technical case studies with context, implementation details, outcomes, and supporting metrics
+- Project coverage spanning CDC data reconciliation, job-search tooling, and campus discovery software
+- Responsive resume preview with direct PDF open and download actions
 - Contact form powered by Formspree
-- SEO metadata with sitemap, canonical route metadata, and JSON-LD profile data
-- AI-readable portfolio summary at `/ai-summary.txt`, LLM entry point at `/llms.txt`, and structured data at `/portfolio.json`
-- Netlify deployment with SPA redirects and automated deploy metadata
+- Google Analytics 4 engagement tracking for key portfolio interactions
+- Search and AI discovery through sitemap, JSON-LD, `llms.txt`, `ai-summary.txt`, and `portfolio.json`
+- Netlify deployment with SPA routing, security headers, and deploy metadata
+- Automated linting, tests, builds, dependency checks, CodeQL analysis, and deployment verification
 
 ## Tech Stack
 
-- React 18
-- Vite
-- Tailwind CSS
-- React Router
+### Application
+
+- React 19
+- React Router 7
+- Vite 8
+- Tailwind CSS 3
 - Formspree
-- Vitest and Testing Library
-- ESLint
+- React Icons
+
+### Testing and Quality
+
+- Vitest 4
+- Testing Library
+- ESLint 9
+
+### Delivery and Operations
+
 - Netlify
+- GitHub Actions
+- Dependabot
+- CodeQL
+- npm audit
+- Google Analytics 4
 
 ## Repository Structure
 
 ```text
 .
-├── main/                 # Vite React application
-│   ├── public/           # Static assets, resume, metadata, redirects
-│   └── src/              # Pages, components, hooks, tests, styles
-├── netlify.toml          # Netlify build configuration
-├── package.json          # Root scripts forwarding into main/
+├── .github/workflows/     # CI, security, dependency, and release automation
+├── docs/                  # Analytics, security, and operational documentation
+├── main/                  # Vite React application
+│   ├── public/            # Static assets, resume, metadata, and redirects
+│   └── src/               # Pages, components, hooks, data, tests, and styles
+├── netlify.toml           # Netlify build and security-header configuration
+├── package.json           # Root scripts forwarding into main/
 └── README.md
 ```
 
-## Local Development
+## Getting Started
 
-Install dependencies from the app directory:
+### Prerequisites
 
-```bash
-cd main
-npm install
-```
+- Node.js 22
+- npm
 
-Common commands are also available from the repository root:
+### Install and Run
 
 ```bash
-npm run dev      # Start the local Vite server
-npm run lint     # Run ESLint
-npm test         # Run Vitest
-npm run build    # Build for production
-npm run preview  # Preview the production build
+git clone https://github.com/waffy1901/personalWebsite.git
+cd personalWebsite
+npm install --prefix main
+npm run dev
 ```
+
+The local Vite server will print the development URL in the terminal.
+
+## Available Scripts
+
+Run these commands from the repository root:
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the local Vite development server |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run the Vitest test suite |
+| `npm run build` | Create the production build |
+| `npm run preview` | Preview the production build locally |
 
 ## Environment Variables
 
-Vite only exposes client-side variables prefixed with `VITE_`.
+Vite only exposes client-side environment variables prefixed with `VITE_`.
 
-```text
-VITE_GA_MEASUREMENT_ID
-VITE_FORMSPREE_KEY
-VITE_DEPLOY_DATE
-VITE_SITE_URL
-```
+| Variable | Purpose |
+| --- | --- |
+| `VITE_GA_MEASUREMENT_ID` | Enables Google Analytics 4 |
+| `VITE_FORMSPREE_KEY` | Configures the Formspree contact form |
+| `VITE_DEPLOY_DATE` | Displays build and deployment metadata |
+| `VITE_SITE_URL` | Provides the canonical site URL |
 
-`VITE_DEPLOY_DATE` is injected by the build script during production builds without rewriting local `.env` files. The production build pins `VITE_SITE_URL` to `https://waffy.dev`, so Netlify should not override it with an environment variable. Local development displays the current local preview timestamp so stale `.env` values are not shown on localhost. Formspree and Google Analytics values should be provided through the local `.env` file or Netlify environment settings.
+`VITE_DEPLOY_DATE` is injected by the production build without rewriting local `.env` files. Production builds pin `VITE_SITE_URL` to `https://waffy.dev`.
+
+Provide the Formspree and analytics values through a local `.env` file or Netlify environment variables. Do not commit secrets or private credentials.
+
+## Application Structure
+
+The application uses React Router for client-side routing and keeps core portfolio content in reusable data modules under `main/src/data/`. Pages and components consume those modules to render experience, projects, case studies, profile information, and route metadata.
+
+Key public discovery files include:
+
+- `main/public/sitemap.xml`
+- `main/public/robots.txt`
+- `main/public/llms.txt`
+- `main/public/ai-summary.txt`
+- `main/public/portfolio.json`
+
+Legacy capitalized routes redirect to their canonical lowercase equivalents, while Netlify's SPA redirect supports direct navigation to client-side routes.
 
 ## Analytics
 
-When `VITE_GA_MEASUREMENT_ID` is set, the app loads Google Analytics with manual SPA page views and portfolio-specific engagement events. The tracked events are:
+When `VITE_GA_MEASUREMENT_ID` is configured, the app sends manual SPA page views and portfolio-specific engagement events, including:
 
-- `page_view`
-- `resume_open`
-- `resume_download`
-- `social_link_click`
-- `project_source_click`
-- `project_details_open`
-- `case_study_card_click`
-- `case_study_link_click`
-- `contact_form_submit`
-- `contact_form_success`
-- `contact_email_click`
+- Resume opens and downloads
+- Social-link clicks
+- Project source and detail interactions
+- Case-study navigation
+- Contact-form submissions and successful completions
 
-Recommended GA4 key events are documented in [docs/analytics.md](./docs/analytics.md). The highest-signal candidates are `resume_download`, `contact_form_success`, `project_source_click`, and `case_study_link_click`.
+Recommended GA4 key-event setup is documented in [docs/analytics.md](./docs/analytics.md).
 
-## Security Automation
+## Testing and Security Automation
 
-Lightweight GitHub-side checks cover Dependabot updates, npm audit, the existing CodeQL/default setup, secret scanning settings, and deployed security-header verification. Setup and ownership notes are documented in [docs/security-automation.md](./docs/security-automation.md).
+The repository includes automated checks for:
+
+- ESLint validation
+- Vitest and Testing Library tests
+- Production builds
+- Dependabot dependency updates
+- Scheduled and pull-request-based `npm audit`
+- CodeQL analysis
+- Deployed security-header verification
+- Netlify deployment-to-commit validation before GitHub release creation
+
+Additional setup and ownership notes are documented in [docs/security-automation.md](./docs/security-automation.md).
 
 ## Deployment
 
-The site is deployed on Netlify using [netlify.toml](./netlify.toml):
+Netlify is configured through [netlify.toml](./netlify.toml):
 
 - Base directory: `main`
 - Build command: `npm run build`
-- Publish directory: `main/dist`
-- Node version: `22`
+- Publish directory: `dist`
+- Node.js version: `22`
 
-The app uses `main/public/_redirects` so client-side routes such as `/Resume`, `/Projects`, `/Experience`, and `/Contact` work after deployment.
+The production site is available at [waffy.dev](https://waffy.dev/).
 
 ## Releases
 
-GitHub Actions creates a release for each push to `main` after lint, tests, and production build pass. Release tags use the format:
+After the required checks pass, the release workflow verifies the corresponding Netlify production deployment and creates a GitHub release tied to that commit.
+
+Release tags use the following format:
 
 ```text
 deploy-YYYYMMDDTHHMMSSZ-<short-sha>
 ```
 
-This gives each production deployment a durable GitHub release record tied to the commit that produced it.
-
-The release workflow uses the `NETLIFY_AUTH_TOKEN` repository secret to verify the matching Netlify production deploy before publishing a release. Token rotation and reminder setup are documented in [docs/netlify-token-rotation.md](./docs/netlify-token-rotation.md).
+Netlify token rotation and reminder setup are documented in [docs/netlify-token-rotation.md](./docs/netlify-token-rotation.md).
