@@ -39,14 +39,14 @@ function buildCaseStudyNodes(caseStudy) {
 function CaseStudyCard({ caseStudy, featured = false }) {
   const cardClass = featured
     ? "mc-presentation-panel p-5 text-white sm:p-7 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(22rem,0.92fr)] lg:gap-8"
-    : "mc-panel flex min-h-[28rem] flex-col p-5";
-  const mutedText = featured ? "text-slate-300" : "text-slate-600";
-  const titleText = featured ? "text-white" : "text-[#0B1220]";
-  const metaText = featured ? "text-slate-400" : "text-slate-500";
+    : "mc-presentation-panel flex min-h-[28rem] flex-col p-5 text-white";
+  const mutedText = "text-slate-300";
+  const titleText = "text-white";
+  const metaText = "text-slate-400";
 
   return (
     <article className={cardClass}>
-      <div className={featured ? "relative z-10" : "flex flex-1 flex-col"}>
+      <div className={featured ? "relative z-10" : "relative z-10 flex flex-1 flex-col"}>
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <StatusBadge tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}>
@@ -84,14 +84,14 @@ function CaseStudyCard({ caseStudy, featured = false }) {
               placement: "case_studies_grid",
             })
           }
-          className={featured ? "mc-button-primary mt-6 w-fit" : "mc-button-light mt-5 w-fit"}
+          className={featured ? "mc-button-primary mt-6 w-fit" : "mc-button-secondary mt-5 w-fit"}
         >
           Read case study
           <FaArrowRight className="ml-2" aria-hidden="true" />
         </Link>
       </div>
 
-      <div className={featured ? "relative z-10 mt-6 lg:mt-0" : "mt-5 grid gap-2"}>
+      <div className={featured ? "relative z-10 mt-6 lg:mt-0" : "relative z-10 mt-5 grid gap-2"}>
         {featured ? (
           <SystemDiagram
             centerLabel={caseStudy.category}
@@ -103,12 +103,12 @@ function CaseStudyCard({ caseStudy, featured = false }) {
           caseStudy.metrics.slice(0, 2).map((metric) => (
             <div
               key={metric.label}
-              className="rounded-md border border-slate-200 bg-[#E8EDF2] px-3 py-2"
+              className="rounded-md border border-white/10 bg-white/[0.065] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
-              <p className="text-2xl font-black text-[#0B1220]">
+              <p className="text-2xl font-black text-[#93B4FF]">
                 {metric.value}
               </p>
-              <p className="text-sm font-bold text-slate-600">
+              <p className="text-sm font-bold text-slate-300">
                 {metric.label}
               </p>
             </div>
