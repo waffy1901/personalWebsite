@@ -15,10 +15,10 @@ import usePageTracking from "./hooks/usePageTracking.jsx"
 function App() {
   usePageTracking()
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="flex min-h-screen w-full flex-col bg-[#F4F1EA]">
       <Seo />
       <Navbar />
-      <div className="flex-1 overflow-auto bg-slate-100">
+      <div className="flex-1 overflow-auto">
         <Routes>
           <Route caseSensitive path="/" element={<Home />} />
           <Route caseSensitive path="/resume" element={<Resume />} />

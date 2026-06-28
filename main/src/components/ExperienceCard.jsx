@@ -1,12 +1,49 @@
 import React, { useId, useState } from "react";
 import { FaArrowLeft, FaCheck, FaClipboard, FaInfoCircle } from "react-icons/fa";
+import { StatusBadge } from "./MissionControl.jsx";
 
-const ExperienceCard = ({ title, company, location, date, bullets, logo, color }) => {
+const ExperienceCard = ({
+  title,
+  company,
+  location,
+  date,
+  bullets,
+  logo,
+  featured = false,
+}) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [copyStatus, setCopyStatus] = useState(null);
   const cardId = useId();
   const titleId = `${cardId}-title`;
   const detailsId = `${cardId}-details`;
+  const isHomeDepot = company === "The Home Depot";
+  const useStandaloneLogo = featured && isHomeDepot;
+  const accentClass = isHomeDepot ? "bg-[#F96302]" : "bg-[#2563EB]";
+  const accentTextClass = isHomeDepot ? "text-[#FFB077]" : "text-[#93B4FF]";
+  const frontFaceClass = featured
+    ? "border-white/10 bg-[#111827]"
+    : "border-white/10 bg-white/[0.065]";
+  const logoTileClass = useStandaloneLogo
+    ? ""
+    : isHomeDepot
+    ? "border-[#F96302]/35 bg-[#F96302]"
+    : "border-[#2563EB]/35 bg-[#2563EB]";
+  const cardHeightClass = featured
+    ? "min-h-[30rem] lg:min-h-[36rem]"
+    : "min-h-[24rem]";
+  const logoBayClass = useStandaloneLogo
+    ? "my-5 flex flex-1 items-start justify-center pt-4 lg:pt-6"
+    : featured
+    ? "my-5 flex flex-1 items-start justify-center rounded-2xl border p-8 pt-10"
+    : "my-5 flex flex-1 items-center justify-center rounded-2xl border p-6";
+  const logoImageClass = useStandaloneLogo
+    ? "h-44 w-44 object-contain sm:h-52 sm:w-52"
+    : featured
+    ? "max-h-52 max-w-[82%] object-contain shadow-[0_18px_42px_rgba(11,18,32,0.28)]"
+    : "max-h-32 max-w-[70%] object-contain";
+  const detailsButtonClass = featured
+    ? "mc-button-light mt-3 w-full sm:w-fit"
+    : "mc-button-light mt-auto w-full sm:w-fit";
 
   const handleCopy = async () => {
     try {
@@ -23,37 +60,48 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
   };
 
   return (
-    <article className="w-full min-h-[23rem] perspective">
+    <article className={`w-full ${featured ? "lg:self-center" : ""} ${cardHeightClass} perspective`}>
       <div
-        className={`relative min-h-[23rem] w-full transition-transform duration-500 transform-style-preserve-3d ${
+        className={`relative ${cardHeightClass} w-full transition-transform duration-500 transform-style-preserve-3d motion-reduce:transition-none ${
           isFlipped ? "rotate-y-180" : ""
         }`}
       >
-        {/* Front Side */}
         <div
           aria-hidden={isFlipped}
-          className={`absolute inset-0 backface-hidden ${color} bg-opacity-90 rounded-lg shadow-md p-4 flex flex-col ${
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border p-5 text-white backface-hidden ${frontFaceClass} ${
             isFlipped ? "pointer-events-none" : ""
           }`}
         >
-          <div className="flex flex-col flex-shrink-0">
-            <div className="flex justify-between items-center mb-2">
-              <h3 id={titleId} className="text-xl font-bold text-gray-800 max-w-[60%]">{title}</h3>
-              <p className="text-lg text-gray-600">{date}</p>
+          <div className={`absolute inset-x-0 top-0 h-1 ${accentClass}`} aria-hidden="true" />
+
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <StatusBadge
+                tone={isHomeDepot ? "orange" : "cyan"}
+                className="border-white/15 bg-white/10 text-slate-100"
+              >
+                {isHomeDepot ? "Production platform" : "Engineering signal"}
+              </StatusBadge>
+              <h3 id={titleId} className="mt-4 text-2xl font-black leading-tight text-white">
+                {title}
+              </h3>
+              <p className={`mt-2 text-base font-black ${accentTextClass}`}>{company}</p>
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <p className="text-lg text-gray-600">{company}</p>
-              <p className="text-lg text-gray-600">{location}</p>
+            <div className="text-right text-sm font-bold text-slate-300">
+              <p>{date}</p>
+              <p className="mt-1">{location}</p>
             </div>
           </div>
-          <div className="flex flex-1 items-center justify-center py-4">
+
+          <div className={`${logoBayClass} ${logoTileClass}`}>
             <img
               src={logo}
               alt=""
               aria-hidden="true"
-              className="max-h-36 max-w-[70%] object-contain"
+              className={logoImageClass}
             />
           </div>
+
           <button
             type="button"
             onClick={() => setIsFlipped(true)}
@@ -61,60 +109,66 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
             aria-label={`Show details for ${title} at ${company}`}
             aria-expanded={isFlipped}
             aria-controls={detailsId}
-            className="mt-auto inline-flex w-full items-center justify-center rounded bg-white/85 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 sm:w-fit sm:justify-start sm:py-2"
+            className={detailsButtonClass}
           >
-            <FaInfoCircle className="mr-2" />
+            <FaInfoCircle className="mr-2" aria-hidden="true" />
             Details
           </button>
         </div>
 
-        {/* Back Side */}
         <div
           id={detailsId}
           role="region"
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
-          className={`absolute inset-0 backface-hidden ${color} bg-opacity-85 rounded-lg shadow-md p-4 flex flex-col rotate-y-180 ${
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white backface-hidden rotate-y-180 ${
             isFlipped ? "" : "pointer-events-none"
           }`}
         >
-          
-          {/* Copy Button Top-Right */}
-          <div className="absolute top-4 right-4 z-10 flex flex-col items-center group">
+          <div className="absolute right-4 top-4 z-10 flex flex-col items-center group">
             <button
               type="button"
               onClick={handleCopy}
               tabIndex={isFlipped ? 0 : -1}
               aria-label={`Copy ${title} details`}
-              className="p-2 rounded-full bg-white shadow-md hover:shadow-lg hover:scale-110 transform transition-all duration-200 flex items-center justify-center"
+              className="relative flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
             >
               <FaClipboard
-                className={`h-5 w-5 transition-opacity duration-200 ${copyStatus === "success" ? "opacity-0" : "opacity-100"}`}
+                className={`h-4 w-4 transition-opacity duration-200 ${
+                  copyStatus === "success" ? "opacity-0" : "opacity-100"
+                }`}
+                aria-hidden="true"
               />
               <FaCheck
-                className={`absolute h-5 w-5 text-green-500 transition-opacity duration-200 ${copyStatus === "success" ? "opacity-100" : "opacity-0"}`}
+                className={`absolute h-4 w-4 text-emerald-300 transition-opacity duration-200 ${
+                  copyStatus === "success" ? "opacity-100" : "opacity-0"
+                }`}
+                aria-hidden="true"
               />
             </button>
 
-            {/* Tooltip */}
             <span
-              className={`mt-1 text-xs text-gray-700 bg-white/90 px-2 py-1 rounded shadow-sm transform transition-all duration-200
-                ${copyStatus ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2"} 
-                group-hover:opacity-100 group-hover:translate-y-0`}
+              className={`mt-2 rounded bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-sm transition-all duration-200 ${
+                copyStatus
+                  ? "translate-y-0 opacity-100"
+                  : "-translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
+              }`}
             >
-              {copyStatus === "success" ? "Copied!" : copyStatus === "error" ? "Copy failed" : "Copy"}
+              {copyStatus === "success" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy"}
             </span>
           </div>
 
-          <h3 id={`${detailsId}-heading`} className="text-xl font-semibold mb-4 mt-1 pr-14">Experience Details</h3>
+          <p className="text-xs font-black uppercase text-[#93B4FF]">Operational record</p>
+          <h3 id={`${detailsId}-heading`} className="mt-2 pr-16 text-xl font-black">
+            Experience Details
+          </h3>
 
-          {/* Scrollable bullets area */}
-          <div className="flex-1 overflow-y-auto pr-2 pt-2">
-            <ul className="list-none pl-0 space-y-2">
+          <div className="mt-4 flex-1 overflow-y-auto pr-2">
+            <ul className="space-y-3">
               {bullets.map((bullet, index) => (
-                <li key={index} className="text-gray-700 flex">
-                  <span className="mr-2 flex-shrink-0">•</span>
-                  <span className="flex-1">{bullet}</span>
+                <li key={index} className="flex gap-3 text-sm leading-relaxed text-slate-200">
+                  <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${accentClass}`} />
+                  <span>{bullet}</span>
                 </li>
               ))}
             </ul>
@@ -125,9 +179,9 @@ const ExperienceCard = ({ title, company, location, date, bullets, logo, color }
             onClick={() => setIsFlipped(false)}
             tabIndex={isFlipped ? 0 : -1}
             aria-label={`Hide details for ${title} at ${company}`}
-            className="mt-3 inline-flex w-full items-center justify-center rounded bg-white/85 px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition-colors hover:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 sm:w-fit sm:justify-start sm:py-2"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
           >
-            <FaArrowLeft className="mr-2" />
+            <FaArrowLeft className="mr-2" aria-hidden="true" />
             Back
           </button>
         </div>
