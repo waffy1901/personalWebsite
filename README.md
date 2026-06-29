@@ -126,6 +126,7 @@ Legacy capitalized routes redirect to their canonical lowercase equivalents, whi
 
 When `VITE_GA_MEASUREMENT_ID` is configured, the app sends manual SPA page views and portfolio-specific engagement events, including:
 
+- Manual SPA `page_view` events
 - Resume opens and downloads
 - Social-link clicks
 - Project source and detail interactions

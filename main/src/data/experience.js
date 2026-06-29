@@ -20,7 +20,7 @@ export const workExperiences = [
     location: "Atlanta, GA",
     date: "January 2025 - Present",
     bullets: [
-      "Improved scalability by deploying and validating HPA for a core service previously capped at 20 static pods, cutting mean latency 40% (121 to 72 ms) and errors 89% while boosting throughput 40% (24.9M to 34.8M reqs/wk) and reducing average CPU usage 26%, enabling dynamic scaling between 50\u2013100 pods in production.",
+      "Improved scalability by deploying and validating Horizontal Pod Autoscaling (HPA) for a core service previously capped at 20 static pods, cutting mean latency 40% (121 to 72 ms) and errors 89% while boosting throughput 40% (24.9M to 34.8M reqs/wk) and reducing average CPU usage 26%, enabling dynamic scaling between 50\u2013100 pods in production.",
       "Reconstructed deployment workflows for abandoned legacy Java 1.8 Tomcat services supporting mission-critical transaction systems with no existing operational ownership, rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation across 8 repositories while eliminating a critical platform outage risk.",
       "Remediated \u223c330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD 401 authentication failures to enable secure, reproducible container builds.",
       "Led testing and validation to disable a legacy service component handling \u223c27% of transaction volume (14.5 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
@@ -135,7 +135,7 @@ export const extracurricularExperiences = [
     date: "September 2024 - November 2024",
     bullets: [
       "Reduced page load times by \u223c35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
-      "Implemented a cart page for a React Native grocery application, allowing users to add/remove items, adjust squantities, view real-time total costs, and integrated the Stripe API for streamlined in-app credit card payments.",
+      "Implemented a cart page for a React Native grocery application, allowing users to add/remove items, adjust quantities, view real-time total costs, and integrated the Stripe API for streamlined in-app credit card payments.",
       "Leveraged an inbuilt API for image recognition, identifying and ranking the top 3 product matches for shopping carts.",
     ],
     logo: fintechGTLogo,

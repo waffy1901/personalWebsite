@@ -9,7 +9,7 @@ export const caseStudiesPage = {
     {
       id: "production-scale",
       value: "34.8M",
-      label: "weekly requests after HPA validation",
+      label: "weekly requests after autoscaling validation",
     },
     {
       id: "legacy-services",
@@ -34,7 +34,7 @@ export const caseStudies = [
     logo: hdLogo,
     logoTheme: "home-depot",
     summary:
-      "Validated and deployed HPA for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
+      "Validated and deployed Horizontal Pod Autoscaling (HPA) for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
     metrics: [
       {
         value: "40%",
@@ -66,7 +66,7 @@ export const caseStudies = [
       {
         title: "Autoscaling rollout",
         detail:
-          "HPA thresholds were deployed and validated with production observability, Kubernetes behavior checks, and staged comparison against the previous baseline.",
+          "Autoscaling thresholds were deployed and validated with production observability, Kubernetes behavior checks, and staged comparison against the previous baseline.",
       },
       {
         title: "Measured recovery",

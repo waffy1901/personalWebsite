@@ -11,7 +11,7 @@ application.
 
 Primary public contact channels shown by the portfolio:
 
-* Email: waffyahmed@gmail.com
+* Email action: available through the portfolio contact and social links
 * LinkedIn: https://www.linkedin.com/in/wa24/
 * GitHub: https://github.com/waffy1901
 * Resume PDF: https://waffy.dev/waffyAhmedResume.pdf
@@ -260,8 +260,8 @@ React Router and publishes the following primary routes:
   ownership cards.
 * /resume - resume preview image with direct open and download actions for the
   PDF.
-* /contact - Formspree-backed contact form, fallback email path, and LinkedIn,
-  GitHub, and email links.
+* /contact - Formspree-backed contact form, fallback email action, and
+  LinkedIn, GitHub, and email links.
 * /ai-summary.txt - this AI-readable portfolio summary.
 * /llms.txt - a short LLM-oriented entry point linking to the canonical
   summary, sitemap, resume, case studies, and contact routes.

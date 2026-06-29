@@ -14,7 +14,7 @@ function Contact() {
     <PageShell className="mc-dark-field text-white">
       <PageContainer className="max-w-5xl">
         <SectionHeader
-          eyebrow="Contact intake"
+          eyebrow="Open channel"
           title={contact.heading}
           description={contact.intro}
           align="center"
@@ -30,7 +30,7 @@ function Contact() {
               Alternative routes
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-300">
-              LinkedIn, GitHub, and email stay available for quick professional conversations.
+              If the form gets in the way, LinkedIn, GitHub, and email are still one click away.
             </p>
             <SocialLinks placement="contact" surface="dark" className="mt-5 grid gap-2" />
           </aside>

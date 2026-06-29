@@ -1,19 +1,26 @@
 import React from "react"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "./App.jsx"
 
+const formspreeSubmitMock = vi.hoisted(() =>
+  vi.fn((event) => event?.preventDefault?.())
+)
+const formspreeMockState = vi.hoisted(() => ({
+  current: {
+    errors: null,
+    submitting: false,
+    succeeded: false,
+  },
+}))
+
 vi.mock("@formspree/react", () => ({
   useForm: () => [
-    {
-      errors: [],
-      submitting: false,
-      succeeded: false,
-    },
-    vi.fn((event) => event?.preventDefault?.()),
+    formspreeMockState.current,
+    formspreeSubmitMock,
   ],
   ValidationError: () => null,
 }))
@@ -42,6 +49,12 @@ const clickWithoutNavigation = async (user, element) => {
 }
 
 beforeEach(() => {
+  formspreeSubmitMock.mockClear()
+  formspreeMockState.current = {
+    errors: null,
+    submitting: false,
+    succeeded: false,
+  }
   vi.stubEnv("VITE_FORMSPREE_KEY", "test-form-key")
   vi.stubGlobal(
     "ResizeObserver",
@@ -83,8 +96,8 @@ describe("App routes", () => {
       })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("heading", { name: /cdc data reconciliation/i })
-    ).toBeInTheDocument()
+      screen.getAllByRole("heading", { name: /cdc data reconciliation/i })
+    ).not.toHaveLength(0)
   })
 
   it("renders the experience route", () => {
@@ -180,10 +193,15 @@ describe("App routes", () => {
     const [sourceCodeLink] = screen.getAllByRole("link", {
       name: /source code/i,
     })
+    expect(screen.queryByText(/details available/i)).not.toBeInTheDocument()
+    expect(
+      screen.getAllByRole("button", { name: /view details/i })
+    ).toHaveLength(3)
+
     await clickWithoutNavigation(user, sourceCodeLink)
     await user.click(
       screen.getByRole("button", {
-        name: /show details for cdc data reconciliation/i,
+        name: /view details for cdc data reconciliation/i,
       })
     )
 
@@ -223,7 +241,7 @@ describe("App routes", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("button", {
-          name: /show details for cdc data reconciliation/i,
+          name: /view details for cdc data reconciliation/i,
         })
       ).toHaveFocus()
     )
@@ -296,6 +314,67 @@ describe("App routes", () => {
         }),
       ],
     ])
+    expect(formspreeSubmitMock).toHaveBeenCalledTimes(1)
+  })
+
+  it("blocks honeypot-filled contact form submissions", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderRoute("/contact")
+
+    await waitFor(() =>
+      expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
+    )
+
+    await user.type(screen.getByLabelText(/first name/i), "Waffy")
+    await user.type(screen.getByLabelText(/last name/i), "Ahmed")
+    await user.type(screen.getByLabelText(/email/i), "waffy@example.com")
+    await user.type(
+      screen.getByLabelText(/message/i),
+      "Hello from a real visitor."
+    )
+    fireEvent.change(document.querySelector('input[name="_gotcha"]'), {
+      target: { value: "Acme" },
+    })
+    await user.click(screen.getByRole("button", { name: /send message/i }))
+
+    expect(formspreeSubmitMock).not.toHaveBeenCalled()
+    expect(getAnalyticsEvents("contact_form_submit")).toEqual([])
+  })
+
+  it("announces and focuses successful contact submissions", async () => {
+    formspreeMockState.current = {
+      errors: null,
+      submitting: false,
+      succeeded: true,
+    }
+    renderRoute("/contact")
+
+    const successStatus = screen.getByRole("status")
+
+    expect(successStatus).toHaveAttribute("aria-live", "polite")
+    expect(successStatus).toHaveAttribute("aria-atomic", "true")
+    expect(successStatus).toHaveAttribute("tabindex", "-1")
+    expect(successStatus).toHaveTextContent(/thank you for your message/i)
+    await waitFor(() => expect(successStatus).toHaveFocus())
+  })
+
+  it("renders and focuses a general contact form submission error", async () => {
+    formspreeMockState.current = {
+      errors: {
+        getFieldErrors: () => [],
+        getFormErrors: () => [{ message: "Submission failed" }],
+      },
+      submitting: false,
+      succeeded: false,
+    }
+    renderRoute("/contact")
+
+    const submissionAlert = screen.getByRole("alert")
+
+    expect(submissionAlert).toHaveTextContent(/message could not be sent/i)
+    expect(submissionAlert).toHaveAttribute("tabindex", "-1")
+    await waitFor(() => expect(submissionAlert).toHaveFocus())
   })
 
   it("publishes ProfilePage structured data with a main entity", () => {
@@ -359,7 +438,14 @@ describe("App routes", () => {
     expect(
       screen.getByRole("heading", { name: /contact form/i })
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: /^email$/i })
+    ).toHaveAttribute("href", "mailto:waffyahmed@gmail.com")
+    expect(screen.queryByText("waffyahmed@gmail.com")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /copy email/i })).not.toBeInTheDocument()
     expect(screen.getByLabelText(/email/i)).toBeRequired()
+    expect(screen.getByLabelText(/email/i)).toHaveAttribute("maxlength", "254")
+    expect(screen.getByLabelText(/message/i)).toHaveAttribute("minlength", "10")
     expect(screen.getByLabelText(/message/i)).toHaveValue("")
   })
 
@@ -402,7 +488,7 @@ describe("App routes", () => {
 
     await user.click(
       screen.getByRole("button", {
-        name: /show details for software engineer at the home depot/i,
+        name: /view details for software engineer at the home depot/i,
       })
     )
 

@@ -91,12 +91,12 @@ function Projects() {
           >
             <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,0.92fr)_minmax(21rem,1.08fr)] lg:items-center">
               <div>
-                <StatusBadge tone="orange">Featured project</StatusBadge>
+                <StatusBadge tone="orange">Public build</StatusBadge>
                 <h2
                   id="featured-project-heading"
                   className="mt-5 text-4xl font-black leading-tight sm:text-5xl"
                 >
-                  Featured public-health reconciliation system
+                  CDC Data Reconciliation
                 </h2>
                 <p className="mt-4 text-lg leading-relaxed text-slate-300">
                   Led a six-person team while contributing full-stack work on a

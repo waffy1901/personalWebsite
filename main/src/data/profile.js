@@ -18,7 +18,7 @@ export const resume = {
 export const contact = {
   heading: "Let's connect",
   intro:
-    "I'm always excited to connect with new people! Whether you have a potential opportunity to discuss, want to expand your professional network, have feedback to share, or merely want to chat, please don't hesitate to reach out!",
+    "Have an opportunity, feedback, or a good engineering conversation in mind? Send a note and I will get back to you.",
 }
 
 export const socialLinks = [

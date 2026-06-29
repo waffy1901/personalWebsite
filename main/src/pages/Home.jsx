@@ -33,7 +33,7 @@ const impactMetrics = [
   {
     value: "89%",
     label: "fewer errors",
-    detail: "Measured after HPA rollout on a core service.",
+    detail: "Measured after autoscaling rollout on a core service.",
     tone: "orange",
   },
   {
@@ -67,7 +67,7 @@ const autoscalingNodes = [
     icon: FaNetworkWired,
   },
   {
-    label: "HPA policy",
+    label: "Autoscaling policy",
     detail: "50-100 pods",
     tone: "orange",
     icon: FaServer,

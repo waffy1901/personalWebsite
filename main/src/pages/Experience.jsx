@@ -31,7 +31,7 @@ const impactMetrics = [
   {
     value: "89%",
     label: "fewer production errors",
-    detail: "Measured after HPA validation.",
+    detail: "Measured after Horizontal Pod Autoscaling (HPA) rollout.",
     tone: "orange",
   },
   {
