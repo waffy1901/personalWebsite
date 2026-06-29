@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { FaArrowLeft, FaGithub, FaInfoCircle } from "react-icons/fa";
-import { StackChips, StatusBadge } from "./MissionControl.jsx";
+import { StackChips } from "./MissionControl.jsx";
 import { trackEvent, trackLinkClick } from "../utils/analytics";
 
 function usePrefersReducedMotion() {
@@ -168,22 +168,19 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
             />
           </div>
 
-          <div className="relative z-10 mt-auto flex items-center justify-between gap-3">
-            <StatusBadge tone="cyan" className="border-white/15 bg-white/10 text-slate-100">
-              Details available
-            </StatusBadge>
+          <div className="relative z-10 mt-auto flex justify-end">
             <button
               ref={detailsButtonRef}
               type="button"
               onClick={showDetails}
               tabIndex={isFlipped ? -1 : 0}
-              aria-label={`Show details for ${title}`}
+              aria-label={`View details for ${title}`}
               aria-expanded={isFlipped}
               aria-controls={detailsId}
-              className="mc-button-light"
+              className="mc-button-primary w-full sm:w-auto"
             >
               <FaInfoCircle className="mr-2" aria-hidden="true" />
-              Details
+              View details
             </button>
           </div>
         </div>

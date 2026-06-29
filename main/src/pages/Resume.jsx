@@ -4,7 +4,6 @@ import {
   PageContainer,
   PageShell,
   SectionHeader,
-  StatusBadge,
 } from "../components/MissionControl.jsx";
 import { resume } from "../data/profile";
 import { trackEvent } from "../utils/analytics";
@@ -21,8 +20,7 @@ function Resume() {
         />
 
         <section className="mc-panel p-4 sm:p-5">
-          <div className="mb-4 flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <StatusBadge tone="green">PDF ready</StatusBadge>
+          <div className="mb-4 flex flex-col gap-3 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-end">
             <div className="flex flex-wrap justify-center gap-3 sm:justify-end">
               <a
                 href={resume.pdf}

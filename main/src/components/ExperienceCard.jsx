@@ -41,9 +41,7 @@ const ExperienceCard = ({
     : featured
     ? "max-h-52 max-w-[82%] object-contain shadow-[0_18px_42px_rgba(11,18,32,0.28)]"
     : "max-h-32 max-w-[70%] object-contain";
-  const detailsButtonClass = featured
-    ? "mc-button-light mt-3 w-full sm:w-fit"
-    : "mc-button-light mt-auto w-full sm:w-fit";
+  const detailsButtonClass = "mc-button-primary w-full sm:w-auto";
 
   const handleCopy = async () => {
     try {
@@ -102,18 +100,20 @@ const ExperienceCard = ({
             />
           </div>
 
-          <button
-            type="button"
-            onClick={() => setIsFlipped(true)}
-            tabIndex={isFlipped ? -1 : 0}
-            aria-label={`Show details for ${title} at ${company}`}
-            aria-expanded={isFlipped}
-            aria-controls={detailsId}
-            className={detailsButtonClass}
-          >
-            <FaInfoCircle className="mr-2" aria-hidden="true" />
-            Details
-          </button>
+          <div className="mt-auto flex justify-end">
+            <button
+              type="button"
+              onClick={() => setIsFlipped(true)}
+              tabIndex={isFlipped ? -1 : 0}
+              aria-label={`View details for ${title} at ${company}`}
+              aria-expanded={isFlipped}
+              aria-controls={detailsId}
+              className={detailsButtonClass}
+            >
+              <FaInfoCircle className="mr-2" aria-hidden="true" />
+              View details
+            </button>
+          </div>
         </div>
 
         <div

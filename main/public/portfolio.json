@@ -61,7 +61,7 @@
       "organization": "The Home Depot",
       "timeframe": "2025",
       "category": "Platform Reliability",
-      "summary": "Validated and deployed HPA for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
+      "summary": "Validated and deployed Horizontal Pod Autoscaling (HPA) for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
       "url": "https://waffy.dev/case-studies/kubernetes-autoscaling",
       "metrics": [
         "40% lower mean latency",
