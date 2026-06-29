@@ -1,64 +1,65 @@
 # Personal Website Repository Audit
 
 **Repository:** `waffy1901/personalWebsite`  
-**Audited branch:** `main`  
-**Audited commit:** `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Audit scope:** React application, content/data layer, tests, dependencies, Netlify configuration, public metadata, security controls, and GitHub Actions.
+**Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
+**Reconciled against:** PR #125 (`overhaul/v2`)  
+**Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, security controls, and GitHub Actions.
 
-> This was a source and configuration audit rather than a fresh browser-based Lighthouse run.
+> This is a source and configuration audit, not a fresh browser-based Lighthouse or visual-regression run. Findings below are reconciled against the current PR so resolved items are not presented as open work.
 
 ---
 
 ## Overall Assessment
 
-The portfolio is in **good engineering shape**. The redesign is much more distinctive, recruiter-oriented, and technically credible than a conventional portfolio. The repository now has meaningful automated testing, dependency scanning, CodeQL, deployment validation, analytics, structured data, and accessible interaction patterns.
+The portfolio is in **good engineering shape**. It presents a distinctive, recruiter-oriented platform and reliability narrative while also demonstrating meaningful engineering discipline through automated testing, dependency scanning, CodeQL, deployment validation, analytics, structured data, and accessible interaction patterns.
 
-No obvious current build-breaking or critical security issue was found. The dependency-resolution follow-up passed the application CI, CodeQL, and `npm audit` workflows.
+No obvious build-breaking or critical security issue was found. The highest-value remaining work is architectural rather than cosmetic:
 
-The most important remaining problems are:
-
-1. Deep-link SEO and link previews are still limited by the client-rendered SPA.
-2. Unknown URLs produce indexable soft 404s.
-3. README and AI-readable artifacts have already drifted from the actual application.
-4. The ownership-card interaction is not fully accessible.
-5. Several smaller content, performance, security-header, and maintenance issues remain.
+1. Pre-render canonical routes so crawlers and link-preview clients receive route-specific metadata.
+2. Return genuine 404 responses for unknown URLs.
+3. Generate public documentation and AI-readable artifacts from canonical data to prevent drift.
+4. Add targeted accessibility, performance, and security hardening.
 
 ---
 
-# Highest-Priority Findings
+## Resolved in PR #125
 
-## 1. High: Deep Routes Initially Publish Homepage SEO Metadata
+The current PR addresses several findings from the baseline review:
 
-Netlify sends every application route to the same `index.html` file through:
+- Added practical contact-form field limits and autocomplete attributes.
+- Added a honeypot and duplicate-submission protection.
+- Added a profile-driven fallback email action.
+- Added general submission-error handling.
+- Added live-region announcements and focus management for successful and failed form submissions.
+- Standardized project and experience card actions around clearer **View details** controls.
+- Corrected the Fintech @ Georgia Tech `squantities` typo.
+- Expanded `HPA` to `Horizontal Pod Autoscaling (HPA)` where additional context improves readability.
+- Updated the favicon, structured portfolio metadata, and the CSP hash required by the inline JSON-LD change.
+- Expanded automated coverage for contact behavior, accessibility outcomes, input constraints, structured data, and experience-card interactions.
+
+These items should not be tracked as unresolved findings after this PR merges.
+
+---
+
+# Open Findings
+
+## 1. High: Deep Routes Initially Publish Homepage Metadata
+
+Netlify currently sends application routes to the same `index.html` file through the SPA rewrite:
 
 ```text
 /* /index.html 200
 ```
 
-That HTML contains homepage-specific title, description, canonical URL, Open Graph URL, and Open Graph title.
-
-The correct route-specific values are applied only after React runs a `useEffect`.
-
-Consequently, a request for a route such as:
+The initial HTML contains homepage-specific title, canonical, and Open Graph values. React replaces them after the application runs, but crawlers, AI fetchers, messaging clients, and social-preview generators that do not execute JavaScript may continue to see homepage metadata for routes such as:
 
 ```text
 /case-studies/kubernetes-autoscaling
 ```
 
-initially returns HTML declaring:
-
-```text
-canonical: https://waffy.dev/
-title: Waffy Ahmed | Software Engineer Portfolio
-```
-
-Any search crawler, social preview generator, messaging client, or AI fetcher that does not execute JavaScript will see homepage metadata instead of the case-study metadata.
-
 ### Recommended Correction
 
-Pre-render static HTML for each canonical route during the build. The site has only a small, known set of routes, making it a strong candidate for a Vite-compatible prerender or static-site-generation approach.
-
-At minimum, generate standalone HTML for:
+Pre-render static HTML for every canonical route during the build:
 
 - `/`
 - `/experience`
@@ -68,7 +69,7 @@ At minimum, generate standalone HTML for:
 - `/case-studies`
 - Each individual case study
 
-This is more valuable than further client-side SEO work because the existing route metadata is already thoughtfully defined.
+The route-level metadata definitions already exist; the missing step is publishing them in the initial HTML response.
 
 **Relevant files:**
 
@@ -79,69 +80,44 @@ This is more valuable than further client-side SEO work because the existing rou
 
 ---
 
-## 2. High: Unknown Routes Are Soft 404s and May Be Indexed
+## 2. High: Unknown Routes Produce Soft 404s
 
-The catch-all Netlify rewrite returns `index.html` with HTTP 200 for every unknown URL.
-
-React then displays the `NotFound` component, but this is only a visual 404.
-
-There are two problems:
-
-- The server response is still HTTP 200.
-- The initial HTML has `robots: index, follow`.
-
-The client-side SEO component changes the title and canonical URL for an unknown route, but it does not add `noindex`.
-
-That means a nonsense URL could theoretically be treated as a valid, indexable page with a self-referencing canonical.
+The catch-all SPA rewrite returns `index.html` with HTTP 200 for unknown URLs. React later renders the `NotFound` page, but the server response is still successful and the initial HTML remains indexable.
 
 ### Recommended Correction
 
-Best option:
+Preferred approach:
 
 - Pre-render known routes.
-- Let Netlify return a genuine `404.html` with HTTP 404 for anything else.
+- Publish a real `404.html`.
+- Allow Netlify to return HTTP 404 for unknown paths.
 
-Interim correction:
+Interim improvement:
 
-- Add `meta[name="robots"] = "noindex, nofollow"` on the not-found route.
-- Canonicalize the not-found page back to the homepage rather than the invalid pathname.
+- Apply `noindex, nofollow` on the client-rendered not-found route.
+- Canonicalize invalid paths back to the homepage rather than to the invalid URL.
 
 **Relevant files:**
 
 - `main/public/_redirects`
-- `main/index.html`
 - `main/src/components/Seo.jsx`
 - `main/src/pages/NotFound.jsx`
 
 ---
 
-## 3. High-Medium: Public Documentation and AI Artifacts Are Already Drifting
+## 3. High-Medium: Documentation and AI Artifacts Can Drift
 
-The actual application now uses React `19.2.7`.
+The root README correctly lists React 19, but two other public documentation surfaces are stale:
 
-However:
+- `main/README.md` still lists React 18.
+- `main/public/ai-summary.txt` still describes the implementation as React 18.
+- The AI summary says the homepage includes Georgia Tech branding, while the redesigned hero now centers the profile image and platform/reliability positioning.
 
-- The root README still says React 18.
-- The application README still says React 18.
-- `ai-summary.txt` still describes the implementation as React 18.
-
-The AI summary also says the homepage contains Georgia Tech branding, but the redesigned homepage now centers the profile photo and platform/reliability positioning rather than displaying the GT logo in the hero.
-
-This drift is especially important because the site intentionally exposes:
-
-- `ai-summary.txt`
-- `portfolio.json`
-- `llms.txt`
-- JSON-LD
-- Sitemap entries
-- Two READMEs
-- React data files
-
-The same career claims and metrics are repeated across several of these surfaces. For example, the CDC `5000+ hours` figure appears in homepage content, projects, experience, case studies, the AI summary, and structured JSON.
+The same career claims and metrics also appear across JavaScript data modules, JSON-LD, `portfolio.json`, `ai-summary.txt`, `llms.txt`, the sitemap, and both READMEs. Manual synchronization across these surfaces is likely to drift again.
 
 ### Recommended Correction
 
-Treat the JavaScript data modules as the canonical source and generate the static artifacts at build time:
+Treat the data modules as the canonical source and generate public artifacts during the build:
 
 ```text
 src/data/
@@ -158,14 +134,7 @@ JSON-LD
 sitemap.xml
 ```
 
-Also add a synchronization test that verifies:
-
-- Framework versions shown in documentation match `package.json`.
-- Every case-study slug appears in the sitemap.
-- Every structured artifact contains the same primary metrics.
-- Resume and social URLs match `profile.js`.
-
-This is probably the highest-leverage maintainability improvement in the repository.
+Add synchronization tests covering framework versions, case-study slugs, primary metrics, resume links, and social URLs.
 
 **Relevant files:**
 
@@ -175,89 +144,23 @@ This is probably the highest-leverage maintainability improvement in the reposit
 - `main/public/ai-summary.txt`
 - `main/public/portfolio.json`
 - `main/public/sitemap.xml`
-- `main/src/data/profile.js`
-- `main/src/data/experience.js`
-- `main/src/data/projects.js`
-- `main/src/data/caseStudies.js`
+- `main/src/data/`
 
 ---
 
-## 4. Medium: Ownership Cards Are Visually Interactive but Not Semantic Disclosures
+## 4. Medium: A Few Content Claims Need Tighter Wording
 
-`OwnershipCard` makes the entire `<article>` focusable and expands its details through hover or focus.
+The following wording remains worth revising:
 
-The details panel is visually collapsed through height, translation, and opacity, but it:
+- The 2024 internship bullet uses `germane product data` and `pruning customer theft`, which read unnaturally and imply stronger direct causality than the surrounding context establishes.
+- The release-governance section says staged rollouts ensure `zero regressions`; a rollout process can reduce risk but cannot guarantee that outcome.
+- The Job Search Aid description uses a generic `etc.` rather than naming exact capabilities.
 
-- Has no disclosure button.
-- Has no `aria-expanded`.
-- Has no `aria-controls`.
-- Has no `aria-hidden` or `inert` state.
-- Does not communicate that focusing the card changed the content.
-
-A keyboard user can discover it, but the behavior is less clear to a screen-reader user and does not offer an explicit mobile or touch action.
-
-### Recommended Correction
-
-Use the same interaction quality already implemented in `ProjectCard`:
-
-- A real **View details** button.
-- `aria-expanded`.
-- `aria-controls`.
-- Explicit show/hide state.
-- Escape-key support if appropriate.
-- Details hidden semantically when collapsed.
-
-`ProjectCard` already demonstrates strong focus restoration and Escape handling.
-
-**Relevant files:**
-
-- `main/src/components/OwnershipCard.jsx`
-- `main/src/components/ProjectCard.jsx`
-
----
-
-## 5. Medium: Content Quality Has a Few Noticeable Blemishes
-
-### Clear Typo
-
-The Fintech @ Georgia Tech bullet says:
-
-> “adjust squantities”
-
-This should be:
-
-> “adjust quantities”
-
-### Awkward Wording
-
-The 2024 internship bullet uses:
-
-- “germane product data”
-- “pruning customer theft”
-
-These feel unnatural and potentially overstate direct causality.
-
-A cleaner version would be:
+Suggested direction:
 
 > Used Java, React, and TypeScript to surface relevant product information across self-checkout registers, supporting faster associate intervention and loss-prevention efforts associated with approximately $10M in annual shrink exposure.
 
-### Absolute Operational Claim
-
-The release-governance section says staged rollouts ensure “zero regressions.”
-
-No rollout process can literally guarantee zero regressions.
-
-Safer wording:
-
 > Coordinate staged rollouts for high-risk changes, reducing regression risk and improving operational consistency.
-
-### Generic Project Copy
-
-The Job Search Aid description contains:
-
-> “resources such as FAQs, resume templates, etc.”
-
-Replacing `etc.` with two or three exact capabilities would make it more concrete.
 
 **Relevant files:**
 
@@ -268,43 +171,26 @@ Replacing `etc.` with two or three exact capabilities would make it more concret
 
 # Architecture and Performance
 
-## 6. Medium: All Route Pages Are Loaded Eagerly
+## 5. Medium: Secondary Routes Are Loaded Eagerly
 
-`App.jsx` statically imports every page, including all case-study and secondary routes.
+`App.jsx` statically imports all route pages. The site is still small, but route-level lazy loading would keep the initial homepage bundle focused as the portfolio grows.
 
-For a small portfolio this is not disastrous, but the redesign has increased page and component complexity. Route-level lazy loading would keep the homepage bundle focused:
+Keep the homepage eager and lazy-load secondary routes through `React.lazy` and `Suspense`.
 
-```jsx
-const Experience = lazy(() => import("./pages/Experience.jsx"));
-const Projects = lazy(() => import("./pages/Projects.jsx"));
-const CaseStudy = lazy(() => import("./pages/CaseStudy.jsx"));
-```
-
-The homepage should remain eager; secondary pages can load through `Suspense`.
-
-**Relevant file:**
-
-- `main/src/App.jsx`
+**Relevant file:** `main/src/App.jsx`
 
 ---
 
-## 7. Medium-Low: Images Lack Intrinsic Dimensions and Below-the-Fold Lazy Loading
+## 6. Medium-Low: Images Need Explicit Loading Treatment
 
-Examples include:
+The hero image, project logos, experience logos, and resume preview generally lack intrinsic dimensions. Several below-the-fold images are also loaded eagerly.
 
-- Hero profile image.
-- Project logos.
-- Experience logos.
-- Resume preview.
+Recommended treatment:
 
-Most do not provide `width` and `height`, so the browser has less information for reserving layout space before the file loads.
-
-### Recommended Treatment
-
-- Give all images intrinsic dimensions or a fixed `aspect-ratio`.
-- Use `loading="lazy"` for resume previews and below-the-fold logos.
+- Provide `width` and `height`, or a stable aspect ratio, for layout reservation.
+- Lazy-load below-the-fold assets.
 - Keep the homepage hero eager and consider `fetchPriority="high"`.
-- Evaluate WebP or AVIF for the profile and resume-preview images.
+- Evaluate WebP or AVIF for large photographic assets.
 
 **Relevant files:**
 
@@ -315,137 +201,59 @@ Most do not provide `width` and `height`, so the browser has less information fo
 
 ---
 
-## 8. Low: No Bundle or Performance Regression Budget
+## 7. Low: No Performance Regression Budget
 
-The Vite configuration contains only the React plugin, an ES2019 target, and Vitest configuration.
+The repository does not currently enforce a bundle-size, Lighthouse, or Core Web Vitals regression budget.
 
-There is currently no:
+A lightweight production bundle report is sufficient for now; Lighthouse CI becomes more valuable once route rendering and image loading are improved.
 
-- Bundle-size report.
-- Maximum chunk-size policy.
-- Lighthouse CI.
-- Core Web Vitals regression check.
-
-This is not urgent, but a lightweight production bundle report would be useful now that React, React Router, Vite, Formspree, icons, diagrams, analytics, and several image assets are involved.
-
-**Relevant file:**
-
-- `main/vite.config.mjs`
+**Relevant file:** `main/vite.config.mjs`
 
 ---
 
-# Accessibility and Interaction Details
+# Accessibility and Interaction
 
-## 9. Medium-Low: Contact Success Is Not Announced or Focus-Managed
+## 8. Low: Clipboard Results Are Visual Only
 
-After Formspree reports success, the entire form is replaced by a thank-you message.
+`ExperienceCard` visually shows `Copied`, `Copy failed`, or `Copy`, but the status is not announced through an `aria-live` region. The reset timeout should also be cleared if the component unmounts.
 
-The success container has neither:
+**Relevant file:** `main/src/components/ExperienceCard.jsx`
 
-- `role="status"`
-- `aria-live="polite"`
-- Programmatic focus
+### Existing Strengths
 
-A screen-reader user may not know the submission succeeded.
-
-### Recommended Correction
-
-Add a status region and move focus to it after successful submission. It would also be helpful to render a general submission error message rather than only field-level email and message errors.
-
-**Relevant file:**
-
-- `main/src/components/ContactForm.jsx`
-
----
-
-## 10. Low: Clipboard Outcomes Are Visual Only
-
-`ExperienceCard` shows `Copied`, `Copy failed`, or `Copy` visually after using the Clipboard API.
-
-The changing text is not in an `aria-live` region, so assistive technology may not announce the outcome.
-
-The timeout should also ideally be cleared if the component unmounts, although this is a minor robustness concern.
-
-**Relevant file:**
-
-- `main/src/components/ExperienceCard.jsx`
-
----
-
-## 11. Strong Accessibility Work Already Present
-
-Several parts are notably well implemented:
-
-- The navbar has a named navigation landmark and brings the active mobile item into view while honoring reduced-motion preferences.
-- Project flip cards restore focus, support Escape, properly manage tab order, and account for reduced motion.
+- The navbar exposes a named landmark and respects reduced-motion preferences.
+- Project cards manage focus, Escape-key behavior, tab order, and reduced motion.
+- Contact success and failure states now use live regions and focus management.
 - External links consistently use `noopener noreferrer`.
-- Global decorative animations are disabled under `prefers-reduced-motion`.
-- `PageShell` establishes a proper `<main>` landmark.
-
-This is substantially better accessibility work than most personal portfolio repositories.
-
-**Relevant files:**
-
-- `main/src/components/Navbar.jsx`
-- `main/src/components/ProjectCard.jsx`
-- `main/src/index.css`
-- `main/src/components/MissionControl.jsx`
+- `PageShell` establishes the main landmark.
 
 ---
 
 # Security and Privacy
 
-## 12. Medium-Low: CSP Can Be Hardened Further
+## 9. Medium-Low: CSP Can Be Hardened Further
 
-The current policy is already much better than having no CSP. It restricts scripts, connections, frames, forms, images, and other resources.
+The existing Content Security Policy is substantially better than having no policy. Remaining defense-in-depth improvements include:
 
-Several refinements are worth considering.
+- Change `object-src 'self'` to `object-src 'none'` if no object/embed content is required.
+- Change `frame-src 'self'` to `frame-src 'none'` if no embedded frame is required.
+- Add `Strict-Transport-Security` for the HTTPS-only production domain.
+- Treat removal of `style-src 'unsafe-inline'` as longer-term work because current styling may depend on it.
 
-### Use `object-src 'none'`
-
-The current policy uses:
-
-```text
-object-src 'self'
-```
-
-The site does not appear to require browser plug-ins or `<object>` content, so `none` is more appropriate.
-
-### Remove Unnecessary `frame-src 'self'`
-
-The resume is now rendered as an image with external PDF links, not an embedded frame.
-
-Unless another feature requires frames, `frame-src 'none'` would reduce the attack surface.
-
-### Add HSTS
-
-`Strict-Transport-Security` is not configured in `netlify.toml`. This is a defense-in-depth improvement for a production HTTPS-only custom domain.
-
-### Eventually Reduce `style-src 'unsafe-inline'`
-
-This is likely the most difficult CSP improvement because Tailwind and inline style usage may require it. It should be treated as a longer-term hardening task, not an immediate blocker.
-
-The weekly production-header workflow is a strong safeguard, although its expected CSP values will need to change alongside any policy hardening.
+The deployed-header verification workflow should be updated alongside any policy change.
 
 **Relevant files:**
 
 - `netlify.toml`
 - `.github/workflows/deployed-security-headers.yml`
-- `main/src/pages/Resume.jsx`
 
 ---
 
-## 13. Low: Analytics and Formspree Deserve a Small Privacy Disclosure
+## 10. Low: Add a Small Privacy Disclosure
 
-Google Analytics is dynamically loaded as soon as its measurement ID is configured.
-
-The contact form sends visitor-provided details to Formspree.
-
-For a personal portfolio, a short footer-level privacy notice is sufficient:
+The site loads Google Analytics when configured and sends contact submissions through Formspree. A short footer-level disclosure would provide adequate transparency for this portfolio:
 
 > This site uses Google Analytics for aggregate engagement measurement. Contact-form submissions are processed by Formspree.
-
-That improves transparency without needing a large legal page.
 
 **Relevant files:**
 
@@ -454,69 +262,36 @@ That improves transparency without needing a large legal page.
 
 ---
 
-## 14. Medium-Low: Add CDN or WAF Rate Limiting for Contact Form Abuse
+## 11. Medium-Low: Client-Side Form Controls Are Not Rate Limiting
 
-The contact form now has reasonable client-side hardening, including required
-fields, practical length limits, disabled duplicate submits while Formspree is
-submitting, and a honeypot field.
+The PR adds useful client-side abuse resistance, but a bot can bypass the React form and submit directly to the Formspree endpoint.
 
-Those controls improve casual spam resistance and message quality, but they are
-not true denial-of-service protection because a bot can bypass the React app and
-submit directly to the form endpoint.
+For stronger protection:
 
-For stronger protection without adding application dependencies, add CDN or WAF
-rate limiting in front of the production site. Good first rules would be:
+- Review Formspree spam controls and rate limits for the active plan.
+- Add CDN or WAF throttling only where it can be applied without blocking normal recruiter or hiring-team traffic.
+- Start with monitoring or challenge behavior before hard blocking.
 
-- Limit repeated requests to the contact page or contact submission path per IP.
-- Apply stricter throttles to obvious burst behavior.
-- Keep the action as throttle/challenge first, then block only after repeated abuse.
-- Monitor false positives so recruiters or hiring teams are not blocked by normal use.
-
-If Formspree exposes built-in rate limiting, spam filtering, blocklists, or abuse
-controls on the active plan, enable those as the lowest-friction complement.
-
-This should be treated as future operational hardening rather than a current
-release blocker.
-
-**Relevant files/services:**
-
-- Netlify rate limiting or WAF configuration
-- Formspree project spam and abuse settings
-- `main/src/components/ContactForm.jsx`
+This is future operational hardening, not a release blocker.
 
 ---
 
 # Metadata and Platform Polish
 
-## 15. Medium-Low: Web Manifest Still Reflects the Previous Generic Theme
+## 12. Medium-Low: Manifest Metadata Uses the Previous Theme
 
-The redesigned site uses cream, navy, orange, and blue as its defining palette, but the manifest still declares:
+The redesigned site uses cream, navy, orange, and blue, while the manifest and HTML theme metadata still use generic black and white values.
 
-```json
-"theme_color": "#000000",
-"background_color": "#ffffff"
-```
-
-`index.html` also uses a black theme color.
-
-A closer match would be:
+Suggested values:
 
 ```json
-"theme_color": "#0B1220",
-"background_color": "#F4F1EA"
+{
+  "theme_color": "#0B1220",
+  "background_color": "#F4F1EA"
+}
 ```
 
-The manifest name could also be upgraded from:
-
-```text
-Waffy's Website
-```
-
-to:
-
-```text
-Waffy Ahmed | Software Engineer Portfolio
-```
+The manifest name can also be changed from `Waffy's Website` to `Waffy Ahmed | Software Engineer Portfolio`.
 
 **Relevant files:**
 
@@ -525,66 +300,32 @@ Waffy Ahmed | Software Engineer Portfolio
 
 ---
 
-## 16. Low: Validate the AI-Provider Launcher URLs Periodically
+## 13. Low: AI-Provider Launcher URLs Need Periodic Validation
 
-The footer hardcodes provider launch behavior, including a ChatGPT prefilled query URL and a clipboard-then-open flow for Claude.
+The footer depends on external ChatGPT and Claude URL behavior. These formats can change independently of this repository.
 
-These external URL formats can change independently of the deployment. A simple manual release check or unit test over the generated prompt is reasonable, while avoiding reliance on the provider successfully preserving the prefilled text forever.
+Keep a small manual release check or unit test around prompt generation, without assuming providers will always preserve prefilled text.
 
-**Relevant file:**
-
-- `main/src/components/DeployDates.jsx`
+**Relevant file:** `main/src/components/DeployDates.jsx`
 
 ---
 
-# Testing and Delivery Pipeline
+# Testing and Delivery
 
-## What Is Strong
+The repository already has unusually mature automation for a personal portfolio:
 
-The test suite has meaningful behavioral coverage rather than superficial snapshots. It covers:
-
-- All major routes.
-- Route-level SEO mutations.
-- Analytics events.
-- Project-card focus management.
-- Contact submissions.
-- Structured data.
-- Public portfolio JSON.
-- Legacy redirects.
-- Resume actions.
-- Not-found behavior.
-- Experience-card accessibility.
-
-The CI workflow runs clean installs, linting, tests, and a production build on pull requests to `main`.
-
-The repository also has:
-
-- Scheduled and PR-based `npm audit`.
-- Push, PR, and scheduled CodeQL analysis.
+- Pull-request CI for clean installation, linting, tests, and production builds.
+- Scheduled and pull-request-based `npm audit`.
+- Push, pull-request, and scheduled CodeQL analysis.
 - Weekly deployed-header verification.
-- Deployment-to-commit verification before creating a release.
+- Deployment-to-commit validation before release creation.
 
-That is unusually mature for a portfolio repository.
+Recommended additions, in descending order of value:
 
-**Relevant files:**
-
-- `main/src/App.test.jsx`
-- `.github/workflows/dev-ci.yml`
-- `.github/workflows/npm-audit.yml`
-- `.github/workflows/codeql.yml`
-- `.github/workflows/deployed-security-headers.yml`
-- `.github/workflows/release-on-deploy.yml`
-
----
-
-## Remaining Test Gaps
-
-Add the following in descending order of value:
-
-1. `axe` accessibility checks for every top-level route.
-2. A test proving not-found routes receive `noindex`.
-3. Tests over generated sitemap, JSON-LD, and AI artifacts.
-4. A rendered-HTML test confirming deep routes contain their own static metadata after prerendering.
+1. `axe` checks for every top-level route.
+2. A test proving not-found routes receive `noindex` until real 404s are implemented.
+3. Synchronization tests for sitemap, JSON-LD, AI artifacts, and framework versions.
+4. A rendered-HTML test confirming route-specific metadata after prerendering.
 5. One mobile and one desktop visual-regression pass.
 6. A modest bundle-size or Lighthouse budget.
 
@@ -592,32 +333,22 @@ Add the following in descending order of value:
 
 # Product and Portfolio Assessment
 
-The redesign itself is a clear success.
+The redesign is a clear success. The homepage quickly communicates:
 
-The homepage immediately presents:
-
-- Your platform and reliability specialization.
-- Four high-signal metrics.
+- Platform and reliability specialization.
+- High-signal outcome metrics.
 - A prominent resume action.
-- A concise technical focus.
+- A focused technical narrative.
 - A featured production case study.
 - Clear paths into outcomes, experience, and projects.
 
-The case-study data model is also strong. It consistently gives each story:
+The next case-study improvement should emphasize engineering judgment rather than adding more metrics:
 
-- Context.
-- Measurable outcomes.
-- A sequence of engineering steps.
-- Problem, approach, and outcome.
-- Stack and related links.
-
-The next content improvement should not be adding more metrics. It should be adding slightly more **engineering judgment** to the case studies:
-
-- What alternatives were considered?
-- What risks constrained the rollout?
-- Why was this design selected?
-- What validation would have caused a rollback?
-- What remained imperfect afterward?
+- Alternatives considered.
+- Rollout constraints and risks.
+- Why the selected design was chosen.
+- Rollback criteria.
+- Remaining tradeoffs or imperfections.
 
 That would make the case studies read more like senior engineering narratives and less like expanded resume bullets.
 
@@ -625,15 +356,15 @@ That would make the case studies read more like senior engineering narratives an
 
 # Recommended Execution Order
 
-1. **Fix route rendering and soft 404 behavior** through prerendering and a real `404.html`.
-2. **Generate AI, SEO, and public artifacts from canonical data** to eliminate drift.
-3. **Replace `OwnershipCard`’s focus-triggered expansion with an explicit accessible disclosure.**
-4. **Correct the typo, awkward phrasing, absolute claims, React-version docs, and manifest colors.**
-5. **Add route-level lazy loading, image dimensions, lazy loading for below-fold assets, and accessibility CI.**
-6. **Harden CSP, add the short analytics/Formspree privacy disclosure, and evaluate CDN/WAF rate limiting for contact-form abuse.**
+1. Pre-render canonical routes and implement genuine 404 responses.
+2. Generate public documentation and AI artifacts from canonical data.
+3. Correct the remaining wording and documentation drift.
+4. Add route-level lazy loading and explicit image-loading behavior.
+5. Add accessibility and performance regression checks.
+6. Harden response headers and add a concise privacy disclosure.
 
 ---
 
 # Final Assessment
 
-After these changes, the repository would be not merely polished for a personal portfolio—it would demonstrate the same operational rigor and reliability mindset that the portfolio claims as a professional specialty.
+After the remaining architectural and documentation work, the repository will not merely look polished as a portfolio; it will demonstrate the same operational rigor and reliability mindset that the site presents as a professional specialty.
