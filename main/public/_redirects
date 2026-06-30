@@ -3,4 +3,24 @@ http://waffy.netlify.app/* https://waffy.dev/:splat 301!
 https://www.waffy.dev/* https://waffy.dev/:splat 301!
 http://www.waffy.dev/* https://waffy.dev/:splat 301!
 /waffyahmedresume.pdf /waffyAhmedResume.pdf 301
-/* /index.html 200
+
+# Legacy app routes.
+/Resume /resume 301
+/Contact /contact 301
+/CaseStudies /case-studies 301
+/Case-Studies /case-studies 301
+/Experience /experience 301
+/Projects /projects 301
+
+# Canonical React app routes.
+/case-studies /index.html 200
+/case-studies/kubernetes-autoscaling /index.html 200
+/case-studies/legacy-deployment-recovery /index.html 200
+/case-studies/cdc-data-reconciliation /index.html 200
+/experience /index.html 200
+/projects /index.html 200
+/resume /index.html 200
+/contact /index.html 200
+
+# Unknown paths should return a real 404 instead of the SPA shell.
+/* /404.html 404

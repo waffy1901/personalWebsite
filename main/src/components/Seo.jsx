@@ -35,8 +35,9 @@ function Seo() {
 
   useEffect(() => {
     const metadata = getRouteMetadata(location.pathname)
-    const canonicalUrl = toAbsoluteUrl(location.pathname)
+    const canonicalUrl = toAbsoluteUrl(metadata.canonicalPath ?? location.pathname)
     const imageUrl = toAbsoluteUrl(siteMetadata.imagePath)
+    const robots = metadata.robots ?? "index, follow"
 
     document.title = metadata.title
 
@@ -56,6 +57,10 @@ function Seo() {
     upsertMeta('meta[name="keywords"]', {
       name: "keywords",
       content: siteMetadata.keywords.join(", "),
+    })
+    upsertMeta('meta[name="robots"]', {
+      name: "robots",
+      content: robots,
     })
     upsertMeta('meta[property="og:url"]', {
       property: "og:url",

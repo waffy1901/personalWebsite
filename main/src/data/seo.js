@@ -72,6 +72,8 @@ export const defaultRouteMetadata = {
   title: "Page Not Found | Waffy Ahmed",
   description:
     "The requested portfolio page could not be found. Return to Waffy Ahmed's software engineering portfolio.",
+  canonicalPath: "/",
+  robots: "noindex, nofollow",
 }
 
 export const getRouteMetadata = (pathname) =>

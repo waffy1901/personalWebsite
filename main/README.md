@@ -44,4 +44,4 @@ Set `VITE_GA_MEASUREMENT_ID` to enable Google Analytics. The app sends manual SP
 - Static public assets live in `public/`.
 - `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt`, `public/ai-summary.txt`, and `public/portfolio.json` support search and AI-agent discovery.
 - The resume route shows a PNG resume preview while preserving direct PDF open/download links.
-- `_redirects` keeps React Router routes working on Netlify.
+- `_redirects` rewrites canonical React Router routes on Netlify while unknown paths fall through to a real `404.html` response.
