@@ -132,8 +132,9 @@ The Home Depot Software Engineer Intern, May 2024 - July 2024:
   self-checkout workflows and reduce customer wait time for associate
   intervention by about 25%.
 * Used Java, React, and TypeScript to retrieve and display validated product
-  information across self-checkout registers, contributing to loss-prevention
-  and checkout efficiency efforts.
+  information across self-checkout registers, supporting loss-prevention and
+  checkout-efficiency efforts tied to approximately $10 million in annual
+  shrink exposure.
 
 The Home Depot Software Engineer Intern, May 2023 - July 2023:
 
@@ -206,7 +207,7 @@ Job Search Aid:
   saved jobs, user preferences, and job listings fetched by title, location,
   and radius.
 * Implementation details: FirebaseAuth email/password authentication and
-  Firestore storage for saved jobs and user metadata.
+  Firestore storage for profile metadata, saved jobs, and user preferences.
 
 Campus Discovery Service:
 
@@ -240,8 +241,9 @@ Website Structure and User-Facing Routes:
 This portfolio is a Vite React application under the main/ directory. It uses
 React Router and publishes the following primary routes:
 
-* / - Home page with profile summary, Georgia Tech branding, social/contact
-  links, resume download, deploy metadata, and AI-summary actions.
+* / - Home page with profile summary, platform/reliability positioning,
+  social/contact links, resume download, deploy metadata, and AI-summary
+  actions.
 * /case-studies - selected engineering case studies for reliability,
   deployment recovery, and data reconciliation work.
 * /case-studies/kubernetes-autoscaling - deeper writeup on deploying and
@@ -275,7 +277,7 @@ canonical /waffyAhmedResume.pdf path.
 
 Frontend Implementation Context:
 
-* Framework and build: React 18, Vite, React Router, Tailwind CSS, React Icons,
+* Framework and build: React 19, Vite, React Router, Tailwind CSS, React Icons,
   Formspree, and Netlify.
 * Testing and quality: Vitest, Testing Library, jsdom, ESLint, and React Hooks
   lint rules.
@@ -310,12 +312,12 @@ Deployment, Security, and Repository Workflow:
   and uses Node 22.
 * Production build injects VITE_DEPLOY_DATE and VITE_SITE_URL without rewriting
   local .env files.
-* Security headers include a Content-Security-Policy, X-Content-Type-Options:
-  nosniff, Referrer-Policy: strict-origin-when-cross-origin, and a restrictive
-  Permissions-Policy.
+* Security headers include a Content-Security-Policy, Strict-Transport-Security,
+  X-Content-Type-Options: nosniff, Referrer-Policy:
+  strict-origin-when-cross-origin, and a restrictive Permissions-Policy.
 * CSP allows self-hosted app assets, Google Tag Manager / Google Analytics
-  scripts and connections, Formspree form submissions, and self-hosted frames
-  for resume viewing.
+  scripts and connections, Formspree form submissions, data images/fonts where
+  needed, and no object or frame embedding.
 * GitHub Actions includes a pull-request CI workflow for main that runs npm ci,
   lint, tests, and production build from main/.
 * A main-branch deployment release workflow repeats verification and then

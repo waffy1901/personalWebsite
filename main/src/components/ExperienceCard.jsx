@@ -1,6 +1,31 @@
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { FaArrowLeft, FaCheck, FaClipboard, FaInfoCircle } from "react-icons/fa";
 import { StatusBadge } from "./MissionControl.jsx";
+
+function usePrefersReducedMotion() {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    updatePreference();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", updatePreference);
+      return () => mediaQuery.removeEventListener("change", updatePreference);
+    }
+
+    mediaQuery.addListener?.(updatePreference);
+    return () => mediaQuery.removeListener?.(updatePreference);
+  }, []);
+
+  return prefersReducedMotion;
+}
 
 const ExperienceCard = ({
   title,
@@ -13,6 +38,11 @@ const ExperienceCard = ({
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [copyStatus, setCopyStatus] = useState(null);
+  const detailsButtonRef = useRef(null);
+  const backButtonRef = useRef(null);
+  const copyResetTimeoutRef = useRef(null);
+  const shouldRestoreDetailsFocusRef = useRef(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
   const cardId = useId();
   const titleId = `${cardId}-title`;
   const detailsId = `${cardId}-details`;
@@ -42,6 +72,76 @@ const ExperienceCard = ({
     ? "max-h-52 max-w-[82%] object-contain shadow-[0_18px_42px_rgba(11,18,32,0.28)]"
     : "max-h-32 max-w-[70%] object-contain";
   const detailsButtonClass = "mc-button-primary w-full sm:w-auto";
+  const copyStatusMessage =
+    copyStatus === "success"
+      ? `${title} details copied.`
+      : copyStatus === "error"
+      ? `${title} details could not be copied.`
+      : "";
+  const cardTransform = prefersReducedMotion
+    ? "none"
+    : isFlipped
+    ? "rotateY(180deg)"
+    : "rotateY(0deg)";
+  const frontTransform = prefersReducedMotion ? "none" : "rotateY(0deg)";
+  const backTransform = prefersReducedMotion ? "none" : "rotateY(180deg)";
+  const hiddenFaceDelay = prefersReducedMotion ? "0ms" : "250ms";
+  const faceStyle = {
+    WebkitBackfaceVisibility: "hidden",
+    backfaceVisibility: "hidden",
+    transitionProperty: "visibility",
+    transitionDuration: "0s",
+  };
+  const frontFaceStyle = {
+    ...faceStyle,
+    WebkitTransform: frontTransform,
+    transform: frontTransform,
+    transitionDelay: isFlipped ? hiddenFaceDelay : "0ms",
+    visibility: isFlipped ? "hidden" : "visible",
+  };
+  const backFaceStyle = {
+    ...faceStyle,
+    WebkitTransform: backTransform,
+    transform: backTransform,
+    transitionDelay: isFlipped ? "0ms" : hiddenFaceDelay,
+    visibility: isFlipped ? "visible" : "hidden",
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyResetTimeoutRef.current) {
+        window.clearTimeout(copyResetTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isFlipped) {
+      backButtonRef.current?.focus();
+      return;
+    }
+
+    if (shouldRestoreDetailsFocusRef.current) {
+      shouldRestoreDetailsFocusRef.current = false;
+      detailsButtonRef.current?.focus();
+    }
+  }, [isFlipped]);
+
+  const showDetails = () => {
+    setIsFlipped(true);
+  };
+
+  const hideDetails = () => {
+    shouldRestoreDetailsFocusRef.current = true;
+    setIsFlipped(false);
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape" && isFlipped) {
+      event.stopPropagation();
+      hideDetails();
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -53,22 +153,37 @@ const ExperienceCard = ({
     } catch {
       setCopyStatus("error");
     } finally {
-      setTimeout(() => setCopyStatus(null), 1200);
+      if (copyResetTimeoutRef.current) {
+        window.clearTimeout(copyResetTimeoutRef.current);
+      }
+
+      copyResetTimeoutRef.current = window.setTimeout(() => {
+        setCopyStatus(null);
+        copyResetTimeoutRef.current = null;
+      }, 1200);
     }
   };
 
   return (
-    <article className={`w-full ${featured ? "lg:self-center" : ""} ${cardHeightClass} perspective`}>
+    <article
+      className={`w-full ${featured ? "lg:self-center" : ""} ${cardHeightClass} perspective`}
+      onKeyDown={handleKeyDown}
+    >
       <div
-        className={`relative ${cardHeightClass} w-full transition-transform duration-500 transform-style-preserve-3d motion-reduce:transition-none ${
-          isFlipped ? "rotate-y-180" : ""
-        }`}
+        className={`relative ${cardHeightClass} w-full transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none`}
+        style={{
+          WebkitTransform: cardTransform,
+          WebkitTransformStyle: "preserve-3d",
+          transform: cardTransform,
+          transformStyle: "preserve-3d",
+        }}
       >
         <div
           aria-hidden={isFlipped}
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border p-5 text-white backface-hidden ${frontFaceClass} ${
             isFlipped ? "pointer-events-none" : ""
           }`}
+          style={frontFaceStyle}
         >
           <div className={`absolute inset-x-0 top-0 h-1 ${accentClass}`} aria-hidden="true" />
 
@@ -102,8 +217,9 @@ const ExperienceCard = ({
 
           <div className="mt-auto flex justify-end">
             <button
+              ref={detailsButtonRef}
               type="button"
-              onClick={() => setIsFlipped(true)}
+              onClick={showDetails}
               tabIndex={isFlipped ? -1 : 0}
               aria-label={`View details for ${title} at ${company}`}
               aria-expanded={isFlipped}
@@ -124,6 +240,7 @@ const ExperienceCard = ({
           className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white backface-hidden rotate-y-180 ${
             isFlipped ? "" : "pointer-events-none"
           }`}
+          style={backFaceStyle}
         >
           <div className="absolute right-4 top-4 z-10 flex flex-col items-center group">
             <button
@@ -156,6 +273,9 @@ const ExperienceCard = ({
             >
               {copyStatus === "success" ? "Copied" : copyStatus === "error" ? "Copy failed" : "Copy"}
             </span>
+            <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+              {copyStatusMessage}
+            </span>
           </div>
 
           <p className="text-xs font-black uppercase text-[#93B4FF]">Operational record</p>
@@ -175,8 +295,9 @@ const ExperienceCard = ({
           </div>
 
           <button
+            ref={backButtonRef}
             type="button"
-            onClick={() => setIsFlipped(false)}
+            onClick={hideDetails}
             tabIndex={isFlipped ? 0 : -1}
             aria-label={`Hide details for ${title} at ${company}`}
             className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"

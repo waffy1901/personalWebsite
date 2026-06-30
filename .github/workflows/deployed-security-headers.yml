@@ -80,6 +80,7 @@ jobs:
 
           require_header_value "x-content-type-options" "nosniff"
           require_header_value "referrer-policy" "strict-origin-when-cross-origin"
+          require_header_value "strict-transport-security" "max-age=31536000; includeSubDomains"
 
           for permission in "camera=()" "microphone=()" "geolocation=()" "payment=()" "usb=()"; do
             require_header_fragment "permissions-policy" "$permission"
@@ -88,15 +89,15 @@ jobs:
           for directive in \
             "default-src 'self'" \
             "base-uri 'self'" \
-            "object-src 'self'" \
+            "object-src 'none'" \
             "frame-ancestors 'none'" \
-            "script-src 'self' 'sha256-Gx10dm3GfPuh4U4BdlEImysQ7gQn3/l7ezIPDjQbD38=' https://www.googletagmanager.com" \
+            "script-src 'self' 'sha256-o8X4zLmKyHMSpaE9szWdmwLAs2MoAe/uoPsAazCcKQI=' https://www.googletagmanager.com" \
             "connect-src 'self' https://formspree.io https://www.google-analytics.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com" \
             "img-src 'self' data: https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com" \
             "style-src 'self' 'unsafe-inline'" \
             "font-src 'self' data:" \
             "form-action 'self' https://formspree.io" \
-            "frame-src 'self'" \
+            "frame-src 'none'" \
             "upgrade-insecure-requests"; do
             require_header_fragment "content-security-policy" "$directive"
           done

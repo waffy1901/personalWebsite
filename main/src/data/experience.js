@@ -44,7 +44,7 @@ export const workExperiences = [
     date: "May 2024 - July 2024",
     bullets: [
       "Developed an internal product information page for cashiers, streamlining self-checkout processes and reducing customer wait times for associate intervention by ~25%.",
-      "Leveraged Java to obtain germane product data, used React and TypeScript to effectively display product information for all registers at self-checkout, pruning customer theft by \u223c$10 million annually.",
+      "Used Java, React, and TypeScript to retrieve and display validated product information across self-checkout registers, supporting loss-prevention and checkout-efficiency efforts tied to approximately $10 million in annual shrink exposure.",
     ],
     logo: hdLogo,
   },
@@ -97,7 +97,7 @@ export const ownershipAreas = [
     details: [
       "Prevent misconfigurations across multi-service rollouts by reviewing Spinnaker pipelines and Kubernetes manifests.",
       "Enforce deployment safety standards across 15+ microservices spanning multiple GCP environments.",
-      "Coordinate staged rollouts for high-risk changes, ensuring operational consistency and zero regressions.",
+      "Coordinate staged rollouts for high-risk changes, reducing regression risk while maintaining operational consistency.",
     ],
   },
   {

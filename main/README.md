@@ -6,7 +6,7 @@ The app powers Waffy Ahmed's professional portfolio, including experience, case 
 
 ## Stack
 
-- React 18
+- React 19
 - Vite
 - Tailwind CSS
 - React Router

@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "contentLastReviewed": "2026-06-07",
+  "contentLastReviewed": "2026-06-29",
   "person": {
     "name": "Waffy Ahmed",
     "title": "Software Engineer",
@@ -152,7 +152,7 @@
         "XML",
         "Adzuna API"
       ],
-      "summary": "Android job-search support application with authentication, saved jobs, and job search via the Adzuna API.",
+      "summary": "Android job-search support application with FAQs, resume templates, FirebaseAuth sign-in, Firestore-backed profile metadata, saved jobs, user preferences, and Adzuna job search.",
       "source": "https://github.com/waffy1901/jobSearchAid"
     },
     {
