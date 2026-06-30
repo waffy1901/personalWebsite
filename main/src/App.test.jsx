@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "./App.jsx"
+import { routeMetadata } from "./data/seo.js"
 
 const formspreeSubmitMock = vi.hoisted(() =>
   vi.fn((event) => event?.preventDefault?.())
@@ -466,7 +467,7 @@ describe("App routes", () => {
     )
   })
 
-  it("renders a not found route", () => {
+  it("renders a not found route with non-indexable metadata", async () => {
     renderRoute("/missing-page")
 
     expect(
@@ -475,6 +476,42 @@ describe("App routes", () => {
     expect(screen.getByRole("link", { name: /go home/i })).toHaveAttribute(
       "href",
       "/"
+    )
+    await waitFor(() =>
+      expect(document.title).toBe("Page Not Found | Waffy Ahmed")
+    )
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      "noindex, nofollow"
+    )
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://waffy.dev/"
+    )
+  })
+
+  it("publishes Netlify redirects for app routes and a real 404", () => {
+    const redirectLines = readFileSync("public/_redirects", "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+
+    expect(redirectLines).not.toContain("/* /index.html 200")
+    routeMetadata
+      .filter((route) => route.path !== "/")
+      .forEach((route) => {
+        expect(redirectLines).toContain(`${route.path} /index.html 200`)
+      })
+    expect(redirectLines).toContain("/Projects /projects 301")
+    expect(redirectLines.at(-1)).toBe("/* /404.html 404")
+
+    const notFoundHtml = readFileSync("public/404.html", "utf8")
+
+    expect(notFoundHtml).toContain(
+      '<meta name="robots" content="noindex, nofollow" />'
+    )
+    expect(notFoundHtml).toContain(
+      '<link rel="canonical" href="https://waffy.dev/" />'
     )
   })
 

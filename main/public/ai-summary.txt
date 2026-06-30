@@ -271,9 +271,10 @@ React Router and publishes the following primary routes:
   text resources.
 
 Legacy uppercase routes such as /Resume, /Projects, /Experience, and /Contact
-redirect to lowercase routes in the React app. Netlify redirects also preserve
-single-page application routing and redirect /waffyahmedresume.pdf to the
-canonical /waffyAhmedResume.pdf path.
+redirect to lowercase routes in the React app and at the Netlify routing layer.
+Netlify rewrites canonical portfolio routes to the React shell, redirects
+/waffyahmedresume.pdf to the canonical /waffyAhmedResume.pdf path, and serves
+unknown paths through a static 404.html response with noindex metadata.
 
 Frontend Implementation Context:
 
