@@ -480,23 +480,51 @@ describe("App routes", () => {
 
   it("reveals experience details with an accessible control", async () => {
     const user = userEvent.setup()
+    const clipboardWriteMock = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: clipboardWriteMock,
+      },
+    })
     renderRoute("/experience")
 
     expect(
       screen.queryByRole("region", { name: /experience details/i })
     ).not.toBeInTheDocument()
 
-    await user.click(
-      screen.getByRole("button", {
-        name: /view details for software engineer at the home depot/i,
-      })
+    const detailsButton = screen.getByRole("button", {
+      name: /view details for software engineer at the home depot/i,
+    })
+    await user.click(detailsButton)
+
+    const detailsRegion = screen.getByRole("region", {
+      name: /experience details/i,
+    })
+    const backButton = screen.getByRole("button", {
+      name: /hide details for software engineer at the home depot/i,
+    })
+    const copyButton = screen.getByRole("button", {
+      name: /copy software engineer details/i,
+    })
+
+    expect(detailsRegion).toBeInTheDocument()
+    await waitFor(() => expect(backButton).toHaveFocus())
+
+    await user.click(copyButton)
+
+    expect(clipboardWriteMock).toHaveBeenCalledWith(
+      expect.stringContaining("Improved scalability")
+    )
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /software engineer details copied/i
     )
 
+    await user.keyboard("{Escape}")
+
+    await waitFor(() => expect(detailsButton).toHaveFocus())
     expect(
-      screen.getByRole("region", { name: /experience details/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: /copy software engineer details/i })
-    ).toBeInTheDocument()
+      screen.queryByRole("region", { name: /experience details/i })
+    ).not.toBeInTheDocument()
   })
 })

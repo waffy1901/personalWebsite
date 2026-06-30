@@ -48,7 +48,7 @@ export const projects = [
     title: "Job Search Aid",
     techStack: "Kotlin, Google Firebase, Cloud Firestore, XML, Adzuna API",
     bullets: [
-      "Engineered an Android application to aid job seekers by providing resources such as FAQs, resume templates, etc.",
+      "Engineered an Android application to aid job seekers with FAQs, resume templates, saved job tracking, and preference-based job discovery.",
       "Integrated the Adzuna API using Kotlin to fetch jobs based on user preferences of job title, location, and radius.",
       "Handled sign-in with FirebaseAuth, then used Firestore for profile metadata, saved jobs, and user preferences.",
     ],

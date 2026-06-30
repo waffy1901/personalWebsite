@@ -1,6 +1,6 @@
 {
   "short_name": "Waffy",
-  "name": "Waffy's Website",
+  "name": "Waffy Ahmed | Software Engineer Portfolio",
   "icons": [
     {
       "src": "favicon.svg",
@@ -23,6 +23,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#0B1220",
+  "background_color": "#F4F1EA"
 }
