@@ -500,7 +500,9 @@ describe("App routes", () => {
     routeMetadata
       .filter((route) => route.path !== "/")
       .forEach((route) => {
-        expect(redirectLines).toContain(`${route.path} /index.html 200`)
+        expect(redirectLines).toContain(
+          `${route.path} ${route.path}/index.html 200`
+        )
       })
     expect(redirectLines).toContain("/Projects /projects 301")
     expect(redirectLines.at(-1)).toBe("/* /404.html 404")

@@ -19,6 +19,7 @@ for (const rel of [
   "main/src/data/experience.js",
   "main/src/data/projects.js",
   "main/src/data/caseStudies.js",
+  "main/src/data/caseStudySeo.js",
   "main/src/data/seo.js",
   "main/public/portfolio.json",
   "main/public/ai-summary.txt",
@@ -30,7 +31,7 @@ for (const rel of [
 
 if (errors.length === 0) {
   const projectsSource = read("main/src/data/projects.js")
-  const caseStudiesSource = read("main/src/data/caseStudies.js")
+  const caseStudiesSource = read("main/src/data/caseStudySeo.js")
   const seoSource = read("main/src/data/seo.js")
   const portfolioText = read("main/public/portfolio.json")
   const portfolio = JSON.parse(portfolioText)
@@ -46,7 +47,7 @@ if (errors.length === 0) {
   for (const slug of caseSlugs) {
     if (!portfolioCaseSlugs.has(slug)) errors.push(`portfolio.json missing case study slug ${slug}`)
     if (!sitemap.includes(`/case-studies/${slug}`)) errors.push(`sitemap.xml missing /case-studies/${slug}`)
-    if (!seoSource.includes(`/case-studies/${slug}`) && !seoSource.includes("caseStudies.map")) {
+    if (!seoSource.includes(`/case-studies/${slug}`) && !seoSource.includes("caseStudySeoItems.map")) {
       errors.push(`seo.js does not appear to cover case-study slug ${slug}`)
     }
   }

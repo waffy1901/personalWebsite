@@ -12,7 +12,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
-    "build": "VITE_DEPLOY_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) VITE_SITE_URL=https://waffy.dev vite build",
+    "build": "VITE_DEPLOY_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) VITE_SITE_URL=https://waffy.dev vite build && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/prerender-route-metadata.mjs",
     "lint": "eslint src",
     "preview": "vite preview",
     "test": "vitest run"
