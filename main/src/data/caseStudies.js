@@ -1,5 +1,10 @@
 import cdcLogo from "../images/cdcLogo.png"
 import hdLogo from "../images/hdLogo.png"
+import {
+  cdcDataReconciliationSeo,
+  kubernetesAutoscalingSeo,
+  legacyDeploymentRecoverySeo,
+} from "./caseStudySeo.js"
 
 export const caseStudiesPage = {
   title: "Selected engineering case studies",
@@ -26,15 +31,12 @@ export const caseStudiesPage = {
 
 export const caseStudies = [
   {
-    slug: "kubernetes-autoscaling",
-    title: "Kubernetes Autoscaling for Transaction-Critical Services",
+    ...kubernetesAutoscalingSeo,
     organization: "The Home Depot",
     timeframe: "2025",
     category: "Platform Reliability",
     logo: hdLogo,
     logoTheme: "home-depot",
-    summary:
-      "Validated and deployed Horizontal Pod Autoscaling (HPA) for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
     metrics: [
       {
         value: "40%",
@@ -113,15 +115,12 @@ export const caseStudies = [
     ],
   },
   {
-    slug: "legacy-deployment-recovery",
-    title: "Legacy Deployment Recovery and Credential Rotation",
+    ...legacyDeploymentRecoverySeo,
     organization: "The Home Depot",
     timeframe: "2026",
     category: "Deployment Automation",
     logo: hdLogo,
     logoTheme: "home-depot",
-    summary:
-      "Rebuilt deployment workflows for abandoned Java 1.8 Tomcat services so mission-critical repositories could support zero-downtime Cassandra credential rotation.",
     metrics: [
       {
         value: "8",
@@ -200,15 +199,12 @@ export const caseStudies = [
     ],
   },
   {
-    slug: "cdc-data-reconciliation",
-    title: "CDC Data Reconciliation Platform",
+    ...cdcDataReconciliationSeo,
     organization: "Centers for Disease Control and Prevention",
     timeframe: "2023-2024",
     category: "Full-Stack Data Systems",
     logo: cdcLogo,
     logoTheme: "cdc",
-    summary:
-      "Led a team of six building a full-stack reconciliation platform for infectious disease case-count discrepancies between state health departments and CDC datasets.",
     metrics: [
       {
         value: "5000+",

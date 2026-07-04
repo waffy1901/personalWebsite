@@ -3,9 +3,13 @@
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
 **Reconciled against:** PR #125 (`overhaul/v2`)  
+**Website creation date:** Sep 12, 2024 at 2:17 PM<br>
 **Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, security controls, and GitHub Actions.
 
-> This is a source and configuration audit, not a fresh browser-based Lighthouse or visual-regression run. Findings below are reconciled against the current PR so resolved items are not presented as open work.
+> This began as a source and configuration audit, not a browser-based Lighthouse
+> or visual-regression run. The post-deploy addendum records later live
+> production validation, and resolved items are marked as such where follow-up
+> PRs addressed them.
 
 ---
 
@@ -16,9 +20,65 @@ The portfolio is in **good engineering shape**. It presents a distinctive, recru
 No obvious build-breaking or critical security issue was found. The highest-value remaining work is architectural rather than cosmetic:
 
 1. Pre-render canonical routes so crawlers and link-preview clients receive route-specific metadata.
-2. Return genuine 404 responses for unknown URLs.
-3. Generate public documentation and AI-readable artifacts from canonical data to prevent drift.
-4. Add targeted accessibility, performance, and security hardening.
+2. Generate public documentation and AI-readable artifacts from canonical data to prevent drift.
+3. Add targeted accessibility, performance, and security hardening.
+
+---
+
+## Post-Deploy Validation Addendum
+
+- **Validation date:** Jun 30, 2026
+- **Production URL:** `https://waffy.dev/`
+- **Relevant follow-up PRs:** PR #127 (`feat/trust-metadata-a11y-polish`) and PR #128 (`feat/real-404-routing`)
+
+The deployed site remains user-functionally healthy after the trust, metadata,
+accessibility, security-header, and real-404 work:
+
+- Canonical app routes returned HTTP 200 and rendered in the browser: `/`,
+  `/projects`, `/experience`, `/case-studies`, all three case-study detail
+  routes, `/resume`, and `/contact`.
+- Unknown routes now return a genuine HTTP 404 and serve the static 404 page.
+  The deployed 404 HTML includes `noindex, nofollow` and canonicalizes to
+  `https://waffy.dev/`.
+- Legacy uppercase app routes such as `/Projects`, `/Resume`, `/Contact`,
+  `/Experience`, and `/CaseStudies` returned HTTP 301 to lowercase routes.
+- Resume, discovery, and metadata assets remained available: the canonical
+  resume PDF, resume preview image, Open Graph image, `llms.txt`,
+  `ai-summary.txt`, `portfolio.json`, `sitemap.xml`, `robots.txt`, and
+  `manifest.json`.
+- Browser checks confirmed key interaction flows still work: project detail
+  expansion, experience detail expansion, experience copy-status behavior,
+  resume preview/actions, contact form field rendering, case-study navigation,
+  and static 404 rendering.
+- Security headers were present on live HTML, 404, PDF, and static asset
+  responses, including CSP, HSTS, `X-Content-Type-Options`,
+  `Referrer-Policy`, and `Permissions-Policy`.
+
+Production validation also surfaced four follow-up findings:
+
+1. **Analytics CSP allowlist is incomplete.** Google Analytics still sends at
+   least some events successfully to `analytics.google.com`, but browser console
+   output shows GA also attempting `stats.g.doubleclick.net` and
+   `www.google.com/g/collect`, which the current `connect-src` blocks. This can
+   make analytics collection noisy or incomplete.
+2. **The lowercase legacy resume URL is functional but not canonical-clean.**
+   `/waffyahmedresume.pdf` serves the PDF with HTTP 200 instead of redirecting
+   to `/waffyAhmedResume.pdf`. Use a forced redirect if canonicalization matters:
+   `/waffyahmedresume.pdf /waffyAhmedResume.pdf 301!`.
+3. **Deep routes still publish homepage metadata in initial HTML.** Browser
+   titles and metadata update after React loads, but raw HTML for routes such as
+   `/projects`, `/experience`, and `/case-studies/kubernetes-autoscaling` still
+   contains homepage title, canonical, and Open Graph metadata. This confirms
+   prerendered route metadata remains the highest-value next architectural fix.
+4. **Mobile primary navigation is horizontally scrollable at narrow widths.**
+   At a 390px viewport, the nav strip remains functional, but the Contact link
+   starts off-screen until the nav is scrolled. This is not broken behavior, but
+   it is a small usability caveat for mobile visitors.
+
+The multi-agent validation attempt was partially limited by sandbox DNS access:
+several sub-agents could not resolve `waffy.dev`. The successful production
+evidence above came from the main validation pass with approved live network
+access and Playwright browser checks.
 
 ---
 
@@ -39,9 +99,25 @@ The current PR addresses several findings from the baseline review:
 
 These items should not be tracked as unresolved findings after this PR merges.
 
+## Resolved in PR #127 and PR #128
+
+Recent follow-up work addressed several additional findings from this audit:
+
+- Tightened risky or awkward project and experience wording.
+- Updated stale React/version and route-behavior documentation in README and
+  AI-readable summary surfaces.
+- Improved `ExperienceCard` accessibility with copy-status live announcements,
+  timeout cleanup, Escape-to-close behavior, focus restoration, and
+  reduced-motion handling.
+- Refreshed app manifest and theme metadata.
+- Hardened deployed security headers by using `object-src 'none'`,
+  `frame-src 'none'`, and adding HSTS.
+- Replaced the soft-404 SPA catch-all with explicit Netlify route rewrites and
+  a real static `404.html` response for unknown paths.
+
 ---
 
-# Open Findings
+# Findings and Follow-Up Work
 
 ## 1. High: Deep Routes Initially Publish Homepage Metadata
 
@@ -80,38 +156,35 @@ The route-level metadata definitions already exist; the missing step is publishi
 
 ---
 
-## 2. High: Unknown Routes Produce Soft 404s
+## 2. Resolved: Unknown Routes Previously Produced Soft 404s
 
-The catch-all SPA rewrite returns `index.html` with HTTP 200 for unknown URLs. React later renders the `NotFound` page, but the server response is still successful and the initial HTML remains indexable.
+The earlier catch-all SPA rewrite returned `index.html` with HTTP 200 for
+unknown URLs. React later rendered the `NotFound` page, but the server response
+was still successful and the initial HTML remained indexable.
 
-### Recommended Correction
+### Resolution
 
-Preferred approach:
-
-- Pre-render known routes.
-- Publish a real `404.html`.
-- Allow Netlify to return HTTP 404 for unknown paths.
-
-Interim improvement:
-
-- Apply `noindex, nofollow` on the client-rendered not-found route.
-- Canonicalize invalid paths back to the homepage rather than to the invalid URL.
+PR #128 published a static `404.html`, removed the global `/* /index.html 200`
+soft-404 catch-all, added explicit rewrites for canonical React routes, and
+allows unknown paths to return HTTP 404. Deployed validation confirmed
+`https://waffy.dev/definitely-missing-page` returns HTTP 404 with
+`noindex, nofollow` and homepage canonical metadata.
 
 **Relevant files:**
 
 - `main/public/_redirects`
 - `main/src/components/Seo.jsx`
 - `main/src/pages/NotFound.jsx`
+- `main/public/404.html`
 
 ---
 
 ## 3. High-Medium: Documentation and AI Artifacts Can Drift
 
-The root README correctly lists React 19, but two other public documentation surfaces are stale:
-
-- `main/README.md` still lists React 18.
-- `main/public/ai-summary.txt` still describes the implementation as React 18.
-- The AI summary says the homepage includes Georgia Tech branding, while the redesigned hero now centers the profile image and platform/reliability positioning.
+PR #127 corrected the known React-version and hero-description drift in
+`main/README.md` and `main/public/ai-summary.txt`. The broader risk remains:
+public documentation and AI-readable artifacts can still drift because several
+surfaces are maintained manually.
 
 The same career claims and metrics also appear across JavaScript data modules, JSON-LD, `portfolio.json`, `ai-summary.txt`, `llms.txt`, the sitemap, and both READMEs. Manual synchronization across these surfaces is likely to drift again.
 
@@ -148,9 +221,9 @@ Add synchronization tests covering framework versions, case-study slugs, primary
 
 ---
 
-## 4. Medium: A Few Content Claims Need Tighter Wording
+## 4. Resolved: A Few Content Claims Needed Tighter Wording
 
-The following wording remains worth revising:
+The baseline review flagged wording that was worth revising:
 
 - The 2024 internship bullet uses `germane product data` and `pruning customer theft`, which read unnaturally and imply stronger direct causality than the surrounding context establishes.
 - The release-governance section says staged rollouts ensure `zero regressions`; a rollout process can reduce risk but cannot guarantee that outcome.
@@ -166,6 +239,13 @@ Suggested direction:
 
 - `main/src/data/experience.js`
 - `main/src/data/projects.js`
+
+### Resolution
+
+PR #127 replaced these phrases with tighter wording around validated product
+information, loss-prevention support, regression-risk reduction, and exact Job
+Search Aid capabilities. The FirebaseAuth versus Firestore distinction was
+preserved.
 
 ---
 
@@ -213,11 +293,20 @@ A lightweight production bundle report is sufficient for now; Lighthouse CI beco
 
 # Accessibility and Interaction
 
-## 8. Low: Clipboard Results Are Visual Only
+## 8. Resolved: Clipboard Results Were Visual Only
 
-`ExperienceCard` visually shows `Copied`, `Copy failed`, or `Copy`, but the status is not announced through an `aria-live` region. The reset timeout should also be cleared if the component unmounts.
+`ExperienceCard` previously showed `Copied`, `Copy failed`, or `Copy`
+visually, but the status was not announced through an `aria-live` region. The
+reset timeout also needed cleanup if the component unmounted.
 
 **Relevant file:** `main/src/components/ExperienceCard.jsx`
+
+### Resolution
+
+PR #127 added a copy-status live region, timeout cleanup, Escape-to-close
+behavior, focus restoration, and reduced-motion handling. Post-deploy browser
+validation confirmed experience detail expansion and copy-status behavior still
+work.
 
 ### Existing Strengths
 
@@ -231,9 +320,10 @@ A lightweight production bundle report is sufficient for now; Lighthouse CI beco
 
 # Security and Privacy
 
-## 9. Medium-Low: CSP Can Be Hardened Further
+## 9. Resolved: CSP Could Be Hardened Further
 
-The existing Content Security Policy is substantially better than having no policy. Remaining defense-in-depth improvements include:
+The baseline Content Security Policy was substantially better than having no
+policy. Remaining defense-in-depth improvements included:
 
 - Change `object-src 'self'` to `object-src 'none'` if no object/embed content is required.
 - Change `frame-src 'self'` to `frame-src 'none'` if no embedded frame is required.
@@ -246,6 +336,18 @@ The deployed-header verification workflow should be updated alongside any policy
 
 - `netlify.toml`
 - `.github/workflows/deployed-security-headers.yml`
+
+### Resolution
+
+PR #127 changed `object-src` to `none`, changed `frame-src` to `none`, added
+HSTS, and updated deployed-header verification. Post-deploy validation confirmed
+the hardened headers are present on live HTML, 404, PDF, and static asset
+responses.
+
+The separate production finding from Jun 30, 2026 is not general CSP hardening:
+Google Analytics now attempts additional collection endpoints that are blocked
+by `connect-src`. Treat that as an analytics allowlist follow-up rather than a
+regression in the original hardening work.
 
 ---
 
@@ -278,7 +380,7 @@ This is future operational hardening, not a release blocker.
 
 # Metadata and Platform Polish
 
-## 12. Medium-Low: Manifest Metadata Uses the Previous Theme
+## 12. Resolved: Manifest Metadata Used the Previous Theme
 
 The redesigned site uses cream, navy, orange, and blue, while the manifest and HTML theme metadata still use generic black and white values.
 
@@ -297,6 +399,11 @@ The manifest name can also be changed from `Waffy's Website` to `Waffy Ahmed | S
 
 - `main/public/manifest.json`
 - `main/index.html`
+
+### Resolution
+
+PR #127 updated the manifest name, theme color, background color, and static
+HTML theme color.
 
 ---
 
@@ -323,7 +430,7 @@ The repository already has unusually mature automation for a personal portfolio:
 Recommended additions, in descending order of value:
 
 1. `axe` checks for every top-level route.
-2. A test proving not-found routes receive `noindex` until real 404s are implemented.
+2. A deployed-route smoke check proving unknown URLs return HTTP 404.
 3. Synchronization tests for sitemap, JSON-LD, AI artifacts, and framework versions.
 4. A rendered-HTML test confirming route-specific metadata after prerendering.
 5. One mobile and one desktop visual-regression pass.
@@ -356,12 +463,12 @@ That would make the case studies read more like senior engineering narratives an
 
 # Recommended Execution Order
 
-1. Pre-render canonical routes and implement genuine 404 responses.
+1. Pre-render canonical routes so initial HTML contains route-specific metadata.
 2. Generate public documentation and AI artifacts from canonical data.
-3. Correct the remaining wording and documentation drift.
-4. Add route-level lazy loading and explicit image-loading behavior.
-5. Add accessibility and performance regression checks.
-6. Harden response headers and add a concise privacy disclosure.
+3. Add route-level lazy loading and explicit image-loading behavior.
+4. Add accessibility and performance regression checks.
+5. Add a concise privacy disclosure and review Formspree spam controls.
+6. Address the Analytics CSP allowlist and lowercase resume canonicalization findings from the post-deploy validation.
 
 ---
 

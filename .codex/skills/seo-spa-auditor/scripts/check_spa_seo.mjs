@@ -14,10 +14,10 @@ const app = read("main/src/App.jsx")
 const sitemap = read("main/public/sitemap.xml")
 const robots = read("main/public/robots.txt")
 const indexHtml = read("main/index.html")
-const caseStudies = read("main/src/data/caseStudies.js")
+const caseStudySeo = read("main/src/data/caseStudySeo.js")
 
 const literalRoutes = extract(seo, /path:\s*"([^"]+)"/g).filter((route) => route !== "*")
-const caseStudyRoutes = extract(caseStudies, /slug:\s*"([^"]+)"/g).map((slug) => `/case-studies/${slug}`)
+const caseStudyRoutes = extract(caseStudySeo, /slug:\s*"([^"]+)"/g).map((slug) => `/case-studies/${slug}`)
 const routes = unique([...literalRoutes, ...caseStudyRoutes])
 
 for (const route of routes) {

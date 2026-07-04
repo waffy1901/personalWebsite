@@ -1,5 +1,5 @@
-import { caseStudies } from "./caseStudies"
-import { portfolioUrls, profile } from "./profile"
+import { caseStudySeoItems } from "./caseStudySeo.js"
+import { portfolioUrls, profileIdentity } from "./siteIdentity.js"
 
 const defaultDescription =
   "Software engineering portfolio for Waffy Ahmed, focused on reliability, Kubernetes, deployment automation, observability, and high-throughput systems."
@@ -10,7 +10,7 @@ export const siteMetadata = {
   defaultTitle: "Waffy Ahmed | Software Engineer Portfolio",
   defaultDescription,
   imagePath: "/og-image.png",
-  author: profile.name,
+  author: profileIdentity.name,
   keywords: [
     "Waffy Ahmed",
     "software engineer",
@@ -37,7 +37,7 @@ export const routeMetadata = [
     description:
       "Engineering case studies covering Kubernetes autoscaling, legacy deployment recovery, and CDC data reconciliation work.",
   },
-  ...caseStudies.map((caseStudy) => ({
+  ...caseStudySeoItems.map((caseStudy) => ({
     path: `/case-studies/${caseStudy.slug}`,
     title: `${caseStudy.title} | Waffy Ahmed`,
     description: caseStudy.summary,
