@@ -34,6 +34,8 @@ export const projects = [
     id: "cdc-data-reconciliation",
     title: "CDC Data Reconciliation",
     techStack: "Python, FastAPI, SQLite, React, Tailwind CSS",
+    summary:
+      "Automated infectious-disease case-count reconciliation between state health departments and CDC datasets.",
     bullets: [
       "Oversaw a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health departments and the CDC, alongside doubling as a full-stack software developer.",
       "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the two datasets, saving 5000+ hours of manual reconciliation annually.",
@@ -47,6 +49,8 @@ export const projects = [
     id: "job-search-aid",
     title: "Job Search Aid",
     techStack: "Kotlin, Google Firebase, Cloud Firestore, XML, Adzuna API",
+    summary:
+      "Android job-search support application with FAQs, resume templates, FirebaseAuth sign-in, Firestore-backed profile metadata, saved jobs, user preferences, and Adzuna job search.",
     bullets: [
       "Engineered an Android application to aid job seekers with FAQs, resume templates, saved job tracking, and preference-based job discovery.",
       "Integrated the Adzuna API using Kotlin to fetch jobs based on user preferences of job title, location, and radius.",
@@ -59,6 +63,8 @@ export const projects = [
     id: "campus-discovery-service",
     title: "Campus Discovery Service",
     techStack: "Node.js, MongoDB, Java, XML",
+    summary:
+      "Campus event discovery and registration application for Georgia Tech students and organizers.",
     bullets: [
       "Developed an Android application for students to explore and register for on-campus events at Georgia Tech, offering access to event capacities, details, and waitlists, in collaboration with 5 classmates.",
       "Constructed various technical diagrams (DCD, Domain Model, SD, SSD) to plan/design iterations of the application.",

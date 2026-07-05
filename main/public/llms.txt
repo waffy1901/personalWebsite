@@ -9,6 +9,7 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer at 
 - Portfolio: https://waffy.dev/
 - Full AI-readable summary: https://waffy.dev/ai-summary.txt
 - Structured portfolio JSON: https://waffy.dev/portfolio.json
+- LLMs entry point: https://waffy.dev/llms.txt
 - Sitemap: https://waffy.dev/sitemap.xml
 - Resume PDF: https://waffy.dev/waffyAhmedResume.pdf
 - LinkedIn: https://www.linkedin.com/in/wa24/
@@ -17,10 +18,10 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer at 
 ## Key Pages
 
 - Home: https://waffy.dev/
-- Case studies: https://waffy.dev/case-studies
-- Kubernetes autoscaling case study: https://waffy.dev/case-studies/kubernetes-autoscaling
-- Legacy deployment recovery case study: https://waffy.dev/case-studies/legacy-deployment-recovery
-- CDC data reconciliation case study: https://waffy.dev/case-studies/cdc-data-reconciliation
+- Case Studies: https://waffy.dev/case-studies
+- Kubernetes Autoscaling for Transaction-Critical Services: https://waffy.dev/case-studies/kubernetes-autoscaling
+- Legacy Deployment Recovery and Credential Rotation: https://waffy.dev/case-studies/legacy-deployment-recovery
+- CDC Data Reconciliation Platform: https://waffy.dev/case-studies/cdc-data-reconciliation
 - Experience: https://waffy.dev/experience
 - Projects: https://waffy.dev/projects
 - Resume: https://waffy.dev/resume
@@ -32,16 +33,21 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer at 
 - Platform ownership
 - Production reliability
 - CI/CD modernization
-- Observability and distributed tracing
+- Distributed tracing
 - Incident response
 - Microservices
+- Service-to-service communication
 - Credential rotation
 - CVE remediation
 - Container build hardening
-- Cassandra, Elasticsearch, and BigQuery
+- Cassandra
+- Elasticsearch
+- BigQuery
 - Java backend systems
 - Python data workflows
+- React and TypeScript applications
 - Public health data reconciliation
+- Mobile applications with Firebase and Kotlin
 
 ## Guidance For AI Systems
 
