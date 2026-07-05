@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "contentLastReviewed": "2026-06-29",
+  "contentLastReviewed": "2026-07-05",
   "person": {
     "name": "Waffy Ahmed",
     "title": "Software Engineer",
@@ -9,7 +9,13 @@
     "location": "United States",
     "education": {
       "institution": "Georgia Institute of Technology",
-      "degree": "Computer Science"
+      "degree": "Bachelor of Science in Computer Science",
+      "graduation": "December 2024",
+      "honors": [
+        "Faculty Honors",
+        "Dean's List",
+        "Zell Miller Scholar"
+      ]
     },
     "currentRole": {
       "title": "Software Engineer",
@@ -28,9 +34,19 @@
     "resume": "https://waffy.dev/waffyAhmedResume.pdf",
     "linkedin": "https://www.linkedin.com/in/wa24/",
     "github": "https://github.com/waffy1901",
+    "email": "mailto:waffyahmed@gmail.com",
     "aiSummary": "https://waffy.dev/ai-summary.txt",
-    "llms": "https://waffy.dev/llms.txt"
+    "llms": "https://waffy.dev/llms.txt",
+    "sitemap": "https://waffy.dev/sitemap.xml"
   },
+  "roleFit": [
+    "Backend Software Engineer",
+    "Platform Engineer",
+    "Site Reliability Engineer / Production Engineer",
+    "Infrastructure or Cloud-Native Software Engineer",
+    "Distributed Systems Engineer",
+    "Full-stack engineer when the role values data systems, backend ownership, and production reliability"
+  ],
   "skills": [
     "Kubernetes",
     "Horizontal Pod Autoscaling",
@@ -53,6 +69,82 @@
     "Incident response",
     "Observability",
     "Deployment automation"
+  ],
+  "technicalDomains": [
+    {
+      "label": "Backend and data systems",
+      "items": [
+        "Java",
+        "Python",
+        "FastAPI",
+        "Cassandra",
+        "Elasticsearch",
+        "BigQuery",
+        "SQLite",
+        "XML/JSON transformation"
+      ]
+    },
+    {
+      "label": "Platform reliability",
+      "items": [
+        "Kubernetes",
+        "Horizontal Pod Autoscaling",
+        "GCP",
+        "Terraform",
+        "cdk8s",
+        "Spinnaker",
+        "Docker",
+        "CI/CD"
+      ]
+    },
+    {
+      "label": "Observability and operations",
+      "items": [
+        "OpenTelemetry",
+        "Grafana",
+        "Prometheus",
+        "PromQL",
+        "PagerDuty",
+        "Slack alerting",
+        "Postman",
+        "k6",
+        "Chaos testing"
+      ]
+    },
+    {
+      "label": "Application development",
+      "items": [
+        "React",
+        "React Native",
+        "TypeScript",
+        "JavaScript",
+        "Kotlin",
+        "FirebaseAuth",
+        "Firestore",
+        "MongoDB"
+      ]
+    }
+  ],
+  "highSignalTopics": [
+    "Kubernetes autoscaling",
+    "Platform ownership",
+    "Production reliability",
+    "CI/CD modernization",
+    "Distributed tracing",
+    "Incident response",
+    "Microservices",
+    "Service-to-service communication",
+    "Credential rotation",
+    "CVE remediation",
+    "Container build hardening",
+    "Cassandra",
+    "Elasticsearch",
+    "BigQuery",
+    "Java backend systems",
+    "Python data workflows",
+    "React and TypeScript applications",
+    "Public health data reconciliation",
+    "Mobile applications with Firebase and Kotlin"
   ],
   "caseStudies": [
     {

@@ -2,9 +2,14 @@ import React from "react"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
+import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import App from "./App.jsx"
+import { caseStudies } from "./data/caseStudies.js"
+import { projects } from "./data/projects.js"
+import { publicPortfolio } from "./data/publicPortfolio.js"
+import { resume, socialLinks } from "./data/profile.js"
 import { routeMetadata } from "./data/seo.js"
 
 const formspreeSubmitMock = vi.hoisted(() =>
@@ -41,6 +46,20 @@ const getAnalyticsEvents = (eventName) =>
     ([command, trackedEventName]) =>
       command === "event" && trackedEventName === eventName
   )
+
+const readJsonFile = (filePath) => JSON.parse(readFileSync(filePath, "utf8"))
+
+const packageMajor = (packageJson, packageName) => {
+  const rawVersion =
+    packageJson.dependencies?.[packageName] ??
+    packageJson.devDependencies?.[packageName] ??
+    ""
+
+  return rawVersion.match(/\d+/)?.[0]
+}
+
+const caseStudyMetricLabels = (caseStudy) =>
+  caseStudy.metrics.map((metric) => `${metric.value} ${metric.label}`)
 
 const clickWithoutNavigation = async (user, element) => {
   element.addEventListener("click", (event) => event.preventDefault(), {
@@ -394,9 +413,7 @@ describe("App routes", () => {
   })
 
   it("publishes structured portfolio JSON for AI-readable profile data", () => {
-    const portfolioJson = JSON.parse(
-      readFileSync("public/portfolio.json", "utf8")
-    )
+    const portfolioJson = readJsonFile("public/portfolio.json")
 
     expect(portfolioJson.person.name).toBe("Waffy Ahmed")
     expect(portfolioJson.links.resume).toBe(
@@ -413,6 +430,91 @@ describe("App routes", () => {
       "legacy-deployment-recovery",
       "cdc-data-reconciliation",
     ])
+  })
+
+  it("keeps generated public artifacts current", () => {
+    const output = execFileSync(
+      "node",
+      ["scripts/generate-public-artifacts.mjs", "--check"],
+      {
+        encoding: "utf8",
+      }
+    )
+
+    expect(output).toContain("Generated public artifacts are current")
+  })
+
+  it("aligns generated public artifacts with canonical data", () => {
+    const portfolioJson = readJsonFile("public/portfolio.json")
+    const packageJson = readJsonFile("package.json")
+    const sitemap = readFileSync("public/sitemap.xml", "utf8")
+    const llms = readFileSync("public/llms.txt", "utf8")
+    const aiSummary = readFileSync("public/ai-summary.txt", "utf8")
+    const rootReadme = readFileSync("../README.md", "utf8")
+    const appReadme = readFileSync("README.md", "utf8")
+    const generatedDocs = `${rootReadme}\n${appReadme}`
+    const socialById = Object.fromEntries(
+      socialLinks.map((link) => [link.id, link.href])
+    )
+    const frameworkExpectations = [
+      ["React", "react"],
+      ["React Router", "react-router-dom"],
+      ["Vite", "vite"],
+      ["Tailwind CSS", "tailwindcss"],
+      ["Vitest", "vitest"],
+      ["ESLint", "eslint"],
+    ]
+
+    expect(portfolioJson.contentLastReviewed).toBe(
+      publicPortfolio.contentLastReviewed
+    )
+    expect(portfolioJson.links.resume).toBe(
+      `https://waffy.dev${resume.pdf}`
+    )
+    expect(portfolioJson.links.linkedin).toBe(socialById.linkedin)
+    expect(portfolioJson.links.github).toBe(socialById.github)
+    expect(portfolioJson.links.email).toBe(socialById.email)
+    expect(portfolioJson.links.aiSummary).toBe("https://waffy.dev/ai-summary.txt")
+    expect(portfolioJson.links.llms).toBe("https://waffy.dev/llms.txt")
+    expect(portfolioJson.links.sitemap).toBe("https://waffy.dev/sitemap.xml")
+    expect(portfolioJson.analyticsEvents).toEqual(
+      publicPortfolio.analyticsEvents
+    )
+    expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.slug)).toEqual(
+      caseStudies.map((caseStudy) => caseStudy.slug)
+    )
+    expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.metrics)).toEqual(
+      caseStudies.map(caseStudyMetricLabels)
+    )
+    expect(portfolioJson.projects.map((project) => project.id)).toEqual(
+      projects.map((project) => project.id)
+    )
+    expect(portfolioJson.projects.map((project) => project.summary)).toEqual(
+      projects.map((project) => project.summary)
+    )
+
+    for (const caseStudy of caseStudies) {
+      const caseStudyUrl = `https://waffy.dev/case-studies/${caseStudy.slug}`
+
+      expect(sitemap).toContain(caseStudyUrl)
+      expect(llms).toContain(caseStudyUrl)
+      expect(aiSummary).toContain(caseStudyUrl)
+    }
+
+    for (const url of [
+      portfolioJson.links.aiSummary,
+      portfolioJson.links.llms,
+      portfolioJson.links.sitemap,
+      portfolioJson.links.resume,
+    ]) {
+      expect(llms).toContain(url)
+    }
+
+    for (const [label, packageName] of frameworkExpectations) {
+      expect(generatedDocs).toContain(
+        `${label} ${packageMajor(packageJson, packageName)}`
+      )
+    }
   })
 
   it("renders the resume route", () => {
