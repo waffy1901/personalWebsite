@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adversarial Change Verifier"
+  short_description: "Parallel regression and change verification"
+  default_prompt: "Use $adversarial-change-verifier to spin up agents and adversarially verify my latest portfolio changes."

@@ -89,6 +89,8 @@ function CaseStudy() {
                   src={caseStudy.logo}
                   alt=""
                   aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
                   className="max-h-full max-w-full object-contain"
                 />
               </span>

@@ -178,6 +178,9 @@ function Home() {
                   <img
                     src={profile.profilePicture}
                     alt={profile.name}
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
                     className="h-[30rem] w-full rounded-2xl object-cover object-center"
                   />
                 </div>

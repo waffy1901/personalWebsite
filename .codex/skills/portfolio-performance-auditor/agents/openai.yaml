@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Performance Auditor"
+  short_description: "Audit route and asset performance"
+  default_prompt: "Use $portfolio-performance-auditor to check my portfolio for performance regressions."
