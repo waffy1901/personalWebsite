@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio GitHub Automation"
+  short_description: "Maintain portfolio GitHub automation"
+  default_prompt: "Use $portfolio-github-automation-maintainer to update my portfolio GitHub workflows safely."

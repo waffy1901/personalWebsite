@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Audit Maintainer"
+  short_description: "Keep the repository audit current"
+  default_prompt: "Use $portfolio-audit-maintainer to reconcile my portfolio audit document with current evidence."

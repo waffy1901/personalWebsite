@@ -68,6 +68,15 @@ const clickWithoutNavigation = async (user, element) => {
   await user.click(element)
 }
 
+const expectImagePolicy = (image, { loading, fetchPriority }) => {
+  expect(image).toHaveAttribute("loading", loading)
+  expect(image).toHaveAttribute("decoding", "async")
+
+  if (fetchPriority) {
+    expect(image).toHaveAttribute("fetchpriority", fetchPriority)
+  }
+}
+
 beforeEach(() => {
   formspreeSubmitMock.mockClear()
   formspreeMockState.current = {
@@ -96,43 +105,53 @@ afterEach(() => {
 })
 
 describe("App routes", () => {
-  it("renders the home route", () => {
+  it("renders the home route", async () => {
     renderRoute("/")
 
     expect(
-      screen.getByRole("heading", { name: /waffy ahmed/i })
+      await screen.findByRole("heading", { name: /waffy ahmed/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: /download resume/i })
     ).toHaveAttribute("href", "/waffyAhmedResume.pdf")
+    expectImagePolicy(
+      screen.getByRole("img", { name: /waffy ahmed/i }),
+      {
+        loading: "eager",
+        fetchPriority: "high",
+      }
+    )
   })
 
-  it("renders the projects route", () => {
+  it("renders the projects route", async () => {
     renderRoute("/projects")
 
     expect(
-      screen.getByRole("heading", {
+      await screen.findByRole("heading", {
         name: /practical builds for real workflows/i,
       })
     ).toBeInTheDocument()
     expect(
       screen.getAllByRole("heading", { name: /cdc data reconciliation/i })
     ).not.toHaveLength(0)
+    expectImagePolicy(document.querySelector(`img[src="${projects[0].logo}"]`), {
+      loading: "lazy",
+    })
   })
 
-  it("renders the experience route", () => {
+  it("renders the experience route", async () => {
     renderRoute("/experience")
 
     expect(
-      screen.getByRole("heading", { name: /work experience/i })
+      await screen.findByRole("heading", { name: /work experience/i })
     ).toBeInTheDocument()
   })
 
-  it("renders the case studies route", () => {
+  it("renders the case studies route", async () => {
     renderRoute("/case-studies")
 
     expect(
-      screen.getByRole("heading", { name: /selected engineering case studies/i })
+      await screen.findByRole("heading", { name: /selected engineering case studies/i })
     ).toBeInTheDocument()
     const [firstCaseStudyLink] = screen.getAllByRole("link", {
       name: /read case study/i,
@@ -143,11 +162,11 @@ describe("App routes", () => {
     )
   })
 
-  it("renders a case study detail route", () => {
+  it("renders a case study detail route", async () => {
     renderRoute("/case-studies/kubernetes-autoscaling")
 
     expect(
-      screen.getByRole("heading", {
+      await screen.findByRole("heading", {
         name: /kubernetes autoscaling for transaction-critical services/i,
       })
     ).toBeInTheDocument()
@@ -206,6 +225,9 @@ describe("App routes", () => {
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     renderRoute("/projects")
 
+    await screen.findByRole("heading", {
+      name: /practical builds for real workflows/i,
+    })
     await waitFor(() =>
       expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
     )
@@ -272,14 +294,14 @@ describe("App routes", () => {
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     renderRoute("/")
 
+    const downloadResumeLink = await screen.findByRole("link", {
+      name: /download resume/i,
+    })
     await waitFor(() =>
       expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
     )
 
-    await clickWithoutNavigation(
-      user,
-      screen.getByRole("link", { name: /download resume/i })
-    )
+    await clickWithoutNavigation(user, downloadResumeLink)
     await clickWithoutNavigation(
       user,
       screen.getByRole("link", { name: /linkedin/i })
@@ -314,11 +336,12 @@ describe("App routes", () => {
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     renderRoute("/contact")
 
+    const firstNameInput = await screen.findByLabelText(/first name/i)
     await waitFor(() =>
       expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
     )
 
-    await user.type(screen.getByLabelText(/first name/i), "Waffy")
+    await user.type(firstNameInput, "Waffy")
     await user.type(screen.getByLabelText(/last name/i), "Ahmed")
     await user.type(screen.getByLabelText(/email/i), "waffy@example.com")
     await user.type(screen.getByLabelText(/message/i), "Hello from the test.")
@@ -342,11 +365,12 @@ describe("App routes", () => {
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     renderRoute("/contact")
 
+    const firstNameInput = await screen.findByLabelText(/first name/i)
     await waitFor(() =>
       expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
     )
 
-    await user.type(screen.getByLabelText(/first name/i), "Waffy")
+    await user.type(firstNameInput, "Waffy")
     await user.type(screen.getByLabelText(/last name/i), "Ahmed")
     await user.type(screen.getByLabelText(/email/i), "waffy@example.com")
     await user.type(
@@ -370,6 +394,7 @@ describe("App routes", () => {
     }
     renderRoute("/contact")
 
+    await screen.findByText(/thank you for your message/i)
     const successStatus = screen.getByRole("status")
 
     expect(successStatus).toHaveAttribute("aria-live", "polite")
@@ -390,7 +415,7 @@ describe("App routes", () => {
     }
     renderRoute("/contact")
 
-    const submissionAlert = screen.getByRole("alert")
+    const submissionAlert = await screen.findByRole("alert")
 
     expect(submissionAlert).toHaveTextContent(/message could not be sent/i)
     expect(submissionAlert).toHaveAttribute("tabindex", "-1")
@@ -517,26 +542,32 @@ describe("App routes", () => {
     }
   })
 
-  it("renders the resume route", () => {
+  it("renders the resume route", async () => {
     renderRoute("/resume")
 
-    expect(screen.getByRole("link", { name: /open pdf/i })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: /open pdf/i })).toHaveAttribute(
       "href",
       "/waffyAhmedResume.pdf"
     )
-    expect(
-      screen.getByRole("img", { name: /preview of waffy ahmed's resume/i })
-    ).toHaveAttribute("src", "/resume-preview.png")
+    const resumePreview = screen.getByRole("img", {
+      name: /preview of waffy ahmed's resume/i,
+    })
+
+    expect(resumePreview).toHaveAttribute("src", "/resume-preview.png")
+    expectImagePolicy(resumePreview, {
+      loading: "eager",
+      fetchPriority: "high",
+    })
     expect(
       screen.queryByText(/your browser cannot display this pdf inline/i)
     ).not.toBeInTheDocument()
   })
 
-  it("renders the contact route", () => {
+  it("renders the contact route", async () => {
     renderRoute("/contact")
 
     expect(
-      screen.getByRole("heading", { name: /let's connect/i })
+      await screen.findByRole("heading", { name: /let's connect/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole("heading", { name: /contact form/i })
@@ -573,7 +604,7 @@ describe("App routes", () => {
     renderRoute("/missing-page")
 
     expect(
-      screen.getByRole("heading", { name: /page not found/i })
+      await screen.findByRole("heading", { name: /page not found/i })
     ).toBeInTheDocument()
     expect(screen.getByRole("link", { name: /go home/i })).toHaveAttribute(
       "href",
@@ -630,6 +661,7 @@ describe("App routes", () => {
     })
     renderRoute("/experience")
 
+    await screen.findByRole("heading", { name: /work experience/i })
     expect(
       screen.queryByRole("region", { name: /experience details/i })
     ).not.toBeInTheDocument()

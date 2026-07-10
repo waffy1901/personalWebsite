@@ -2,7 +2,8 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled against:** PR #125 (`overhaul/v2`)  
+**Reconciled through:** PR #131 (`feat/generate-public-artifacts`) at `a3cb39b`, including PR #129 (`prerenderRouteMetadata`)<br>
+**Latest audit pass:** Jul 5, 2026 repo-wide local audit on `main` with current uncommitted performance/image-loading changes present<br>
 **Website creation date:** Sep 12, 2024 at 2:17 PM<br>
 **Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, security controls, and GitHub Actions.
 
@@ -17,11 +18,15 @@
 
 The portfolio is in **good engineering shape**. It presents a distinctive, recruiter-oriented platform and reliability narrative while also demonstrating meaningful engineering discipline through automated testing, dependency scanning, CodeQL, deployment validation, analytics, structured data, and accessible interaction patterns.
 
-No obvious build-breaking or critical security issue was found. The highest-value remaining work is architectural rather than cosmetic:
+No obvious build-breaking or critical security issue was found. The original
+highest-risk architectural gap, crawler-visible route metadata, has since been
+resolved by the prerendered route-shell work. The highest-value remaining work
+is now operational polish and regression protection:
 
-1. Pre-render canonical routes so crawlers and link-preview clients receive route-specific metadata.
-2. Generate public documentation and AI-readable artifacts from canonical data to prevent drift.
-3. Add targeted accessibility, performance, and security hardening.
+1. Release or continue validating the current route lazy-loading and image-loading improvements.
+2. Add targeted accessibility, visual, and performance regression checks.
+3. Add a concise privacy disclosure and review Formspree abuse controls.
+4. Clean up low-severity URL canonicalization and analytics allowlist caveats.
 
 ---
 
@@ -80,6 +85,52 @@ several sub-agents could not resolve `waffy.dev`. The successful production
 evidence above came from the main validation pass with approved live network
 access and Playwright browser checks.
 
+### Jul 5, 2026 Repo-Wide Reconciliation
+
+This pass audited the current repository state, including the existing
+uncommitted route lazy-loading and image-loading changes. It used source
+inspection, local checks, a production build, local preview HTTP checks, and
+read-only production HTTP checks. No browser automation was used in this pass,
+so the Jul 5 checks should not add GA4 page views/users.
+
+Validated local evidence:
+
+- `git diff --check`, `npm run lint`, `npm run test`, `npm run build`, and the
+  release preflight script all passed.
+- `npm audit --audit-level=moderate` reported `0` vulnerabilities.
+- Focused repository checks passed for frontend performance policy, content
+  synchronization, resume assets, SPA SEO, AI discovery, CSP JSON-LD hash, and
+  GA4 event coverage.
+- The production build generated route chunks and prerendered metadata shells
+  for 9 routes. Generated `dist` route shells such as
+  `projects/index.html`, `resume/index.html`, and
+  `case-studies/kubernetes-autoscaling/index.html` contain route-specific
+  title, canonical, robots, and Open Graph metadata.
+- Local Vite preview serves trailing-slash route URLs and direct
+  `index.html` shell URLs with the expected metadata. Vite preview does not
+  apply Netlify `_redirects`, so slashless local preview URLs are not
+  authoritative for Netlify rewrite behavior.
+
+Validated production HTTP evidence from `https://waffy.dev` on Jul 5, 2026:
+
+- `/projects`, `/resume`, and
+  `/case-studies/kubernetes-autoscaling` returned HTTP 301 to trailing-slash
+  URLs.
+- The corresponding trailing-slash pages returned HTTP 200 with route-specific
+  initial HTML metadata and slashless canonical URLs.
+- `/projects.html` and `/missing-page` returned HTTP 404 with
+  `noindex, nofollow`.
+- `/waffyAhmedResume.pdf`, `/llms.txt`, `/ai-summary.txt`,
+  `/portfolio.json`, `/sitemap.xml`, `/robots.txt`, and `/manifest.json`
+  returned HTTP 200.
+- `/waffyahmedresume.pdf` still returned HTTP 200 rather than redirecting to
+  `/waffyAhmedResume.pdf`; this remains a low-severity canonical hygiene item.
+
+The Jun 30 browser-observed GA4 CSP caveat was not re-browser-tested during
+this pass. The current local CSP still does not explicitly allow
+`stats.g.doubleclick.net` or `www.google.com/g/collect`, so the audit keeps that
+item as an analytics follow-up rather than marking it resolved.
+
 ---
 
 ## Resolved in PR #125
@@ -115,27 +166,41 @@ Recent follow-up work addressed several additional findings from this audit:
 - Replaced the soft-404 SPA catch-all with explicit Netlify route rewrites and
   a real static `404.html` response for unknown paths.
 
+## Resolved in PR #129
+
+PR #129 addressed the original deep-route metadata finding by generating
+route-specific HTML shells during the production build and pointing Netlify
+canonical route rewrites at those shells.
+
+Jul 5, 2026 production validation confirmed that route-specific initial HTML
+metadata is present after the current trailing-slash redirect behavior. The
+remaining route caveat is canonicalization polish, not missing metadata.
+
 ---
 
 # Findings and Follow-Up Work
 
-## 1. High: Deep Routes Initially Publish Homepage Metadata
+## 1. Resolved: Canonical Routes Publish Route-Specific Initial Metadata
 
-Netlify currently sends application routes to the same `index.html` file through the SPA rewrite:
+The baseline and Jun 30 deployed audit found that Netlify sent application
+routes to the same homepage-flavored `index.html` shell:
 
 ```text
 /* /index.html 200
 ```
 
-The initial HTML contains homepage-specific title, canonical, and Open Graph values. React replaces them after the application runs, but crawlers, AI fetchers, messaging clients, and social-preview generators that do not execute JavaScript may continue to see homepage metadata for routes such as:
+That meant crawlers, AI fetchers, messaging clients, and social-preview
+generators that do not execute JavaScript could see homepage metadata for deep
+routes such as:
 
 ```text
 /case-studies/kubernetes-autoscaling
 ```
 
-### Recommended Correction
+### Resolution
 
-Pre-render static HTML for every canonical route during the build:
+The current build now prerenders static metadata shells for every canonical
+route:
 
 - `/`
 - `/experience`
@@ -145,7 +210,13 @@ Pre-render static HTML for every canonical route during the build:
 - `/case-studies`
 - Each individual case study
 
-The route-level metadata definitions already exist; the missing step is publishing them in the initial HTML response.
+`npm run build` on Jul 5, 2026 reported `Pre-rendered metadata shells for 9
+routes`, and `check_spa_seo.mjs` passed. Production HTTP checks also confirmed
+that trailing-slash route URLs serve route-specific titles and canonicals.
+
+Keep the remaining trailing-slash behavior tracked as URL canonicalization
+polish: production currently redirects `/projects` to `/projects/`, while the
+served shell canonical remains `https://waffy.dev/projects`.
 
 **Relevant files:**
 
@@ -179,18 +250,24 @@ allows unknown paths to return HTTP 404. Deployed validation confirmed
 
 ---
 
-## 3. High-Medium: Documentation and AI Artifacts Can Drift
+## 3. Addressed: Documentation and AI Artifacts Are Generated
 
 PR #127 corrected the known React-version and hero-description drift in
-`main/README.md` and `main/public/ai-summary.txt`. The broader risk remains:
-public documentation and AI-readable artifacts can still drift because several
-surfaces are maintained manually.
+`main/README.md` and `main/public/ai-summary.txt`. The current repository goes
+further by generating the public documentation and AI-readable artifacts from
+canonical source modules.
 
-The same career claims and metrics also appear across JavaScript data modules, JSON-LD, `portfolio.json`, `ai-summary.txt`, `llms.txt`, the sitemap, and both READMEs. Manual synchronization across these surfaces is likely to drift again.
+`main/scripts/generate-public-artifacts.mjs` now updates `portfolio.json`,
+`ai-summary.txt`, `llms.txt`, `sitemap.xml`, JSON-LD in `main/index.html`, the
+CSP JSON-LD hash in `netlify.toml`, and generated README blocks. The Jul 5,
+2026 build reported `Generated public artifacts are already current`, and the
+content sync plus AI discovery checks passed.
 
-### Recommended Correction
+### Remaining Risk
 
-Treat the data modules as the canonical source and generate public artifacts during the build:
+Wire the generator's check mode and the focused content, AI discovery, CSP, and
+GA4 checks into release/pre-push validation so future content edits cannot drift
+silently. The useful model is already in place:
 
 ```text
 src/data/
@@ -207,8 +284,6 @@ JSON-LD
 sitemap.xml
 ```
 
-Add synchronization tests covering framework versions, case-study slugs, primary metrics, resume links, and social URLs.
-
 **Relevant files:**
 
 - `main/package.json`
@@ -217,6 +292,7 @@ Add synchronization tests covering framework versions, case-study slugs, primary
 - `main/public/ai-summary.txt`
 - `main/public/portfolio.json`
 - `main/public/sitemap.xml`
+- `main/scripts/generate-public-artifacts.mjs`
 - `main/src/data/`
 
 ---
@@ -251,26 +327,40 @@ preserved.
 
 # Architecture and Performance
 
-## 5. Medium: Secondary Routes Are Loaded Eagerly
+## 5. Addressed in Current Working Tree: Secondary Routes Are Lazy-Loaded
 
-`App.jsx` statically imports all route pages. The site is still small, but route-level lazy loading would keep the initial homepage bundle focused as the portfolio grows.
+The baseline audit flagged that `App.jsx` statically imported every route page.
+The current uncommitted working tree now uses `React.lazy`, `Suspense`, and an
+accessible route-loading fallback to split secondary route code.
 
-Keep the homepage eager and lazy-load secondary routes through `React.lazy` and `Suspense`.
+Jul 5, 2026 validation confirmed the related app tests are async-aware, the
+focused frontend performance policy check passed, and the production build emits
+separate route chunks. Keep this item as pending release validation until the
+working-tree changes are committed, pushed, and verified after deploy.
 
 **Relevant file:** `main/src/App.jsx`
 
 ---
 
-## 6. Medium-Low: Images Need Explicit Loading Treatment
+## 6. Partially Addressed in Current Working Tree: Images Need Explicit Loading Treatment
 
-The hero image, project logos, experience logos, and resume preview generally lack intrinsic dimensions. Several below-the-fold images are also loaded eagerly.
+At the baseline, the hero image, project logos, experience logos, and resume preview generally lacked intrinsic dimensions, and several below-the-fold images loaded eagerly.
 
-Recommended treatment:
+The current uncommitted working tree addresses the loading policy portion:
+
+- Homepage profile and resume preview images use `loading="eager"`,
+  `fetchPriority="high"`, and `decoding="async"`.
+- Repeated logos and provider icons use `loading="lazy"` and
+  `decoding="async"`.
+- `main/src/App.test.jsx` includes assertions for the image-loading behavior
+  that is most important to route rendering.
+
+Recommended remaining treatment:
 
 - Provide `width` and `height`, or a stable aspect ratio, for layout reservation.
-- Lazy-load below-the-fold assets.
-- Keep the homepage hero eager and consider `fetchPriority="high"`.
 - Evaluate WebP or AVIF for large photographic assets.
+- Run a desktop and narrow-mobile browser pass before treating this as fully
+  visually verified.
 
 **Relevant files:**
 
@@ -430,11 +520,12 @@ The repository already has unusually mature automation for a personal portfolio:
 Recommended additions, in descending order of value:
 
 1. `axe` checks for every top-level route.
-2. A deployed-route smoke check proving unknown URLs return HTTP 404.
-3. Synchronization tests for sitemap, JSON-LD, AI artifacts, and framework versions.
-4. A rendered-HTML test confirming route-specific metadata after prerendering.
-5. One mobile and one desktop visual-regression pass.
-6. A modest bundle-size or Lighthouse budget.
+2. A deployed-route smoke check proving unknown URLs return HTTP 404 and
+   canonical route redirects still land on route-specific prerendered shells.
+3. One mobile and one desktop visual-regression pass.
+4. A modest bundle-size or Lighthouse budget.
+5. Wire content/AI discovery/CSP/GA4 focused checks into release validation as
+   public surfaces evolve.
 
 ---
 
@@ -463,15 +554,17 @@ That would make the case studies read more like senior engineering narratives an
 
 # Recommended Execution Order
 
-1. Pre-render canonical routes so initial HTML contains route-specific metadata.
-2. Generate public documentation and AI artifacts from canonical data.
-3. Add route-level lazy loading and explicit image-loading behavior.
-4. Add accessibility and performance regression checks.
-5. Add a concise privacy disclosure and review Formspree spam controls.
-6. Address the Analytics CSP allowlist and lowercase resume canonicalization findings from the post-deploy validation.
+1. Finish review/release validation for the current route lazy-loading and
+   image-loading working-tree changes.
+2. Add accessibility, visual, and performance regression checks.
+3. Add a concise privacy disclosure and review Formspree spam controls.
+4. Address the analytics CSP allowlist, trailing-slash canonicalization, and
+   lowercase resume canonicalization findings from deployed validation.
+5. Add `generate:public -- --check` and AI discovery validation to the release
+   path.
 
 ---
 
 # Final Assessment
 
-After the remaining architectural and documentation work, the repository will not merely look polished as a portfolio; it will demonstrate the same operational rigor and reliability mindset that the site presents as a professional specialty.
+As the remaining operational polish lands, the repository will not merely look polished as a portfolio; it will demonstrate the same operational rigor and reliability mindset that the site presents as a professional specialty.

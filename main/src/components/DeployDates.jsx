@@ -97,6 +97,8 @@ function DeployDates({ first }) {
                   src={provider.icon}
                   alt=""
                   aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
                   className="h-5 w-5 opacity-90"
                 />
               </button>

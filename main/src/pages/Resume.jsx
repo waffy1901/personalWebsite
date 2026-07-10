@@ -67,6 +67,9 @@ function Resume() {
             <img
               src={resume.preview}
               alt="Preview of Waffy Ahmed's resume"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               className="h-auto w-full rounded-md"
             />
           </a>

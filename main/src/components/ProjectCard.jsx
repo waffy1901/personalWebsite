@@ -164,6 +164,8 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
               src={logo}
               alt=""
               aria-hidden="true"
+              loading="lazy"
+              decoding="async"
               className="max-h-36 max-w-[78%] object-contain"
             />
           </div>

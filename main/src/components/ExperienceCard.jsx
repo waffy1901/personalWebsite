@@ -211,6 +211,8 @@ const ExperienceCard = ({
               src={logo}
               alt=""
               aria-hidden="true"
+              loading="lazy"
+              decoding="async"
               className={logoImageClass}
             />
           </div>
