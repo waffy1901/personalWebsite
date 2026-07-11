@@ -76,8 +76,15 @@ export const defaultRouteMetadata = {
   robots: "noindex, nofollow",
 }
 
+const normalizeRoutePathname = (pathname = "/") =>
+  pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname
+
 export const getRouteMetadata = (pathname) =>
-  routeMetadata.find((route) => route.path === pathname) ?? defaultRouteMetadata
+  routeMetadata.find(
+    (route) => route.path === normalizeRoutePathname(pathname)
+  ) ?? defaultRouteMetadata
 
 export const toAbsoluteUrl = (path = "/") => {
   const baseUrl = siteMetadata.siteUrl.replace(/\/$/, "")

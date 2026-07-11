@@ -1,0 +1,61 @@
+name: Portfolio integrity
+
+"on":
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: portfolio-integrity-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integrity:
+    name: Validate portfolio surfaces
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.13.0
+          cache: npm
+          cache-dependency-path: main/package-lock.json
+
+      - name: Install dependencies
+        working-directory: main
+        run: npm ci
+
+      - name: Check generated public artifacts
+        run: npm run generate:public -- --check
+
+      - name: Check portfolio content sync
+        run: node .codex/skills/portfolio-content-sync/scripts/check_content_sync.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check resume assets
+        run: node .codex/skills/resume-site-sync/scripts/check_resume_assets.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check SPA and SEO alignment
+        run: node .codex/skills/seo-spa-auditor/scripts/check_spa_seo.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check AI discovery artifacts
+        run: node .codex/skills/ai-discovery-maintainer/scripts/check_ai_discovery.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check CSP JSON-LD hash
+        run: node .codex/skills/csp-security-header-maintainer/scripts/check_csp_jsonld_hash.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check GA4 events
+        run: node .codex/skills/ga4-portfolio-analytics/scripts/check_ga4_events.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check frontend performance policy
+        run: node .codex/skills/portfolio-performance-auditor/scripts/check_frontend_performance.mjs "$GITHUB_WORKSPACE"

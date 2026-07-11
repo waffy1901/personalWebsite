@@ -10,7 +10,11 @@ import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { resume, socialLinks } from "./data/profile.js"
-import { routeMetadata } from "./data/seo.js"
+import {
+  defaultRouteMetadata,
+  getRouteMetadata,
+  routeMetadata,
+} from "./data/seo.js"
 
 const formspreeSubmitMock = vi.hoisted(() =>
   vi.fn((event) => event?.preventDefault?.())
@@ -191,6 +195,37 @@ describe("App routes", () => {
       "content",
       "Kubernetes Autoscaling for Transaction-Critical Services | Waffy Ahmed"
     )
+  })
+
+  it("preserves route-level SEO metadata on trailing-slash direct loads", async () => {
+    renderRoute("/projects/")
+
+    expect(
+      await screen.findByRole("heading", {
+        name: /practical builds for real workflows/i,
+      })
+    ).toBeInTheDocument()
+    await waitFor(() =>
+      expect(document.title).toBe("Projects | Waffy Ahmed")
+    )
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href",
+      "https://waffy.dev/projects"
+    )
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      "content",
+      "index, follow"
+    )
+  })
+
+  it("matches known trailing-slash paths without masking unknown routes", () => {
+    routeMetadata
+      .filter((route) => route.path !== "/")
+      .forEach((route) => {
+        expect(getRouteMetadata(`${route.path}/`)).toBe(route)
+      })
+
+    expect(getRouteMetadata("/missing-page/")).toBe(defaultRouteMetadata)
   })
 
   it("sends analytics page views when analytics is configured", async () => {

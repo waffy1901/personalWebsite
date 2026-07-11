@@ -35,7 +35,9 @@ function Seo() {
 
   useEffect(() => {
     const metadata = getRouteMetadata(location.pathname)
-    const canonicalUrl = toAbsoluteUrl(metadata.canonicalPath ?? location.pathname)
+    const canonicalUrl = toAbsoluteUrl(
+      metadata.canonicalPath ?? metadata.path ?? location.pathname
+    )
     const imageUrl = toAbsoluteUrl(siteMetadata.imagePath)
     const robots = metadata.robots ?? "index, follow"
 

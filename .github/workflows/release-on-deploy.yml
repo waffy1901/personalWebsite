@@ -59,10 +59,8 @@ jobs:
       - name: Wait for Netlify production deploy
         env:
           EXPECTED_COMMIT: ${{ github.sha }}
-          LEGACY_RESUME_URL: https://waffy.netlify.app/waffyAhmedResume.pdf
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          SITE_URL: https://waffy.dev
         run: |
           set -euo pipefail
 
@@ -93,11 +91,16 @@ jobs:
             sleep 20
           done
 
-          home_html="$(curl -fsSL "${SITE_URL}/")"
-          printf '%s' "$home_html" | grep -F 'rel="canonical" href="https://waffy.dev/"'
-          printf '%s' "$home_html" | grep -F 'property="og:url" content="https://waffy.dev/"'
-          printf '%s' "$home_html" | grep -F 'https://waffy.dev/waffyAhmedResume.pdf'
+      - name: Validate deployed routes
+        env:
+          SITE_URL: https://waffy.dev
+        run: python3 scripts/check-deployed-routes.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
 
+      - name: Validate legacy Netlify domain redirect
+        env:
+          LEGACY_RESUME_URL: https://waffy.netlify.app/waffyAhmedResume.pdf
+        run: |
+          set -euo pipefail
           legacy_headers="$(curl -fsSI "$LEGACY_RESUME_URL")"
           printf '%s\n' "$legacy_headers" | grep -Eiq '^HTTP/[0-9.]+ 301'
           printf '%s\n' "$legacy_headers" | tr -d '\r' | grep -Fiq 'Location: https://waffy.dev/waffyAhmedResume.pdf'
