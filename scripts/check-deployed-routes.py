@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import shlex
 import subprocess
 import sys
@@ -28,37 +29,139 @@ class CurlResponse:
     body: str
 
 
+@dataclass(frozen=True)
+class RouteMetadataExpectation:
+    path: str
+    title: str
+    description: str
+    canonical_url: str
+    image_url: str
+
+
 class MetadataParser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.canonicals = []
+        self.descriptions = []
         self.og_urls = []
+        self.og_titles = []
+        self.og_descriptions = []
+        self.og_images = []
+        self.og_secure_images = []
         self.robots = []
-        self.title_parts = []
-        self.in_title = False
+        self.twitter_titles = []
+        self.twitter_descriptions = []
+        self.twitter_images = []
+        self.titles = []
+        self._title_parts = None
 
     def handle_starttag(self, tag, attrs):
         attributes = dict(attrs)
         if tag == "link" and attributes.get("rel") == "canonical":
             self.canonicals.append(attributes.get("href", ""))
-        elif tag == "meta" and attributes.get("property") == "og:url":
-            self.og_urls.append(attributes.get("content", ""))
-        elif tag == "meta" and attributes.get("name") == "robots":
-            self.robots.append(attributes.get("content", ""))
         elif tag == "title":
-            self.in_title = True
+            self._title_parts = []
+        elif tag == "meta":
+            property_name = attributes.get("property")
+            meta_name = attributes.get("name")
+            content = attributes.get("content", "")
+
+            if property_name == "og:url":
+                self.og_urls.append(content)
+            elif property_name == "og:title":
+                self.og_titles.append(content)
+            elif property_name == "og:description":
+                self.og_descriptions.append(content)
+            elif property_name == "og:image":
+                self.og_images.append(content)
+            elif property_name == "og:image:secure_url":
+                self.og_secure_images.append(content)
+            elif meta_name == "description":
+                self.descriptions.append(content)
+            elif meta_name == "robots":
+                self.robots.append(content)
+            elif meta_name == "twitter:title":
+                self.twitter_titles.append(content)
+            elif meta_name == "twitter:description":
+                self.twitter_descriptions.append(content)
+            elif meta_name == "twitter:image":
+                self.twitter_images.append(content)
 
     def handle_endtag(self, tag):
-        if tag == "title":
-            self.in_title = False
+        if tag == "title" and self._title_parts is not None:
+            self.titles.append("".join(self._title_parts).strip())
+            self._title_parts = None
 
     def handle_data(self, data):
-        if self.in_title:
-            self.title_parts.append(data)
+        if self._title_parts is not None:
+            self._title_parts.append(data)
 
     @property
     def title(self):
-        return "".join(self.title_parts).strip()
+        return self.titles[0] if self.titles else ""
+
+
+def load_route_metadata(repo_root):
+    exporter_path = repo_root / "main" / "scripts" / "export-route-metadata.mjs"
+    result = subprocess.run(
+        [
+            "node",
+            "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON",
+            str(exporter_path),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        detail = result.stderr.strip() or "unknown Node error"
+        raise ValueError(f"Could not load route metadata from {exporter_path}: {detail}")
+
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise ValueError(
+            f"Could not parse route metadata from {exporter_path}: {error}"
+        ) from error
+
+    if not isinstance(payload, dict):
+        raise ValueError(f"{exporter_path} must emit a JSON object.")
+
+    image_url = payload.get("imageUrl")
+    routes = payload.get("routes")
+    if not isinstance(image_url, str) or not image_url:
+        raise ValueError(f"{exporter_path} must emit a nonempty imageUrl.")
+    if not isinstance(routes, list) or not routes:
+        raise ValueError(f"{exporter_path} must emit a nonempty routes list.")
+
+    expectations = {}
+    required_fields = ("path", "title", "description", "canonicalUrl")
+    for index, route in enumerate(routes):
+        if not isinstance(route, dict):
+            raise ValueError(f"{exporter_path} route {index} must be a JSON object.")
+
+        for field in required_fields:
+            if not isinstance(route.get(field), str) or not route[field]:
+                raise ValueError(
+                    f"{exporter_path} route {index} must include nonempty {field}."
+                )
+
+        path = route["path"]
+        if not path.startswith("/"):
+            raise ValueError(f"{exporter_path} has invalid route path {path!r}.")
+        if path in expectations:
+            raise ValueError(f"{exporter_path} has duplicate route path {path!r}.")
+
+        expectations[path] = RouteMetadataExpectation(
+            path=path,
+            title=route["title"],
+            description=route["description"],
+            canonical_url=route["canonicalUrl"],
+            image_url=image_url,
+        )
+
+    return expectations
 
 
 def load_redirect_rules(repo_root):
@@ -179,17 +282,66 @@ def parse_metadata(html):
     return parser
 
 
+def validate_route_inventory(canonical_routes, route_metadata):
+    expected_paths = {"/", *canonical_routes}
+    actual_paths = set(route_metadata)
+    failures = []
+
+    missing_paths = sorted(expected_paths - actual_paths)
+    if missing_paths:
+        failures.append(
+            "Route metadata is missing canonical paths: " + ", ".join(missing_paths) + "."
+        )
+
+    extra_paths = sorted(actual_paths - expected_paths)
+    if extra_paths:
+        failures.append(
+            "Route metadata has paths missing from canonical rewrites: "
+            + ", ".join(extra_paths)
+            + "."
+        )
+
+    return failures
+
+
+def validate_shell_metadata(request_url, metadata, expected, failures):
+    exact_values = (
+        ("title", metadata.titles, expected.title),
+        ("description", metadata.descriptions, expected.description),
+        ("canonical", metadata.canonicals, expected.canonical_url),
+        ("robots", metadata.robots, "index, follow"),
+        ("og:url", metadata.og_urls, expected.canonical_url),
+        ("og:title", metadata.og_titles, expected.title),
+        ("og:description", metadata.og_descriptions, expected.description),
+        ("og:image", metadata.og_images, expected.image_url),
+        ("og:image:secure_url", metadata.og_secure_images, expected.image_url),
+        ("twitter:title", metadata.twitter_titles, expected.title),
+        (
+            "twitter:description",
+            metadata.twitter_descriptions,
+            expected.description,
+        ),
+        ("twitter:image", metadata.twitter_images, expected.image_url),
+    )
+
+    for label, actual_values, expected_value in exact_values:
+        if actual_values != [expected_value]:
+            failures.append(
+                f"{request_url} {label} mismatch: expected exactly "
+                f"{[expected_value]!r}, got {actual_values or '<missing>'!r}."
+            )
+
+
 def check_shell(
     origin,
     request_path,
-    canonical_path,
+    expected_metadata,
     args,
     failures,
     *,
     expected_effective_path=None,
 ):
     request_url = site_url(origin, request_path)
-    expected_canonical = site_url(origin, canonical_path)
     expected_effective = site_url(
         origin, expected_effective_path or request_path
     )
@@ -216,23 +368,10 @@ def check_shell(
         )
 
     metadata = parse_metadata(response.body)
-    if metadata.canonicals != [expected_canonical]:
-        failures.append(
-            f"{request_url} canonical mismatch: expected {expected_canonical!r}, "
-            f"got {metadata.canonicals or '<missing>'!r}."
-        )
-    if metadata.og_urls != [expected_canonical]:
-        failures.append(
-            f"{request_url} og:url mismatch: expected {expected_canonical!r}, "
-            f"got {metadata.og_urls or '<missing>'!r}."
-        )
-    if not metadata.title:
-        failures.append(f"{request_url} is missing an initial HTML title.")
-    if any("noindex" in value.lower() for value in metadata.robots):
-        failures.append(f"{request_url} unexpectedly has a noindex robots directive.")
+    validate_shell_metadata(request_url, metadata, expected_metadata, failures)
 
 
-def check_canonical_route(origin, route, args, failures):
+def check_canonical_route(origin, route, expected_metadata, args, failures):
     slashless_url = site_url(origin, route)
     trailing_path = f"{route}/"
     expected_redirect = site_url(origin, trailing_path)
@@ -257,10 +396,10 @@ def check_canonical_route(origin, route, args, failures):
             f"got {response.redirect_url or '<missing>'!r}."
         )
 
-    check_shell(origin, trailing_path, route, args, failures)
+    check_shell(origin, trailing_path, expected_metadata, args, failures)
 
 
-def check_legacy_redirect(origin, rule, canonical_routes, args, failures):
+def check_legacy_redirect(origin, rule, route_metadata, args, failures):
     source_url = site_url(origin, rule.source)
     expected_redirect = site_url(origin, rule.destination)
     served_route = f"{rule.destination}/"
@@ -289,11 +428,11 @@ def check_legacy_redirect(origin, rule, canonical_routes, args, failures):
             f"got {response.redirect_url or '<missing>'!r}."
         )
 
-    if rule.destination in canonical_routes:
+    if rule.destination in route_metadata:
         check_shell(
             origin,
             rule.source,
-            rule.destination,
+            route_metadata[rule.destination],
             args,
             failures,
             expected_effective_path=served_route,
@@ -353,15 +492,24 @@ def main():
     try:
         origin = normalize_site_url(args.site_url)
         canonical_routes, local_redirects = load_redirect_rules(repo_root)
+        route_metadata = load_route_metadata(repo_root)
     except (OSError, ValueError) as error:
         print(error, file=sys.stderr)
         return 1
 
-    failures = []
-    check_shell(origin, "/", "/", args, failures)
+    failures = validate_route_inventory(canonical_routes, route_metadata)
+    if failures:
+        print("Deployed route validation failed:", file=sys.stderr)
+        for failure in failures:
+            print(f"- {failure}", file=sys.stderr)
+        return 1
+
+    check_shell(origin, "/", route_metadata["/"], args, failures)
 
     for route in canonical_routes:
-        check_canonical_route(origin, route, args, failures)
+        check_canonical_route(
+            origin, route, route_metadata[route], args, failures
+        )
 
     canonical_route_set = set(canonical_routes)
     app_redirects = [
@@ -369,7 +517,7 @@ def main():
     ]
     for rule in app_redirects:
         check_legacy_redirect(
-            origin, rule, canonical_route_set, args, failures
+            origin, rule, route_metadata, args, failures
         )
 
     check_unknown_route(origin, args, failures)

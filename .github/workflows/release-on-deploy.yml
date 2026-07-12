@@ -56,6 +56,11 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.13.0
+
       - name: Wait for Netlify production deploy
         env:
           EXPECTED_COMMIT: ${{ github.sha }}
@@ -90,6 +95,9 @@ jobs:
             echo "Waiting for Netlify production deploy ${EXPECTED_COMMIT}; attempt ${attempt}/45 saw state=${deploy_state}, commit=${deploy_commit}"
             sleep 20
           done
+
+      - name: Test deployed route checker
+        run: python3 scripts/test_deployed_routes.py
 
       - name: Validate deployed routes
         env:

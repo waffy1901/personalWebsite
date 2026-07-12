@@ -48,6 +48,9 @@ jobs:
       - name: Check SPA and SEO alignment
         run: node .codex/skills/seo-spa-auditor/scripts/check_spa_seo.mjs "$GITHUB_WORKSPACE"
 
+      - name: Test deployed route checker
+        run: python3 scripts/test_deployed_routes.py
+
       - name: Check AI discovery artifacts
         run: node .codex/skills/ai-discovery-maintainer/scripts/check_ai_discovery.mjs "$GITHUB_WORKSPACE"
 
