@@ -2,8 +2,8 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PR #134 (`feat/portfolio-performance-security-automation`) at `17c9fb3`, including PR #131 (`feat/generate-public-artifacts`) and PR #129 (`prerenderRouteMetadata`)<br>
-**Latest audit pass:** Jul 10, 2026 automation and route-metadata follow-up on `main` with current uncommitted portfolio-integrity, deployed-route validation, and trailing-slash metadata fixes present<br>
+**Reconciled through:** PR #135 (`feat/route-metadata-integrity`) at merge commit `aea2eff1a51767a39f1ef1fe0afc4c756d8d3d5e`, including PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
+**Latest audit pass:** Jul 11, 2026 production deployment validation for PR #135, GitHub Actions run `29154593131`, and release `deploy-20260711T133623Z-aea2eff`, plus exact deployed-route metadata gate hardening in the current working tree<br>
 **Website creation date:** Sep 12, 2024 at 2:17 PM<br>
 **Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, security controls, and GitHub Actions.
 
@@ -19,17 +19,16 @@
 The portfolio is in **good engineering shape**. It presents a distinctive, recruiter-oriented platform and reliability narrative while also demonstrating meaningful engineering discipline through automated testing, dependency scanning, CodeQL, deployment validation, analytics, structured data, and accessible interaction patterns.
 
 No obvious build-breaking or critical security issue was found. The original
-highest-risk architectural gap, crawler-visible route metadata, has since been
-resolved by the prerendered route-shell work. The highest-value remaining work
-is now operational polish and regression protection:
+crawler-visible route-metadata gap and the later trailing-slash hydration
+regression are resolved. PR #135 is merged, deployed, and production-browser
+verified, and the portfolio-integrity and deployed-route workflows are active.
 
-1. Deploy and production-browser-verify the current trailing-slash runtime
-   metadata fix.
-2. Commit and activate the current portfolio-integrity and deployed-route
-   automation.
-3. Add targeted accessibility, visual, and performance regression checks.
-4. Add a concise privacy disclosure and review Formspree abuse controls.
-5. Clean up low-severity URL canonicalization and analytics allowlist caveats.
+The highest-value remaining work is operational polish:
+
+1. Add targeted accessibility, visual, and performance regression checks.
+2. Add a concise privacy disclosure and review Formspree abuse controls.
+3. Clean up the remaining low-severity URL canonicalization and analytics
+   allowlist caveats.
 
 ---
 
@@ -136,7 +135,7 @@ Current `main` includes PR #134 at `17c9fb3`, with deployment tag
 route-level lazy loading, image loading policy, deployed security-header
 verification, and related release checks.
 
-The current uncommitted automation follow-up adds:
+The automation follow-up that later shipped in PR #135 added:
 
 - `.github/workflows/portfolio-integrity.yml`, a pull-request and manual check
   for generated public artifacts, content synchronization, resume assets, SPA
@@ -157,14 +156,15 @@ passed for the homepage, 8 canonical routes, 6 legacy app redirects, and the
 unknown-route 404. No browser automation was used, so this validation should
 not add GA4 page views or users.
 
-The deployed-route checker intentionally validates HTTP and initial HTML; it
-does not execute React and therefore cannot detect post-hydration document
-metadata changes. The App-level trailing-slash tests added in the follow-up
-cover that client path locally, while production browser verification remains a
-separate release check.
+The deployed-route checker intentionally validates HTTP behavior and initial
+HTML; it does not execute React. App-level trailing-slash tests cover the client
+path locally, and the Jul 11 production browser pass independently verified the
+hydrated document metadata.
 
-These workflow changes are validated but are not yet active in GitHub Actions;
-they still need to be committed, pushed, and observed in a real workflow run.
+PR #135 merged at `aea2eff1a51767a39f1ef1fe0afc4c756d8d3d5e` and activated
+the workflow changes. Portfolio Integrity run `29154543878` passed for the PR,
+and release-on-deploy workflow run `29154593131` validated the exact deployed
+merge commit before creating release `deploy-20260711T133623Z-aea2eff`.
 
 ### Jul 10, 2026 Trailing-Slash Runtime Metadata Follow-Up
 
@@ -185,9 +185,10 @@ canonicalization polish. It is not a full-page availability failure, but it
 affects every reloaded non-home route and can expose `noindex, nofollow` to
 JavaScript-capable crawlers.
 
-The current uncommitted fix normalizes one trailing slash before route metadata
-lookup and derives canonical URLs from the matched route. Regression tests cover
-all known non-home trailing-slash paths and preserve the unknown-route fallback.
+The fix that later shipped in PR #135 normalizes one trailing slash before route
+metadata lookup and derives canonical URLs from the matched route. Regression
+tests cover all known non-home trailing-slash paths and preserve the
+unknown-route fallback.
 Lint, 25 tests, the SPA SEO check, the frontend performance policy check, and
 the production build with 9 prerendered route shells passed. A localhost
 production-preview browser reload kept `/projects/` on the Projects title with
@@ -199,11 +200,45 @@ Route splitting, image policy, CSS, assets, dependencies, and Vite configuration
 are unchanged; the production build kept the main bundle at 211.34 kB
 (69.26 kB gzip) with separate secondary-route chunks.
 
-No production browser automation was run during this follow-up, avoiding new
-GA4 browser traffic. The production post-hydration symptom is based on the user
-report plus the confirmed source path; production HTTP checks prove the redirect
-and initial shell. Keep this item open until a deployed browser reload confirms
-the fixed title, canonical, robots, and social metadata.
+No production browser automation was run during the Jul 10 follow-up, avoiding
+new GA4 browser traffic at that stage. The item therefore remained open pending
+deployment. The Jul 11 production validation below supplies that evidence and
+closes the regression.
+
+### Jul 11, 2026 PR #135 Deployment Closure
+
+PR #135 merged at `aea2eff1a51767a39f1ef1fe0afc4c756d8d3d5e`, and Netlify
+deployed that exact commit. Release workflow run `29154593131` passed its app
+verification, deploy wait, deployed-route validation, legacy-domain redirect,
+and release-creation steps, producing `deploy-20260711T133623Z-aea2eff`.
+
+The live HTTP checker passed for the homepage, 8 canonical routes, 6 legacy app
+redirects, and the unknown-route 404. Production-browser hard reloads on all
+eight non-home canonical routes retained the correct route-specific title and
+description, slashless canonical URL, `index, follow`, `og:url`, `og:title`,
+`twitter:title`, and page heading after hydration. The static unknown-route
+page retained its `Page Not Found | Waffy Ahmed` title, homepage canonical,
+`noindex, nofollow`, and `Page not found` heading. No browser console errors
+were observed.
+
+The browser pass may have contributed up to eight GA4 page views. The HTTP and
+GitHub Actions checks did not execute analytics. This closes the trailing-slash
+hydration regression as a production issue.
+
+### Jul 11, 2026 Exact Metadata Gate Hardening
+
+The current follow-up strengthens regression protection rather than changing
+the deployed app. `scripts/check-deployed-routes.py` now imports route
+expectations directly from `main/src/data/seo.js` and requires exact singleton
+matches for title, description, canonical, robots, Open Graph URL, title,
+description and image fields, and Twitter title, description, and image fields.
+It also requires the metadata route inventory to match the canonical rewrites
+derived from `main/public/_redirects`.
+
+Offline fixture tests reject wrong-but-nonempty, missing, and duplicate values
+for every enforced field. The tests are wired into Portfolio Integrity and the
+release job before the live route check. This hardening is locally validated but
+will not be active in GitHub Actions until the current follow-up is published.
 
 The Jun 30 browser-observed GA4 CSP caveat was not re-browser-tested during
 this pass. The current local CSP still does not explicitly allow
@@ -253,15 +288,15 @@ canonical route rewrites at those shells.
 
 Jul 5, 2026 production validation confirmed that route-specific initial HTML
 metadata is present after the current trailing-slash redirect behavior. That
-PR #129 resolution remains valid. The Jul 10 follow-up found a separate client
-hydration regression for those trailing-slash browser URLs; it is tracked below
-without reopening the initial-HTML finding.
+PR #129 resolution remains valid. The separate client-hydration regression
+found on Jul 10 was resolved by PR #135 and production-browser verified on Jul
+11.
 
 ---
 
 # Findings and Follow-Up Work
 
-## 1. Initial Metadata Resolved; Trailing-Slash Runtime Fix Pending Deploy
+## 1. Resolved in PR #135: Initial HTML and Trailing-Slash Runtime Metadata
 
 The baseline and Jun 30 deployed audit found that Netlify sent application
 routes to the same homepage-flavored `index.html` shell:
@@ -304,10 +339,10 @@ canonical remains `https://waffy.dev/projects`. The post-hydration behavior was
 more serious. Because the client metadata lookup required an exact slashless
 path, it replaced valid route metadata with the 404 defaults after a reload.
 
-The current working tree fixes that client mismatch in `seo.js` and `Seo.jsx`
-and adds route-level regression coverage in `App.test.jsx`. Local production
-preview and automated checks pass, but this runtime portion remains open until
-the fix is deployed and verified in a production browser.
+PR #135 fixed the client mismatch in `seo.js` and `Seo.jsx` and added
+route-level regression coverage in `App.test.jsx`. Local production preview and
+automated checks passed, and the Jul 11 production hard-reload pass confirmed
+correct hydrated metadata across every non-home canonical route.
 
 **Relevant files:**
 
@@ -357,11 +392,11 @@ content sync plus AI discovery checks passed.
 
 ### Automation Follow-Up
 
-The Jul 10 working tree wires the generator's check mode and the focused
-content, resume, SPA SEO, AI discovery, CSP, GA4, and frontend performance
-checks into a dedicated pull-request workflow. This addresses silent public
-artifact drift at the PR gate once the workflow is committed and pushed. The
-useful model remains:
+PR #135 wires the generator's check mode and the focused content, resume, SPA
+SEO, AI discovery, CSP, GA4, and frontend performance checks into a dedicated
+pull-request workflow. The workflow is active and passed for PR #135, so silent
+public-artifact drift is now enforced at the pull-request gate. The useful model
+remains:
 
 ```text
 src/data/
@@ -612,12 +647,13 @@ The repository already has unusually mature automation for a personal portfolio:
 - Weekly deployed-header verification.
 - Deployment-to-commit validation before release creation.
 
-The current Jul 10 working tree adds a dedicated portfolio-integrity PR check
-and source-derived deployed-route initial-HTML smoke coverage. Both have passed
-local/static validation, and the route checker passed against production, but
-neither change is active in GitHub Actions until it is committed and pushed.
-The route checker does not execute React, so browser-hydrated metadata remains
-covered by App tests plus a post-deploy browser reload check.
+PR #135 added the dedicated Portfolio Integrity pull-request check and
+source-derived deployed-route initial-HTML smoke coverage. Both are active:
+Portfolio Integrity run `29154543878` passed for PR #135, and
+release-on-deploy workflow run `29154593131` validated the exact production
+commit before release creation. The route checker does not execute React, so
+browser-hydrated metadata remains covered by App tests and the Jul 11
+production browser validation.
 
 Recommended additions, in descending order of value:
 
@@ -652,14 +688,11 @@ That would make the case studies read more like senior engineering narratives an
 
 # Recommended Execution Order
 
-1. Deploy the trailing-slash runtime metadata fix, then confirm in a production
-   browser that reloaded non-home routes retain their route-specific title,
-   canonical, robots, and social metadata.
-2. Commit and push the portfolio-integrity and deployed-route automation, then
-   confirm both workflows pass in GitHub Actions.
-3. Add accessibility, visual, and performance regression checks.
-4. Add a concise privacy disclosure and review Formspree spam controls.
-5. Address the analytics CSP allowlist, remaining trailing-slash URL
+1. Publish and observe the exact route-metadata checker hardening from the
+   current follow-up.
+2. Add accessibility, visual, and performance regression checks.
+3. Add a concise privacy disclosure and review Formspree spam controls.
+4. Address the analytics CSP allowlist, remaining trailing-slash URL
    canonicalization, and lowercase resume canonicalization findings from
    deployed validation.
 
@@ -667,8 +700,10 @@ That would make the case studies read more like senior engineering narratives an
 
 # Final Assessment
 
-The repository remains healthy, but the trailing-slash hydration regression
-should be deployed and browser-verified before route metadata is treated as
-fully closed.
+The repository remains healthy. PR #135 and the Jul 11 production validation
+close the trailing-slash hydration regression: every reloaded non-home route
+retains its route-specific metadata after hydration. The current checker
+hardening strengthens future regression protection rather than correcting a
+remaining production defect.
 
 As the remaining operational polish lands, the repository will not merely look polished as a portfolio; it will demonstrate the same operational rigor and reliability mindset that the site presents as a professional specialty.
