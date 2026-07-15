@@ -1,7 +1,7 @@
 import React from "react"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { MemoryRouter } from "react-router-dom"
+import { BrowserRouter, MemoryRouter } from "react-router-dom"
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -41,6 +41,16 @@ const renderRoute = (route) =>
       <App />
     </MemoryRouter>
   )
+
+const renderBrowserRoute = (route) => {
+  window.history.replaceState({}, "", route)
+
+  return render(
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  )
+}
 
 const getAnalyticsCalls = () =>
   (window.dataLayer || []).map((call) => Array.from(call))
@@ -106,6 +116,7 @@ afterEach(() => {
   delete window.gtag
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
+  window.history.replaceState({}, "", "/")
 })
 
 describe("App routes", () => {
@@ -252,6 +263,28 @@ describe("App routes", () => {
           ],
         ])
       )
+    )
+  })
+
+  it("excludes query strings and fragments from analytics page views", async () => {
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderBrowserRoute(
+      "/projects?email=alice%40example.com&token=reset-secret#access_token=fragment-secret"
+    )
+
+    await waitFor(() => expect(getAnalyticsEvents("page_view")).toHaveLength(1))
+
+    const [[, , pageViewParams]] = getAnalyticsEvents("page_view")
+
+    expect(pageViewParams).toEqual(
+      expect.objectContaining({
+        page_location: "http://localhost:3000/projects",
+        page_path: "/projects",
+        send_to: "G-TEST123",
+      })
+    )
+    expect(JSON.stringify(pageViewParams)).not.toMatch(
+      /alice|reset-secret|fragment-secret/
     )
   })
 

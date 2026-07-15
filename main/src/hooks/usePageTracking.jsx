@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { initializeAnalytics, trackEvent } from "../utils/analytics";
 
 export default function usePageTracking() {
-  const location = useLocation()
+  const { pathname } = useLocation()
   const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID
 
   useEffect(() => {
@@ -13,9 +13,9 @@ export default function usePageTracking() {
 
     initializeAnalytics(measurementId)
     trackEvent("page_view", {
-      page_location: window.location.href,
-      page_path: location.pathname + location.search,
+      page_location: `${window.location.origin}${pathname}`,
+      page_path: pathname,
       page_title: document.title,
     });
-  }, [location, measurementId]);
+  }, [measurementId, pathname]);
 }
