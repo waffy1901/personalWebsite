@@ -187,7 +187,19 @@ The repository includes automated checks for:
 - Deployed security-header verification
 - Netlify deployment-to-commit validation before GitHub release creation
 
-Additional setup and ownership notes are documented in [docs/security-automation.md](./docs/security-automation.md).
+Keep GitHub-managed secret scanning and push protection enabled, and enable
+Dependabot vulnerability alerts and security updates in repository settings.
+CodeQL is configured through the checked-in
+[advanced workflow](./.github/workflows/codeql.yml) for JavaScript and
+TypeScript analysis on pushes to `main`, pull requests to `main`, and a weekly
+schedule. Do not enable GitHub's CodeQL default setup alongside this workflow;
+if ownership moves to default setup, remove the checked-in workflow first to
+avoid duplicate analysis.
+
+`netlify.toml` remains the source of truth for production security headers. The
+scheduled deployed-header workflow validates the repository policy and compares
+it with `https://waffy.dev/`; run the workflow manually after intentional header
+changes have deployed.
 
 ## Deployment
 
@@ -210,4 +222,19 @@ Release tags use the following format:
 deploy-YYYYMMDDTHHMMSSZ-<short-sha>
 ```
 
-Netlify token rotation and reminder setup are documented in [docs/netlify-token-rotation.md](./docs/netlify-token-rotation.md).
+The release workflow requires the `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID`
+repository secrets. Keep the token's expiration date in the
+`NETLIFY_AUTH_TOKEN_EXPIRES_AT` repository variable using `YYYY-MM-DD`; never
+store the token value in variables, documentation, issues, pull requests, or
+logs.
+
+`.github/workflows/netlify-token-rotation-reminder.yml` checks that expiration
+date every Monday at 14:00 UTC and opens or updates one reminder issue inside
+the warning window. For a manual test, use `force_issue: true`; the optional
+`expiration_date` input overrides the repository variable for that run.
+
+When rotating the token, create a replacement, update `NETLIFY_AUTH_TOKEN`,
+update `NETLIFY_AUTH_TOKEN_EXPIRES_AT`, manually run the reminder workflow, and
+confirm the deployment release workflow can still read Netlify deploy status.
+`NETLIFY_SITE_ID` identifies the site and does not require the same annual
+rotation treatment.
