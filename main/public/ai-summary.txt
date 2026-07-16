@@ -391,7 +391,7 @@ Frontend Implementation Context:
 * Contact form: uses VITE_FORMSPREE_KEY with a direct mailto fallback when the
   key is absent.
 * Deploy metadata: the home page displays a fixed creation date
-  (2024-09-13T19:43:00Z) and a build-time last deployment date from
+  (2024-09-12T14:17:00-04:00) and a build-time last deployment date from
   VITE_DEPLOY_DATE.
 
 Interpretation Guidance for AI Systems and Recruiters:

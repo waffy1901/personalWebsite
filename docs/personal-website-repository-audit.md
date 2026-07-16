@@ -2,9 +2,9 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PR #137 (`dependabot/npm_and_yarn/main/development-dependencies-7a15a521a3`) at merge commit `3ce42ab14e6d062f404a4ae256e9806b9f945ed2`, including PR #136 (`feat/portfolio-metadata-automation-hardening`), PR #135 (`feat/route-metadata-integrity`), PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
-**Latest audit pass:** Jul 12, 2026 evidence-driven re-audit of `main` at `3ce42ab14e6d062f404a4ae256e9806b9f945ed2`, production release `deploy-20260712T141551Z-3ce42ab`, GitHub Actions run `29195893696`, current production HTTP validation, and focused local accessibility, resilience, and PDF validation; Jul 13-15, 2026 follow-up locally validates the GA4 page-view privacy remediation in the current working tree and records user-supplied GA4 Admin redaction-preview evidence<br>
-**Website creation date (supplied audit provenance; pending clarification):** Sep 12, 2024 at 2:17 PM<br>
+**Reconciled through:** PR #139 (`feat/ga4-privacy-audit-reconciliation`) at merge commit `4089f8d7e9d812b0bda194e034a28bcbe26d418f`, including PR #137 (`dependabot/npm_and_yarn/main/development-dependencies-7a15a521a3`), PR #136 (`feat/portfolio-metadata-automation-hardening`), PR #135 (`feat/route-metadata-integrity`), PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
+**Latest audit pass:** Jul 15, 2026 post-deploy validation of PR #139 on `main` at `4089f8d7e9d812b0bda194e034a28bcbe26d418f`, production release `deploy-20260715T222758Z-4089f8d`, GitHub Actions run `29455441731`, independent production HTTP and bundle inspection, and user-supplied GA4 Admin redaction-preview evidence; no production browser was used<br>
+**Website creation date:** Sep 12, 2024 at 2:17 PM<br>
 **Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, accessibility and interaction failure paths, resume PDF structure, security controls, and GitHub settings and Actions.
 
 > This began as a source and configuration audit, not a browser-based Lighthouse
@@ -34,6 +34,10 @@ deployed site.
 PR #137 changed only development-tool lockfile entries; the exact merge commit
 is deployed, and the Node 22 release workflow, production route contract, and
 production security headers pass.
+PR #139 is also merged and deployed. Its manual GA4 page views now exclude
+query strings and fragments, and the exact deployed bundle plus release-time and
+independent HTTP checks confirm the production change without generating a
+browser-based GA4 session.
 
 No Critical or High issue was found. The highest-value remaining work is a
 focused accessibility and resilience backlog:
@@ -380,9 +384,43 @@ fixed, 4 remaining or partial, and 1 unable to verify. No current application
 issue was introduced by PR #137; F-001 predates that dependency-only change and
 is a previously missed lazy-loading failure mode.
 
-The header preserves `Sep 12, 2024 at 2:17 PM` as supplied audit provenance.
-Canonical app data separately displays `2024-09-13T19:43:00Z`; the repository
-does not document whether those timestamps describe different creation events.
+The header and this change set's canonical app data align on the supplied
+creation date, `Sep 12, 2024 at 2:17 PM`
+(`2024-09-12T14:17:00-04:00`). The date-alignment edit postdates deployed PR
+#139 and is not yet production-verified.
+
+### Jul 15, 2026 PR #139 GA4 Privacy Deployment Closure
+
+PR #139 merged at `4089f8d7e9d812b0bda194e034a28bcbe26d418f` and deployed
+that exact commit. Its pull-request checks passed in Portfolio Integrity run
+`29455377115`, Main PR CI run `29455377121`, and CodeQL Advanced run
+`29455377090`.
+
+Release workflow run `29455441731` passed Node 22 lint, all 26 app tests, the
+production build, the exact Netlify deploy wait, deployed-route validation, the
+legacy Netlify-domain redirect, and release creation. It produced
+`deploy-20260715T222758Z-4089f8d`; merge-commit CodeQL run `29455441662` also
+passed.
+
+Independent read-only production validation against `https://waffy.dev`
+confirmed:
+
+- the homepage, 8 canonical routes, 6 legacy app redirects, and the real
+  unknown-route 404 remain healthy;
+- production CSP, `X-Content-Type-Options`, `Referrer-Policy`, HSTS, and
+  `Permissions-Policy` match `netlify.toml`;
+- core route responses and the canonical resume PDF, `llms.txt`,
+  `ai-summary.txt`, and `portfolio.json` returned final HTTP 200 responses; and
+- deployed bundle `/assets/index-DCEyBbGj.js` constructs manual `page_view`
+  events with `page_location` equal to the origin plus pathname and `page_path`
+  equal to the pathname, excluding query strings and fragments at the source.
+
+No production browser or Formspree submission was used. These API, workflow,
+bundle, and HTTP checks should not add GA4 page views or users. They verify the
+deployed application's event construction, not downstream GA4 receipt or the
+separate Enhanced Measurement browser-history setting. The query-string
+disclosure sub-finding is resolved in production; F-013 remains Informational
+because the broader transparency and consent decision is still open.
 
 ---
 
@@ -913,10 +951,10 @@ user-facing disclosure or consent control was found.
 On Jul 13, focused source tracing and a BrowserRouter regression reproduced a
 low-severity privacy finding: a URL containing email-, token-, and reset-like
 query values copied those values into both manual GA4 page-view fields, and a
-fragment token also reached `page_location`. The current working tree resolves
-that source-to-sink path by deriving `page_location` from the origin plus router
-pathname, setting `page_path` to the pathname alone, and triggering manual page
-views only when the pathname changes.
+fragment token also reached `page_location`. The fix that shipped in PR #139
+resolves that source-to-sink path by deriving `page_location` from the origin
+plus router pathname, setting `page_path` to the pathname alone, and triggering
+manual page views only when the pathname changes.
 
 The new regression in `main/src/App.test.jsx` proves that email, token, and
 fragment values are absent while the route pathname and GA measurement target
@@ -925,10 +963,11 @@ original disclosure reproducer no longer matches the emitted event. Focused
 analytics tests, all 26 app tests, lint, the production build, the GA4 event
 consistency checker, and `git diff --check` passed.
 
-This is a locally verified working-tree resolution, not yet deployed evidence:
-the source and test changes are uncommitted, and no production browser or
-post-deploy bundle validation has run for them. The regression used localhost
-and a test measurement ID, so it did not create production GA4 traffic.
+The Jul 15 PR #139 deployment closure above adds exact-commit workflow,
+independent live HTTP, and deployed-bundle evidence. No production browser was
+used, so the validation should not create production GA4 traffic. Downstream
+GA4 receipt and Enhanced Measurement history-event behavior were intentionally
+not inferred from the bundle inspection.
 
 On Jul 15, user-supplied GA4 Admin evidence showed URL-query redaction enabled
 for `email`, `email_address`, `token`, `access_token`, `id_token`,
@@ -939,10 +978,10 @@ defense in depth for `page_location`, `page_referrer`, `page_path`, `link_url`,
 supplied evidence did not independently show the separate email-pattern toggle
 or the Enhanced Measurement browser-history page-view setting.
 
-The query-string disclosure sub-finding is therefore resolved in the current
-working tree and covered by property-side redaction preview evidence. F-013
-remains informational because the broader transparency and consent decision is
-still open.
+The query-string disclosure sub-finding is therefore resolved in production and
+covered by property-side redaction preview evidence. F-013 remains
+informational because the broader transparency and consent decision is still
+open.
 
 A short footer-level disclosure would improve transparency for this portfolio:
 
@@ -951,11 +990,11 @@ A short footer-level disclosure would improve transparency for this portfolio:
 The code now treats query strings and fragments as unnecessary for manual page
 views. Preserve the property redaction list as defense in depth, verify the
 separate email-pattern toggle and Enhanced Measurement history-event setting,
-and record dated evidence after the source fix is deployed. Whether opt-in
-consent is required depends on the audience, configuration, policy, and
-jurisdiction; this audit does not make a legal-compliance determination. If an
-applicable requirement calls for it, default analytics consent to denied until
-the visitor chooses.
+and retain dated property-side evidence alongside the deployment record.
+Whether opt-in consent is required depends on the audience, configuration,
+policy, and jurisdiction; this audit does not make a legal-compliance
+determination. If an applicable requirement calls for it, default analytics
+consent to denied until the visitor chooses.
 
 **Relevant files:**
 
@@ -1207,13 +1246,15 @@ repository configuration.
 
 # Final Assessment
 
-The repository remains healthy and production-ready through deployed PR #137 at
-`3ce42ab14e6d062f404a4ae256e9806b9f945ed2`. PR #135 and the Jul 11 production
+The repository remains healthy and production-ready through deployed PR #139 at
+`4089f8d7e9d812b0bda194e034a28bcbe26d418f`. PR #135 and the Jul 11 production
 validation closed the trailing-slash hydration regression. PR #136's offline
 exact-metadata fixtures and inventory checks remain active in pull-request
 automation, while release automation applies the checker to the deployed site.
-PR #137's patch-level development-tool update passed the exact-commit release
-workflow and introduced no meaningful bundle regression.
+PR #137's patch-level development-tool update introduced no meaningful bundle
+regression. PR #139 then removed query strings and fragments from manual GA4
+page-view fields, passed the exact-commit release workflow, and was confirmed in
+the deployed bundle without opening a production browser session.
 
 Within its F-001 through F-013 set, the Jul 12 re-audit found 3 Medium, 7 Low,
 and 3 Informational current findings, with no Critical or High issue and no

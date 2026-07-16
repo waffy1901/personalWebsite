@@ -46,5 +46,5 @@ export const socialLinks = [
 ]
 
 export const deployInfo = {
-  firstPublishedAt: "2024-09-13T19:43:00Z",
+  firstPublishedAt: "2024-09-12T14:17:00-04:00",
 }
