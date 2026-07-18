@@ -102,11 +102,11 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
   return (
     <article
       aria-label={`${title} project`}
-      className="w-full min-h-[29rem] perspective"
+      className="w-full min-h-[29rem] mc-perspective"
       onKeyDown={handleKeyDown}
     >
       <div
-        className="relative min-h-[29rem] w-full transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none"
+        className="relative min-h-[29rem] w-full mc-transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none"
         style={{
           WebkitTransform: cardTransform,
           WebkitTransformStyle: "preserve-3d",
@@ -116,7 +116,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
       >
         <div
           aria-hidden={isFlipped}
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/25 bg-[#111827] p-5 text-white shadow-[0_22px_60px_rgba(11,18,32,0.20)] backface-hidden ${
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/25 bg-[#111827] p-5 text-white shadow-[0_22px_60px_rgba(11,18,32,0.20)] mc-backface-hidden ${
             isFlipped ? "pointer-events-none" : ""
           }`}
           style={frontFaceStyle}
@@ -150,7 +150,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
                   project_title: title,
                 })
               }
-              className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm font-black text-white transition hover:border-[#F96302]/60 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#111827]"
+              className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm font-black text-white transition hover:border-[#F96302]/60 hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#111827]"
             >
               <FaGithub className="mr-2" aria-hidden="true" />
               Source Code
@@ -192,7 +192,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
           role="region"
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white shadow-[0_20px_70px_rgba(11,18,32,0.35)] backface-hidden rotate-y-180 ${
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white shadow-[0_20px_70px_rgba(11,18,32,0.35)] mc-backface-hidden mc-rotate-y-180 ${
             isFlipped ? "" : "pointer-events-none"
           }`}
           style={backFaceStyle}
@@ -201,7 +201,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
           <h3 id={`${detailsId}-heading`} className="mt-2 text-xl font-black">
             {title} details
           </h3>
-          <div className="mt-4 flex-grow overflow-y-auto pr-2">
+          <div className="mt-4 grow overflow-y-auto pr-2">
             <ul className="space-y-3">
               {bullets.map((bullet, index) => (
                 <li key={index} className="flex gap-3 text-sm leading-relaxed text-slate-200">
@@ -217,7 +217,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
             onClick={hideDetails}
             tabIndex={isFlipped ? 0 : -1}
             aria-label={`Hide details for ${title}`}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
           >
             <FaArrowLeft className="mr-2" aria-hidden="true" />
             Back

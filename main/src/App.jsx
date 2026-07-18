@@ -19,7 +19,7 @@ function RouteLoadingFallback() {
       <p
         role="status"
         aria-live="polite"
-        className="rounded-md border border-slate-900/10 bg-white/70 px-4 py-2 text-sm font-bold text-slate-600 shadow-sm"
+        className="rounded-md border border-slate-900/10 bg-white/70 px-4 py-2 text-sm font-bold text-slate-600 shadow-xs"
       >
         Loading page...
       </p>

@@ -57,7 +57,7 @@ function SocialLinks({
                 social_platform: link.id,
               })
             }
-            className={`${socialClass} ${focusOffsetClass} inline-flex items-center rounded-md border px-3 py-2 text-sm font-black transition focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2`}
+            className={`${socialClass} ${focusOffsetClass} inline-flex items-center rounded-md border px-3 py-2 text-sm font-black transition focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2`}
           >
             <Icon className="mr-2" aria-hidden="true" />
             {link.label}

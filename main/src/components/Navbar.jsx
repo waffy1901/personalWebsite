@@ -39,7 +39,7 @@ function Navbar() {
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <NavLink
           to="/"
-          className="group inline-flex items-center gap-3 text-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+          className="group inline-flex items-center gap-3 text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
           aria-label="Waffy Ahmed home"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-md border border-[#0B1220] bg-[#0B1220] font-black text-white transition group-hover:border-[#F96302] group-hover:bg-[#F96302]">
@@ -62,7 +62,7 @@ function Navbar() {
               to={item.to}
               className={({ isActive }) =>
                 [
-                  "group relative shrink-0 rounded-md px-2 py-1.5 text-slate-600 transition hover:bg-[#0B1220]/5 hover:text-[#0B1220] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 sm:rounded-none sm:px-0 sm:hover:bg-transparent",
+                  "group relative shrink-0 rounded-md px-2 py-1.5 text-slate-600 transition hover:bg-[#0B1220]/5 hover:text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 sm:rounded-none sm:px-0 sm:hover:bg-transparent",
                   isActive
                     ? "active text-[#0B1220]"
                     : "",

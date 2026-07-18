@@ -58,7 +58,7 @@ function CaseStudy() {
       <PageContainer>
         <Link
           to="/case-studies"
-          className="mb-5 inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-black text-[#0B1220] transition hover:border-[#2563EB]/50 hover:bg-[#E8EDF2] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+          className="mb-5 inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-black text-[#0B1220] transition hover:border-[#2563EB]/50 hover:bg-[#E8EDF2] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
         >
           <FaArrowLeft className="mr-2" aria-hidden="true" />
           Case Studies
@@ -196,7 +196,7 @@ function CaseStudy() {
                         link_type: "external",
                       })
                     }
-                    className="inline-flex items-center justify-center rounded-md border border-[#F96302]/35 bg-[#F96302]/10 px-4 py-2 text-sm font-black text-[#b94600] transition hover:bg-[#F96302]/15 focus:outline-none focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2"
+                    className="inline-flex items-center justify-center rounded-md border border-[#F96302]/35 bg-[#F96302]/10 px-4 py-2 text-sm font-black text-[#b94600] transition hover:bg-[#F96302]/15 focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2"
                   >
                     {link.label}
                     <FaExternalLinkAlt className="ml-2" aria-hidden="true" />

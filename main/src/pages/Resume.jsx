@@ -62,7 +62,7 @@ function Resume() {
                 placement: "resume_preview",
               })
             }
-            className="mx-auto block w-full max-w-[900px] rounded-lg border border-slate-200 bg-[#E8EDF2] p-2 shadow-inner transition hover:border-[#2563EB]/50 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+            className="mx-auto block w-full max-w-[900px] rounded-lg border border-slate-200 bg-[#E8EDF2] p-2 shadow-inner transition hover:border-[#2563EB]/50 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
           >
             <img
               src={resume.preview}

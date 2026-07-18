@@ -377,7 +377,7 @@ React Router and publishes the following primary routes:
 
 Frontend Implementation Context:
 
-* Framework and build: React 19, Vite 8, React Router 7, Tailwind CSS 3, React
+* Framework and build: React 19, Vite 8, React Router 7, Tailwind CSS 4, React
   Icons 5, Formspree, and Netlify.
 * Testing and quality: Vitest 4, Testing Library, jsdom, ESLint 9, and React
   Hooks lint rules.

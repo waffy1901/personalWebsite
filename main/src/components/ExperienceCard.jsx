@@ -166,11 +166,11 @@ const ExperienceCard = ({
 
   return (
     <article
-      className={`w-full ${featured ? "lg:self-center" : ""} ${cardHeightClass} perspective`}
+      className={`w-full ${featured ? "lg:self-center" : ""} ${cardHeightClass} mc-perspective`}
       onKeyDown={handleKeyDown}
     >
       <div
-        className={`relative ${cardHeightClass} w-full transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none`}
+        className={`relative ${cardHeightClass} w-full mc-transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none`}
         style={{
           WebkitTransform: cardTransform,
           WebkitTransformStyle: "preserve-3d",
@@ -180,7 +180,7 @@ const ExperienceCard = ({
       >
         <div
           aria-hidden={isFlipped}
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border p-5 text-white backface-hidden ${frontFaceClass} ${
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border p-5 text-white mc-backface-hidden ${frontFaceClass} ${
             isFlipped ? "pointer-events-none" : ""
           }`}
           style={frontFaceStyle}
@@ -239,7 +239,7 @@ const ExperienceCard = ({
           role="region"
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white backface-hidden rotate-y-180 ${
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white mc-backface-hidden mc-rotate-y-180 ${
             isFlipped ? "" : "pointer-events-none"
           }`}
           style={backFaceStyle}
@@ -250,7 +250,7 @@ const ExperienceCard = ({
               onClick={handleCopy}
               tabIndex={isFlipped ? 0 : -1}
               aria-label={`Copy ${title} details`}
-              className="relative flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+              className="relative flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
             >
               <FaClipboard
                 className={`h-4 w-4 transition-opacity duration-200 ${
@@ -267,7 +267,7 @@ const ExperienceCard = ({
             </button>
 
             <span
-              className={`mt-2 rounded bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-sm transition-all duration-200 ${
+              className={`mt-2 rounded-sm bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-xs transition-all duration-200 ${
                 copyStatus
                   ? "translate-y-0 opacity-100"
                   : "-translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
@@ -302,7 +302,7 @@ const ExperienceCard = ({
             onClick={hideDetails}
             tabIndex={isFlipped ? 0 : -1}
             aria-label={`Hide details for ${title} at ${company}`}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
+            className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
           >
             <FaArrowLeft className="mr-2" aria-hidden="true" />
             Back

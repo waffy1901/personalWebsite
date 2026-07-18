@@ -91,7 +91,7 @@ function DeployDates({ first }) {
                 type="button"
                 onClick={() => handleAIAction(provider)}
                 aria-label={provider.label}
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+                className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
               >
                 <img
                   src={provider.icon}
@@ -105,7 +105,7 @@ function DeployDates({ first }) {
 
               <div className="pointer-events-none absolute right-0 top-full mt-2">
                 <span
-                  className={`whitespace-nowrap rounded bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-sm transition-all duration-150 ${
+                  className={`whitespace-nowrap rounded-sm bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-xs transition-all duration-150 ${
                     copiedProvider === provider.name
                       ? "translate-y-0 opacity-100"
                       : "translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
