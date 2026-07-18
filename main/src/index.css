@@ -1,8 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@utility mc-backface-hidden {
+  backface-visibility: hidden;
+}
+
+@utility mc-perspective {
+  perspective: 1000px;
+}
+
+@utility mc-transform-style-preserve-3d {
+  transform-style: preserve-3d;
+}
+
+@utility mc-rotate-y-180 {
+  transform: rotateY(180deg);
+}
 
 @layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+
   :root {
     color-scheme: light;
     background: #f4f1ea;
@@ -143,15 +165,15 @@
   }
 
   .mc-button-primary {
-    @apply inline-flex items-center justify-center rounded-md bg-[#F96302] px-4 py-2 text-sm font-black text-white shadow-[0_14px_34px_rgba(249,99,2,0.22)] transition hover:bg-[#d95402] focus:outline-none focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#0B1220];
+    @apply inline-flex items-center justify-center rounded-md bg-[#F96302] px-4 py-2 text-sm font-black text-white shadow-[0_14px_34px_rgba(249,99,2,0.22)] transition hover:bg-[#d95402] focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#0B1220];
   }
 
   .mc-button-secondary {
-    @apply inline-flex items-center justify-center rounded-md border border-[#2563EB]/35 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220];
+    @apply inline-flex items-center justify-center rounded-md border border-[#2563EB]/35 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220];
   }
 
   .mc-button-light {
-    @apply inline-flex items-center justify-center rounded-md bg-[#0B1220] px-4 py-2 text-sm font-black text-white transition hover:bg-[#172033] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2;
+    @apply inline-flex items-center justify-center rounded-md bg-[#0B1220] px-4 py-2 text-sm font-black text-white transition hover:bg-[#172033] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2;
   }
 
   .mc-chip {
@@ -159,7 +181,7 @@
   }
 
   .mc-field {
-    @apply w-full rounded-md border border-white/15 bg-[#0B1220]/80 px-3 py-2 text-white shadow-inner outline-none transition placeholder:text-slate-500 focus:border-[#F96302] focus:ring-2 focus:ring-[#F96302]/25;
+    @apply w-full rounded-md border border-white/15 bg-[#0B1220]/80 px-3 py-2 text-white shadow-inner outline-hidden transition placeholder:text-slate-500 focus:border-[#F96302] focus:ring-2 focus:ring-[#F96302]/25;
   }
 
   .mc-dark-field {

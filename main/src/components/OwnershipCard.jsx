@@ -16,7 +16,7 @@ const OwnershipCard = ({ title, summary, icon, details }) => {
       onFocus={() => setIsHovered(true)}
       onBlur={handleBlur}
       tabIndex={0}
-      className={`relative min-h-[210px] rounded-lg outline-none transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 ${
+      className={`relative min-h-[210px] rounded-lg outline-hidden transition-all duration-300 focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 ${
         isHovered ? "z-20" : "z-0"
       }`}
     >

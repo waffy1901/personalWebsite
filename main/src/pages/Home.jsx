@@ -265,7 +265,7 @@ function Home() {
               <Link
                 key={card.to}
                 to={card.to}
-                className="mc-panel group block p-5 transition hover:-translate-y-1 hover:border-[#2563EB]/40 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 motion-reduce:hover:translate-y-0"
+                className="mc-panel group block p-5 transition hover:-translate-y-1 hover:border-[#2563EB]/40 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 motion-reduce:hover:translate-y-0"
               >
                 <p className="text-xs font-black uppercase text-[#2563EB]">{card.label}</p>
                 <h3 className="mt-3 text-2xl font-black text-[#0B1220]">{card.title}</h3>

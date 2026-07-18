@@ -91,7 +91,7 @@ function ContactFormFields({ formKey }) {
         aria-live="polite"
         aria-atomic="true"
         tabIndex="-1"
-        className="rounded-2xl border border-white/10 bg-white/[0.08] p-6 text-center focus:outline-none focus:ring-2 focus:ring-[#20A875] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+        className="rounded-2xl border border-white/10 bg-white/[0.08] p-6 text-center focus:outline-hidden focus:ring-2 focus:ring-[#20A875] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
       >
         <p className="text-xl font-black text-emerald-300">
           Thank you for your message! I will reach out as soon as possible!
@@ -108,7 +108,7 @@ function ContactFormFields({ formKey }) {
             ref={errorRef}
             role="alert"
             tabIndex="-1"
-            className="mb-4 rounded-lg border border-[#FFB077]/40 bg-[#F96302]/15 p-4 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#FFB077] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+            className="mb-4 rounded-lg border border-[#FFB077]/40 bg-[#F96302]/15 p-4 text-sm text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-[#FFB077] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
           >
             <p className="font-black text-white">The message could not be sent.</p>
             <p className="mt-1 leading-relaxed text-slate-200">
