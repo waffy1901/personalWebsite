@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Change Impact"
+  short_description: "Map portfolio diffs to focused validation"
+  default_prompt: "Use $portfolio-change-impact to map my current changes to affected surfaces and run the minimal validators."

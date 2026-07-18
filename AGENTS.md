@@ -47,6 +47,7 @@ node .codex/skills/seo-spa-auditor/scripts/check_spa_seo.mjs /Users/waffyahmed/D
 node .codex/skills/ai-discovery-maintainer/scripts/check_ai_discovery.mjs /Users/waffyahmed/Downloads/personalWebsite
 node .codex/skills/csp-security-header-maintainer/scripts/check_csp_jsonld_hash.mjs /Users/waffyahmed/Downloads/personalWebsite
 node .codex/skills/ga4-portfolio-analytics/scripts/check_ga4_events.mjs /Users/waffyahmed/Downloads/personalWebsite
+node .codex/skills/portfolio-change-impact/scripts/check_change_impact.mjs --source worktree
 ```
 
 ## Verification Expectations
@@ -59,6 +60,7 @@ node .codex/skills/ga4-portfolio-analytics/scripts/check_ga4_events.mjs /Users/w
 
 ## Skill Routing
 
+- Use `$portfolio-change-impact` to map current or staged changes to affected portfolio surfaces, required synchronization, adjacent skills, and the minimal focused validator set. It is not a release gate.
 - Use `$portfolio-release-qa` for pre-push checks, release readiness, route smoke checks, build/test/lint verification, resume/static asset validation, or Netlify deploy readiness.
 - Use `$portfolio-content-sync` when changing profile, experience, projects, case studies, metrics, links, route slugs, public portfolio metadata, recruiter-facing copy, or AI/SEO-visible content.
 - Use `$resume-site-sync` when replacing, validating, linking, previewing, or summarizing the resume PDF or resume preview image.
