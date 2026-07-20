@@ -27,7 +27,7 @@ jobs:
         run: python3 scripts/test_deployed_security_headers.py
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22.13.0
 
