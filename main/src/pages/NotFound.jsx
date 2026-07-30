@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { PageContainer, PageShell, StatusBadge } from "../components/MissionControl.jsx";
 
 function NotFound() {

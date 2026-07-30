@@ -1,7 +1,7 @@
 import React from "react"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { BrowserRouter, MemoryRouter } from "react-router-dom"
+import { BrowserRouter, MemoryRouter } from "react-router"
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -551,7 +551,7 @@ describe("App routes", () => {
     )
     const frameworkExpectations = [
       ["React", "react"],
-      ["React Router", "react-router-dom"],
+      ["React Router", "react-router"],
       ["Vite", "vite"],
       ["Tailwind CSS", "tailwindcss"],
       ["Vitest", "vitest"],

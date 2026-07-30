@@ -39,7 +39,7 @@ function createFixture(decoding) {
     "main/src/App.jsx",
     [
       'import { lazy, Suspense } from "react"',
-      'import { Route, Routes } from "react-router-dom"',
+      'import { Route, Routes } from "react-router"',
       'import Home from "./pages/Home.jsx"',
       "",
       'const Resume = lazy(() => import("./pages/Resume.jsx"))',

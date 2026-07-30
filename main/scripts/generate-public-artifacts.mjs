@@ -512,7 +512,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
 
   addSection("Frontend Implementation Context")
   add(
-    ...bullet(`Framework and build: React ${packageMajor(packageJson, "react")}, Vite ${packageMajor(packageJson, "vite")}, React Router ${packageMajor(packageJson, "react-router-dom")}, Tailwind CSS ${packageMajor(packageJson, "tailwindcss")}, React Icons ${packageMajor(packageJson, "react-icons")}, Formspree, and Netlify.`),
+    ...bullet(`Framework and build: React ${packageMajor(packageJson, "react")}, Vite ${packageMajor(packageJson, "vite")}, React Router ${packageMajor(packageJson, "react-router")}, Tailwind CSS ${packageMajor(packageJson, "tailwindcss")}, React Icons ${packageMajor(packageJson, "react-icons")}, Formspree, and Netlify.`),
     ...bullet(`Testing and quality: Vitest ${packageMajor(packageJson, "vitest")}, Testing Library, jsdom, ESLint ${packageMajor(packageJson, "eslint")}, and React Hooks lint rules.`),
     ...bullet("SEO and AI discovery: the site publishes sitemap.xml, robots.txt with a sitemap pointer, llms.txt, route-level canonical metadata, Open Graph/Twitter metadata, JSON-LD profile data, ai-summary.txt, and portfolio.json."),
     ...bullet("Analytics: optional Google Analytics page-view tracking is enabled when VITE_GA_MEASUREMENT_ID is provided. The app sends page_view events on route changes without automatic duplicate page views."),
@@ -545,7 +545,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
 
 const buildStackSnapshot = (packageJson) => [
   `React ${packageMajor(packageJson, "react")}`,
-  `React Router ${packageMajor(packageJson, "react-router-dom")}`,
+  `React Router ${packageMajor(packageJson, "react-router")}`,
   `Vite ${packageMajor(packageJson, "vite")}`,
   `Tailwind CSS ${packageMajor(packageJson, "tailwindcss")}`,
   `Vitest ${packageMajor(packageJson, "vitest")}`,
