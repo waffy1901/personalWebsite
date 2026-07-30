@@ -1,14 +1,18 @@
 import gtLogo from "../images/gtLogo.png"
 import profilePicture from "../images/profilePic.jpg"
-import { portfolioUrls, profileIdentity } from "./siteIdentity.js"
+import {
+  currentEmployment,
+  portfolioUrls,
+  profileIdentity,
+} from "./siteIdentity.js"
 
 export { portfolioUrls }
 
 export const profile = {
   name: profileIdentity.name,
-  tagline: "Software Engineer | Georgia Tech",
+  tagline: `${currentEmployment.currentTitle} | Georgia Tech`,
   intro:
-    "I'm a Software Engineer at The Home Depot, owning operational health across 60+ repositories that support transaction-critical services. My work focuses on Kubernetes autoscaling, deployment automation, observability, and incident response for high-throughput systems processing millions of transactions daily. Previously, I interned at The Home Depot twice and led a team of six building a data reconciliation platform for the CDC. I'm a Georgia Tech graduate focused on reliability engineering and building systems that don\u2019t page you at 2 AM.",
+    `I'm a ${currentEmployment.currentTitle} at ${currentEmployment.organization}, owning operational health across 60+ repositories that support transaction-critical services. My work focuses on Kubernetes autoscaling, deployment automation, observability, and incident response for high-throughput systems processing millions of transactions daily. Previously, I interned at The Home Depot twice and led a team of six building a data reconciliation platform for the CDC. I'm a Georgia Tech graduate focused on reliability engineering and building systems that don\u2019t page you at 2 AM.`,
   profilePicture,
   educationLogo: gtLogo,
 }

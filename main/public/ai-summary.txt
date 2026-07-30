@@ -2,10 +2,10 @@ Waffy Ahmed - AI Portfolio Summary
 
 Canonical Identity:
 
-Waffy Ahmed is a Software Engineer at The Home Depot and a Georgia Institute
-of Technology graduate with a Bachelor of Science in Computer Science
-(December 2024). His portfolio is published at https://waffy.dev/ and is
-designed to present production engineering experience, selected software
+Waffy Ahmed is a Software Engineer II at The Home Depot and a Georgia
+Institute of Technology graduate with a Bachelor of Science in Computer
+Science (December 2024). His portfolio is published at https://waffy.dev/ and
+is designed to present production engineering experience, selected software
 projects, resume access, and direct contact paths in a fast React single-page
 application.
 
@@ -40,6 +40,7 @@ Backend and data systems:
 * Java
 * Python
 * FastAPI
+* Cloud Spanner
 * Cassandra
 * Elasticsearch
 * BigQuery
@@ -53,6 +54,9 @@ Platform reliability:
 * Terraform
 * cdk8s
 * Spinnaker
+* Kubernetes CronJobs
+* Workload Identity
+* Secret Manager / External Secrets
 * Docker
 * CI/CD
 
@@ -79,7 +83,23 @@ Application development:
 
 Professional Experience:
 
-Software Engineer, The Home Depot, Atlanta, GA (January 2025 - Present):
+The Home Depot, Atlanta, GA (January 2025 - Present):
+* Software Engineer II (July 2026 - Present)
+* Software Engineer I (January 2025 - July 2026)
+* Selected accomplishments across the full Home Depot tenure
+* Productionized a daily order-reconciliation process by replacing
+  engineer-run scripts, laptop database tunnels, and human GCP credentials
+  with a containerized Kubernetes workflow deployed via cdk8s, Terraform, and
+  Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret
+  Manager/External Secrets.
+* Validated the workflow against the legacy process during a month-long
+  production observation period, hardening database, no-data, and
+  failure-handling paths before transitioning execution to a scheduled
+  Kubernetes CronJob.
+* Diagnosed and resolved post–cluster-rebuild service timeouts (1s failures)
+  by identifying stale node-level routing caused by NodePort usage; migrated
+  internal services to ClusterIP, eliminating node dependency and restoring
+  reliable service-to-service communication.
 * Improved scalability by deploying and validating Horizontal Pod Autoscaling
   (HPA) for a core service previously capped at 20 static pods, cutting mean
   latency 40% (121 to 72 ms) and errors 89% while boosting throughput 40%
@@ -104,10 +124,6 @@ Software Engineer, The Home Depot, Atlanta, GA (January 2025 - Present):
 * Automated Spinnaker deployment pipelines for 15+ microservices with cdk8s,
   standardizing multi-environment release workflows using TypeScript,
   Terraform, and GCP, reducing deployment times by 25%.
-* Diagnosed and resolved post–cluster-rebuild service timeouts (1s failures)
-  by identifying stale node-level routing caused by NodePort usage; migrated
-  internal services to ClusterIP, eliminating node dependency and restoring
-  reliable service-to-service communication.
 * Ensured data integrity for a legacy POS retirement initiative by
   implementing and validating bidirectional Java transformations between XML
   and JSON, enforcing round-trip schema equivalence across 1000+ production

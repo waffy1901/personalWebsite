@@ -3,11 +3,12 @@ import fintechGTLogo from "../images/fintechGTLogo.png"
 import gtComputingLogo from "../images/gtComputingLogo.png"
 import hdLogo from "../images/hdLogo.png"
 import landisGyrLogo from "../images/landisGyrLogo.png"
+import { currentEmployment } from "./siteIdentity.js"
 
 export const experiencePage = {
   workHeading: "Work Experience",
   ownershipHeading: "Platform Ownership & Engineering Impact",
-  ownershipEyebrow: "Software Engineer \u00b7 The Home Depot",
+  ownershipEyebrow: `${currentEmployment.currentTitle} \u00b7 ${currentEmployment.organization}`,
   extracurricularHeading: "Extracurricular Experience",
   centeredExtracurricularIndex: 2,
 }
@@ -15,18 +16,22 @@ export const experiencePage = {
 export const workExperiences = [
   {
     id: "home-depot-software-engineer",
-    title: "Software Engineer",
-    company: "The Home Depot",
-    location: "Atlanta, GA",
-    date: "January 2025 - Present",
+    title: currentEmployment.currentTitle,
+    company: currentEmployment.organization,
+    location: currentEmployment.location,
+    date: currentEmployment.companyTenure.date,
+    roleHistory: currentEmployment.roleHistory,
+    accomplishmentScope: "Selected accomplishments across the full Home Depot tenure",
     bullets: [
+      "Productionized a daily order-reconciliation process by replacing engineer-run scripts, laptop database tunnels, and human GCP credentials with a containerized Kubernetes workflow deployed via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets.",
+      "Validated the workflow against the legacy process during a month-long production observation period, hardening database, no-data, and failure-handling paths before transitioning execution to a scheduled Kubernetes CronJob.",
+      "Diagnosed and resolved post\u2013cluster-rebuild service timeouts (1s failures) by identifying stale node-level routing caused by NodePort usage; migrated internal services to ClusterIP, eliminating node dependency and restoring reliable service-to-service communication.",
       "Improved scalability by deploying and validating Horizontal Pod Autoscaling (HPA) for a core service previously capped at 20 static pods, cutting mean latency 40% (121 to 72 ms) and errors 89% while boosting throughput 40% (24.9M to 34.8M reqs/wk) and reducing average CPU usage 26%, enabling dynamic scaling between 50\u2013100 pods in production.",
       "Reconstructed deployment workflows for abandoned legacy Java 1.8 Tomcat services supporting mission-critical transaction systems with no existing operational ownership, rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation across 8 repositories while eliminating a critical platform outage risk.",
       "Remediated \u223c330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD 401 authentication failures to enable secure, reproducible container builds.",
       "Led testing and validation to disable a legacy service component handling \u223c27% of transaction volume (14.5 million daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
       "Reduced MTTR \u223c50% by implementing an automated rolling-restart Kubernetes job for 20+ microservices, eliminating slow Argo Rollouts sequences and accelerating recovery from memory-leak and state-drift issues.",
       "Automated Spinnaker deployment pipelines for 15+ microservices with cdk8s, standardizing multi-environment release workflows using TypeScript, Terraform, and GCP, reducing deployment times by 25%.",
-      "Diagnosed and resolved post\u2013cluster-rebuild service timeouts (1s failures) by identifying stale node-level routing caused by NodePort usage; migrated internal services to ClusterIP, eliminating node dependency and restoring reliable service-to-service communication.",
       "Ensured data integrity for a legacy POS retirement initiative by implementing and validating bidirectional Java transformations between XML and JSON, enforcing round-trip schema equivalence across 1000+ production fields.",
       "Reduced lookup latency by 5% in a high-throughput system (10 million lookups per day) through a scalable, bucketed Elasticsearch indexing method using Java, enabling distributed lookups via partitioned indices.",
       "Reduced production incidents by 20% via implementing OpenTelemetry tracing across 8 Java-based microservices, enabling early issue detection through standardized distributed tracing and centralized observability.",

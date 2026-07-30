@@ -210,6 +210,7 @@ const buildStructuredPortfolio = (model) => {
       location: publicPortfolio.person.location,
       education: publicPortfolio.person.education,
       currentRole: publicPortfolio.person.currentRole,
+      roleHistory: publicPortfolio.person.roleHistory,
     },
     links: {
       site: toAbsoluteUrl("/"),
@@ -344,6 +345,7 @@ const buildSitemap = (model) => {
 
 const buildLlms = (model, portfolio) => {
   const { profile, routeMetadata, toAbsoluteUrl } = model
+  const currentRoleLabel = `${portfolio.person.currentRole.title} at ${portfolio.person.currentRole.organization}`
   const keyPages = routeMetadata.map((route) => {
     const label = route.path === "/" ? "Home" : titleWithoutSuffix(route.title)
     return `- ${label}: ${toAbsoluteUrl(route.path)}`
@@ -354,7 +356,7 @@ const buildLlms = (model, portfolio) => {
     "",
     `> ${portfolio.person.summary}`,
     "",
-    `This site is the professional portfolio for ${profile.name}, a Software Engineer at The Home Depot and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.`,
+    `This site is the professional portfolio for ${profile.name}, a ${currentRoleLabel} and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.`,
     "",
     "## Canonical Sources",
     "",
@@ -406,12 +408,13 @@ const buildAiSummary = (model, portfolio, packageJson) => {
   const lines = []
   const add = (...items) => lines.push(...items)
   const addSection = (title) => add("", `${title}:`, "")
+  const currentRoleLabel = `${portfolio.person.currentRole.title} at ${portfolio.person.currentRole.organization}`
 
   add(`${profile.name} - AI Portfolio Summary`, "")
   addSection("Canonical Identity")
   add(
     ...wrapText(
-      `${profile.name} is a Software Engineer at The Home Depot and a Georgia Institute of Technology graduate with a Bachelor of Science in Computer Science (December 2024). His portfolio is published at ${portfolio.links.site} and is designed to present production engineering experience, selected software projects, resume access, and direct contact paths in a fast React single-page application.`
+      `${profile.name} is a ${currentRoleLabel} and a Georgia Institute of Technology graduate with a Bachelor of Science in Computer Science (December 2024). His portfolio is published at ${portfolio.links.site} and is designed to present production engineering experience, selected software projects, resume access, and direct contact paths in a fast React single-page application.`
     ),
     "",
     "Primary public contact channels shown by the portfolio:",
@@ -442,7 +445,17 @@ const buildAiSummary = (model, portfolio, packageJson) => {
 
   addSection("Professional Experience")
   for (const experience of workExperiences) {
-    add(`${experience.title}, ${experience.company}, ${experience.location} (${experience.date}):`)
+    if (experience.roleHistory?.length) {
+      add(`${experience.company}, ${experience.location} (${experience.date}):`)
+      for (const role of experience.roleHistory) {
+        add(...bullet(`${role.title} (${role.date})`))
+      }
+      if (experience.accomplishmentScope) {
+        add(...bullet(experience.accomplishmentScope))
+      }
+    } else {
+      add(`${experience.title}, ${experience.company}, ${experience.location} (${experience.date}):`)
+    }
     for (const item of experience.bullets) add(...bullet(item))
     add("")
   }

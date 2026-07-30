@@ -34,6 +34,8 @@ const ExperienceCard = ({
   date,
   bullets,
   logo,
+  roleHistory,
+  accomplishmentScope,
   featured = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -59,7 +61,9 @@ const ExperienceCard = ({
     ? "border-[#F96302]/35 bg-[#F96302]"
     : "border-[#2563EB]/35 bg-[#2563EB]";
   const cardHeightClass = featured
-    ? "min-h-[30rem] lg:min-h-[36rem]"
+    ? roleHistory?.length
+      ? "min-h-[40rem] lg:min-h-[36rem]"
+      : "min-h-[30rem] lg:min-h-[36rem]"
     : "min-h-[24rem]";
   const logoBayClass = useStandaloneLogo
     ? "my-5 flex flex-1 items-start justify-center pt-4 lg:pt-6"
@@ -72,6 +76,11 @@ const ExperienceCard = ({
     ? "max-h-52 max-w-[82%] object-contain shadow-[0_18px_42px_rgba(11,18,32,0.28)]"
     : "max-h-32 max-w-[70%] object-contain";
   const detailsButtonClass = "mc-button-primary w-full sm:w-auto";
+  const copiedDetails = [
+    ...(roleHistory?.map((role) => `${role.title} \u2014 ${role.date}`) ?? []),
+    ...(accomplishmentScope ? [accomplishmentScope] : []),
+    ...bullets,
+  ].join("\n");
   const copyStatusMessage =
     copyStatus === "success"
       ? `${title} details copied.`
@@ -148,7 +157,7 @@ const ExperienceCard = ({
       if (!navigator.clipboard) {
         throw new Error("Clipboard API unavailable");
       }
-      await navigator.clipboard.writeText(bullets.join("\n"));
+      await navigator.clipboard.writeText(copiedDetails);
       setCopyStatus("success");
     } catch {
       setCopyStatus("error");
@@ -201,10 +210,27 @@ const ExperienceCard = ({
               <p className={`mt-2 text-base font-black ${accentTextClass}`}>{company}</p>
             </div>
             <div className="text-right text-sm font-bold text-slate-300">
-              <p>{date}</p>
-              <p className="mt-1">{location}</p>
+              {roleHistory?.length ? null : <p>{date}</p>}
+              <p className={roleHistory?.length ? "" : "mt-1"}>{location}</p>
             </div>
           </div>
+
+          {roleHistory?.length ? (
+            <div
+              aria-label={`${company} role history`}
+              className="mt-5 space-y-3 rounded-xl border border-white/10 bg-white/5 p-4"
+            >
+              {roleHistory.map((role) => (
+                <div
+                  key={`${role.title}-${role.startDate}`}
+                  className="flex flex-col gap-1 text-sm sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
+                >
+                  <p className="font-black text-white">{role.title}</p>
+                  <p className="shrink-0 font-bold text-slate-300">{role.date}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           <div className={`${logoBayClass} ${logoTileClass}`}>
             <img
@@ -286,6 +312,11 @@ const ExperienceCard = ({
           </h3>
 
           <div className="mt-4 flex-1 overflow-y-auto pr-2">
+            {accomplishmentScope ? (
+              <p className="mb-4 text-sm font-black text-[#FFB077]">
+                {accomplishmentScope}
+              </p>
+            ) : null}
             <ul className="space-y-3">
               {bullets.map((bullet, index) => (
                 <li key={index} className="flex gap-3 text-sm leading-relaxed text-slate-200">

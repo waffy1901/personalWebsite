@@ -2,7 +2,7 @@
 
 > Software engineer focused on platform reliability, Kubernetes operations, deployment automation, observability, incident response, and high-throughput production systems.
 
-This site is the professional portfolio for Waffy Ahmed, a Software Engineer at The Home Depot and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.
+This site is the professional portfolio for Waffy Ahmed, a Software Engineer II at The Home Depot and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.
 
 ## Canonical Sources
 

@@ -1,14 +1,17 @@
+import { currentEmployment } from "./siteIdentity.js"
+
 export const publicPortfolio = {
-  schemaVersion: "1.0",
-  contentLastReviewed: "2026-07-05",
+  schemaVersion: "1.1",
+  contentLastReviewed: "2026-07-25",
   person: {
-    title: "Software Engineer",
+    title: currentEmployment.currentTitle,
     location: "United States",
     summary:
       "Software engineer focused on platform reliability, Kubernetes operations, deployment automation, observability, incident response, and high-throughput production systems.",
     currentRole: {
-      title: "Software Engineer",
-      organization: "The Home Depot",
+      title: currentEmployment.currentTitle,
+      organization: currentEmployment.organization,
+      startDate: currentEmployment.roleHistory[0].startDate,
       focus: [
         "Platform reliability",
         "Kubernetes autoscaling",
@@ -17,6 +20,14 @@ export const publicPortfolio = {
         "Incident response",
       ],
     },
+    roleHistory: currentEmployment.roleHistory.map(
+      ({ title, startDate, endDate }) => ({
+        title,
+        organization: currentEmployment.organization,
+        startDate,
+        endDate,
+      })
+    ),
     education: {
       institution: "Georgia Institute of Technology",
       degree: "Bachelor of Science in Computer Science",
@@ -39,6 +50,7 @@ export const publicPortfolio = {
         "Java",
         "Python",
         "FastAPI",
+        "Cloud Spanner",
         "Cassandra",
         "Elasticsearch",
         "BigQuery",
@@ -55,6 +67,9 @@ export const publicPortfolio = {
         "Terraform",
         "cdk8s",
         "Spinnaker",
+        "Kubernetes CronJobs",
+        "Workload Identity",
+        "Secret Manager / External Secrets",
         "Docker",
         "CI/CD",
       ],
@@ -106,6 +121,7 @@ export const publicPortfolio = {
     "Cassandra",
     "Elasticsearch",
     "BigQuery",
+    "Cloud Spanner",
     "Incident response",
     "Observability",
     "Deployment automation",

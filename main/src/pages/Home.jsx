@@ -22,6 +22,7 @@ import {
 } from "../components/MissionControl.jsx";
 import SocialLinks from "../components/SocialLinks";
 import { deployInfo, profile, resume } from "../data/profile";
+import { currentEmployment } from "../data/siteIdentity.js";
 import { trackEvent } from "../utils/analytics";
 
 const impactMetrics = [
@@ -139,8 +140,8 @@ function Home() {
                   I build production systems that stay reliable under pressure.
                 </p>
                 <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                  Software engineer focused on Kubernetes, deployment automation,
-                  observability, and high-throughput backend systems.
+                  {currentEmployment.currentTitle} focused on Kubernetes, deployment
+                  automation, observability, and high-throughput backend systems.
                 </p>
                 <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
                   <FaMapMarkerAlt className="h-3 w-3 text-[#F96302]" aria-hidden="true" />

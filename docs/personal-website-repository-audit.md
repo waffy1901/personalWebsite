@@ -2,8 +2,8 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PR #139 (`feat/ga4-privacy-audit-reconciliation`) at merge commit `4089f8d7e9d812b0bda194e034a28bcbe26d418f`, including PR #137 (`dependabot/npm_and_yarn/main/development-dependencies-7a15a521a3`), PR #136 (`feat/portfolio-metadata-automation-hardening`), PR #135 (`feat/route-metadata-integrity`), PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
-**Latest audit pass:** Jul 15, 2026 post-deploy validation of PR #139 on `main` at `4089f8d7e9d812b0bda194e034a28bcbe26d418f`, production release `deploy-20260715T222758Z-4089f8d`, GitHub Actions run `29455441731`, independent production HTTP and bundle inspection, and user-supplied GA4 Admin redaction-preview evidence; no production browser was used<br>
+**Reconciled through:** PR #142 (`feat/tailwind-v4-migration`) at merge commit `3c2ab9cd8882e3ab74f99ab3fee0d3c8ceb624ae`, including PR #141 (`feat/portfolio-change-impact`), PR #140 (`feat/update-website-creation-date`), PR #139 (`feat/ga4-privacy-audit-reconciliation`), PR #137 (`dependabot/npm_and_yarn/main/development-dependencies-7a15a521a3`), PR #136 (`feat/portfolio-metadata-automation-hardening`), PR #135 (`feat/route-metadata-integrity`), PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
+**Latest audit pass:** Jul 18, 2026 post-deploy validation of PR #142 on `main` at `3c2ab9cd8882e3ab74f99ab3fee0d3c8ceb624ae`, production release `deploy-20260718T140037Z-3c2ab9c`, GitHub Actions run `29647183925`, independent production route, security-header, and deployed-CSS inspection, plus desktop and 390 px deploy-preview browser QA against the same CSS asset; no production browser was used<br>
 **Website creation date:** Sep 12, 2024 at 2:17 PM<br>
 **Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, accessibility and interaction failure paths, resume PDF structure, security controls, and GitHub settings and Actions.
 
@@ -38,6 +38,13 @@ PR #139 is also merged and deployed. Its manual GA4 page views now exclude
 query strings and fragments, and the exact deployed bundle plus release-time and
 independent HTTP checks confirm the production change without generating a
 browser-based GA4 session.
+PR #140's exact creation-date alignment, PR #141's scope-aware local
+change-impact validator, and PR #142's Tailwind CSS 4 migration are also merged
+and present in the exact production commit. PR #142 replaced the Tailwind 3
+PostCSS and JavaScript-configuration path with `@tailwindcss/vite` 4.3.3 and
+explicit CSS-owned compatibility utilities. Its pull-request, release, live
+route, security-header, and deployed-CSS checks passed; the superseded
+package-only Dependabot PR #138 closed without merge.
 
 No Critical or High issue was found. The highest-value remaining work is a
 focused accessibility and resilience backlog:
@@ -386,8 +393,10 @@ is a previously missed lazy-loading failure mode.
 
 The header and this change set's canonical app data align on the supplied
 creation date, `Sep 12, 2024 at 2:17 PM`
-(`2024-09-12T14:17:00-04:00`). The date-alignment edit postdates deployed PR
-#139 and is not yet production-verified.
+(`2024-09-12T14:17:00-04:00`). PR #140 merged at
+`70c67f39bfb22df739f0920fa09eb10d5a6bafce`, was released as
+`deploy-20260716T001807Z-70c67f3`, and remains present in the
+production-validated PR #142 commit.
 
 ### Jul 15, 2026 PR #139 GA4 Privacy Deployment Closure
 
@@ -421,6 +430,60 @@ deployed application's event construction, not downstream GA4 receipt or the
 separate Enhanced Measurement browser-history setting. The query-string
 disclosure sub-finding is resolved in production; F-013 remains Informational
 because the broader transparency and consent decision is still open.
+
+### Jul 18, 2026 PR #142 Tailwind CSS 4 Migration Deployment Closure
+
+PR #142 (`Tailwind CSS 4 Migration`) merged at
+`3c2ab9cd8882e3ab74f99ab3fee0d3c8ceb624ae` from migration commit
+`7337620c06577608ddc92b509312131d6e7a837f`. It migrated the portfolio to
+`tailwindcss` and `@tailwindcss/vite` 4.3.3, replaced the Tailwind 3 build
+integration, preserved the required border defaults and custom 3D-card
+utilities explicitly in CSS, and removed the obsolete PostCSS and Tailwind
+configuration files.
+
+Dependabot PR #138 remains historical triage. It proposed a package-only update
+to Tailwind 4.3.2, closed without merge at `2026-07-18T13:59:55Z`, and was
+superseded by the dedicated migration rather than incorporated into `main`.
+
+PR checks passed in Portfolio integrity run `29646978839`, Main PR CI run
+`29646978854`, CodeQL Advanced run `29646978866`, and npm audit run
+`29646978885`. Post-merge release run `29647183925` passed Node 22 lint, all 26
+app tests, the production build, the exact Netlify deploy wait, deployed-route
+validation, the legacy-domain redirect, and release creation. Merge-commit
+CodeQL run `29647183926` also passed. The release workflow produced
+`deploy-20260718T140037Z-3c2ab9c` for the exact merge commit.
+
+Netlify production deploy `6a5b86dc274cf00008f28d9e` completed without
+errors. Independent production HTTP validation passed the homepage, 8
+canonical routes, 6 legacy app redirects, the real unknown-route 404, and the
+configured security headers. The live `index-Da2fSi2c.css` response returned
+HTTP 200 as `text/css`, was 68,717 bytes, and identified itself as Tailwind CSS
+4.3.3.
+
+The Node 22 release-build comparison with the last audited pre-migration
+release shows the CSS asset increasing from 47.88 kB (8.46 kB gzip) to 68.71
+kB (11.51 kB gzip), while the main JavaScript remained effectively unchanged
+at 264.90 kB versus 264.92 kB and 85.13 kB gzip in both builds. The extra 3.05
+kB of compressed CSS is a modest cold-load cost, not a blocking performance
+regression. The focused performance policy check, all app tests, route splitting,
+image-loading policy, and nine prerendered route shells remain healthy. This is
+a build snapshot, not a Lighthouse, field Core Web Vitals, or regression-budget
+result.
+
+Desktop and 390 px deploy-preview browser QA covered representative routes and
+flip-card interactions without console errors or document-level overflow. The
+preview used the same CSS asset hash later served in production. No production
+browser was opened during this closure, avoiding production-browser GA4
+traffic. The [Tailwind v4 compatibility baseline](https://tailwindcss.com/docs/compatibility)
+targets Chrome 111, Safari 16.4, and Firefox 128 or newer. The Chromium preview
+pass plus production HTTP evidence does not establish Safari, Firefox, or
+older-browser visual parity; custom 3D card transforms remain the most sensitive
+unverified surface. This is a compatibility caveat, not observed breakage.
+
+This closure does not reclassify the existing contrast, governance, Dependabot
+security-feature, release-header-timing, or AI-content-scope findings. The
+migration changed framework plumbing and deployment evidence, not those
+controls.
 
 ---
 
@@ -1166,6 +1229,146 @@ The next case-study improvement should emphasize engineering judgment rather tha
 
 That would make the case studies read more like senior engineering narratives and less like expanded resume bullets.
 
+## Planned Dashboard Integration: Public Live Engineering Data (Jul 19, 2026)
+
+**State:** Planned exploration. No dashboard route, serverless function, dashboard
+credential, snapshot store, or independent uptime monitor exists in the
+repository or has been production-verified.
+
+**Decision:** Within the dashboard alternatives, explore public live data first.
+Do not begin with a static-only impact page, a private GA4 reporting UI, a CMS,
+or a generic GitHub-activity dashboard. This is a product-direction choice, not
+a new F-series defect, and it does not reclassify the accessibility, resilience,
+security, or governance backlog above.
+
+### Product Goal and Initial Public Slice
+
+Use a working `/impact` route to demonstrate production ownership with
+traceable, freshness-labeled evidence. The first version should answer four
+questions without exposing private analytics or employer telemetry:
+
+- What is the latest verified portfolio deployment release, and when was it
+  published?
+- Did the selected delivery, integrity, security, and dependency checks pass,
+  and what exact commit, ref, and event did each result cover?
+- When did the release path last verify the deployed route contract?
+- How fresh is each answer, and is any source partial, stale, or unavailable?
+
+The initial live dataset should be deliberately small:
+
+- the latest verified GitHub deployment release tag, commit, publication time,
+  and evidence link;
+- the latest relevant conclusions, completion times, head SHAs, refs, and event
+  types for the allowlisted `Create deployment release`, `Portfolio integrity`,
+  `CodeQL Advanced`, `npm audit`, and `Deployed security headers` workflows,
+  displayed with their actual scope rather than combined into a single
+  release-specific pass; and
+- an API generation timestamp plus explicit fresh, stale, partial, or
+  unavailable state.
+
+The deployment release is the strongest first anchor because the existing
+release workflow waits for the exact Netlify production commit, validates the
+deployed route contract, and only then creates the GitHub release. The dashboard
+must label it as the latest **verified release**, not assume that it is the
+currently deployed commit if a newer deploy exists without a completed release.
+An exact-current claim would also require a build-generated deploy manifest or
+another authoritative commit comparison. Do not translate release evidence into
+an uptime or SLA claim. Actual availability needs an independent external probe;
+a function running on the same Netlify site does not provide an independent
+failure domain.
+
+### Integration Path
+
+1. **Define the public contract before the UI.** Specify an allowlisted response
+   containing `generatedAt`, release identity, selected check states, source
+   timestamps, evidence URLs, and an overall freshness state. Each workflow
+   record must retain its `headSha`, ref, trigger event, and run URL because the
+   current workflows have different push, pull-request, manual, and scheduled
+   triggers. Use a small set of stable states such as `success`, `failure`,
+   `pending`, `stale`, and `unavailable`. Do not proxy raw GitHub payloads, logs,
+   actor details, or upstream error bodies, and do not present an independently
+   scheduled or pull-request check as an attestation for a deployment release.
+2. **Add one same-origin aggregation endpoint.** Implement a modern Netlify
+   Function at proposed path `main/netlify/functions/portfolio-status.ts`,
+   exposed as read-only `GET /api/portfolio-status`. It should call the GitHub
+   Releases and Actions REST endpoints server-side, fetch sources independently
+   with short timeouts, and return useful partial results when one source fails.
+   The browser should never call GitHub directly.
+3. **Protect the rate budget and make freshness honest.** Dynamic function
+   responses are not cached by default, so add explicit CDN-only caching. A
+   reasonable starting policy is 15 minutes fresh with a 60-minute
+   stale-while-revalidate window using `Netlify-CDN-Cache-Control`, while the
+   browser revalidates. Confirm `Cache-Status` behavior before release and tune
+   the window from observed traffic and upstream limits. GitHub's REST API rate
+   limits make direct per-visitor requests unsuitable; see the official
+   [GitHub REST rate-limit documentation](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+   and [Netlify caching overview](https://docs.netlify.com/build/caching/caching-overview/).
+4. **Keep credentials server-only.** Prefer a narrowly scoped, read-only
+   fine-grained GitHub token stored in Netlify as `GITHUB_DASHBOARD_TOKEN` if
+   rate-budget testing shows authenticated requests are needed. Limit it to this
+   repository with only the GitHub permissions required to read releases and
+   Actions, and give the Netlify variable Functions scope. Read it through
+   `process.env.GITHUB_DASHBOARD_TOKEN`; never declare it in `netlify.toml`, use
+   a `VITE_*` variable, serialize it into the response, or log it. An
+   unauthenticated prototype is acceptable only if its request count and failure
+   behavior stay safely within GitHub's public limit. Follow the current
+   [Netlify serverless environment-variable guidance](https://docs.netlify.com/build/functions/environment-variables/)
+   and document ownership, expiration, and rotation before production use.
+5. **Build the public route around evidence, not decoration.** Lazy-load
+   `/impact`, link to it from the homepage before adding another primary-nav
+   item, and reuse the existing Mission Control visual language. Present a
+   concise status summary, visible update time, evidence links, and a semantic
+   table or list equivalent. Cover loading, partial, stale, empty, and hard-error
+   states; do not rely on color alone and do not add a charting dependency for
+   the first slice.
+6. **Add last-known-good storage only if the first slice needs it.** If GitHub
+   outages or rate limiting make the cached endpoint unreliable, add a scheduled
+   refresh that writes a sanitized snapshot to a site-scoped Netlify Blob and
+   let the read function serve that snapshot with its original timestamp. Do
+   not trigger production builds merely to refresh dashboard data.
+7. **Treat independent availability as a later, separate source.** Only add an
+   uptime or synthetic-latency card after selecting an independent probe,
+   defining its retention and failure semantics, and obtaining approval for any
+   new service. Label synthetic probe latency explicitly; do not present it as
+   real-user performance, Core Web Vitals, or an SLA.
+
+### Repository Wiring and Verification Gate
+
+Implementation would need coordinated updates to the route tree in
+`main/src/App.jsx`, route metadata in `main/src/data/seo.js`, canonical Netlify
+rewrites in `main/public/_redirects`, the generated public-route and prerender
+workflow, and focused route tests. Keep the public data/display contract in a
+canonical data module rather than duplicating labels across the function and
+page. Reuse `MissionControl` metric primitives where they fit, and start with a
+homepage evidence link instead of expanding the already dense primary
+navigation.
+
+The same-origin function path fits the current `connect-src 'self'` policy. If a
+future iteration adds a browser-side vendor connection, external image, or
+embed, review and narrowly update `netlify.toml`; do not weaken CSP preemptively.
+
+Before a preview or release, require:
+
+- function contract tests for allowlisting, timeouts, partial upstream failure,
+  freshness calculation, method rejection, secret non-disclosure, and cache
+  headers;
+- component tests for loading, fresh, stale, partial, unavailable, and keyboard
+  behavior;
+- content, SPA/SEO, AI-discovery, CSP, performance, lint, app-test, and
+  production-build checks selected by the change-impact validator;
+- preview verification at desktop and narrow mobile widths, including visible
+  timestamps, accessible evidence links, no horizontal overflow, and observed
+  CDN `HIT`/`MISS` behavior; and
+- a documented telemetry boundary if browser QA can generate GA4 traffic.
+
+Do not publish GA4 visitors, referrers, resume/contact conversions, raw employer
+telemetry, private repository activity, workflow logs, contribution streaks,
+language percentages, or other vanity metrics. After the first public slice has
+real usage evidence, decide whether it earns a permanent `/impact` route, should
+collapse into a compact homepage module, or should be retired. Historical
+case-study impact and engineering-decision context can be added afterward, but
+must remain clearly separated from live operational status.
+
 ## Reconciled Feedback-Roadmap Follow-Ups (Jul 15, 2026)
 
 The former portfolio feedback roadmap mixed resolved work with a small set of
@@ -1238,7 +1441,10 @@ repository configuration.
 6. Add a modest Node 22 bundle budget, then consider immutable hashed-asset
    caching, Action SHA pinning, or full static body rendering as optional
    hardening. Re-test GA in a production browser before widening CSP.
-7. After the verified backlog, revisit card information hierarchy and ownership
+7. For dashboard exploration, start with the bounded public live engineering
+   status slice above and evaluate its evidence value before static-only or
+   private-dashboard work.
+8. After the verified backlog, revisit card information hierarchy and ownership
    disclosure behavior, then record dated Search Console, link-preview, and GA4
    property verification.
 
@@ -1246,15 +1452,25 @@ repository configuration.
 
 # Final Assessment
 
-The repository remains healthy and production-ready through deployed PR #139 at
-`4089f8d7e9d812b0bda194e034a28bcbe26d418f`. PR #135 and the Jul 11 production
+The repository remains healthy and production-ready through deployed PR #142 at
+`3c2ab9cd8882e3ab74f99ab3fee0d3c8ceb624ae`. PR #135 and the Jul 11 production
 validation closed the trailing-slash hydration regression. PR #136's offline
 exact-metadata fixtures and inventory checks remain active in pull-request
 automation, while release automation applies the checker to the deployed site.
 PR #137's patch-level development-tool update introduced no meaningful bundle
 regression. PR #139 then removed query strings and fragments from manual GA4
 page-view fields, passed the exact-commit release workflow, and was confirmed in
-the deployed bundle without opening a production browser session.
+the deployed bundle without opening a production browser session. PR #140's
+creation-date correction and PR #141's local change-impact routing are now
+included in production. PR #142 completed the dedicated Tailwind CSS 4
+migration; exact-commit release, live route, security-header, and CSS validation
+passed, and the superseded Dependabot PR #138 closed unmerged.
+
+The migration added 3.05 kB of compressed CSS relative to the last audited
+pre-migration release while leaving the main JavaScript effectively unchanged.
+That is a small delivery tradeoff, not a rollback reason. Fresh Lighthouse,
+field Core Web Vitals, Safari, and Firefox evidence remains outside this pass;
+the prior Chromium deploy-preview QA is the current visual evidence.
 
 Within its F-001 through F-013 set, the Jul 12 re-audit found 3 Medium, 7 Low,
 and 3 Informational current findings, with no Critical or High issue and no
@@ -1268,3 +1484,8 @@ caching, workflow immutability, and privacy decisions.
 Addressing that backlog will make the implementation demonstrate the same
 operational rigor, accessibility awareness, and reliability mindset that the
 portfolio presents as Waffy's professional specialty.
+
+The Jul 19 dashboard integration path is planned product work, not deployed
+evidence. Its first experiment is a public, freshness-labeled release and
+validation view backed by a same-origin function; no dashboard capability or
+live-data claim should be inferred until that path is implemented and verified.

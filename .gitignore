@@ -4,3 +4,4 @@ node_modules
 .qodo
 .netlify/
 handoff.md
+.tokensave/

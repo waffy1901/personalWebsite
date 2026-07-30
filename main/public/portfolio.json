@@ -1,10 +1,10 @@
 {
-  "schemaVersion": "1.0",
-  "contentLastReviewed": "2026-07-05",
+  "schemaVersion": "1.1",
+  "contentLastReviewed": "2026-07-25",
   "person": {
     "name": "Waffy Ahmed",
-    "title": "Software Engineer",
-    "tagline": "Software Engineer | Georgia Tech",
+    "title": "Software Engineer II",
+    "tagline": "Software Engineer II | Georgia Tech",
     "summary": "Software engineer focused on platform reliability, Kubernetes operations, deployment automation, observability, incident response, and high-throughput production systems.",
     "location": "United States",
     "education": {
@@ -18,8 +18,9 @@
       ]
     },
     "currentRole": {
-      "title": "Software Engineer",
+      "title": "Software Engineer II",
       "organization": "The Home Depot",
+      "startDate": "2026-07",
       "focus": [
         "Platform reliability",
         "Kubernetes autoscaling",
@@ -27,7 +28,21 @@
         "Observability",
         "Incident response"
       ]
-    }
+    },
+    "roleHistory": [
+      {
+        "title": "Software Engineer II",
+        "organization": "The Home Depot",
+        "startDate": "2026-07",
+        "endDate": null
+      },
+      {
+        "title": "Software Engineer I",
+        "organization": "The Home Depot",
+        "startDate": "2025-01",
+        "endDate": "2026-07"
+      }
+    ]
   },
   "links": {
     "site": "https://waffy.dev/",
@@ -66,6 +81,7 @@
     "Cassandra",
     "Elasticsearch",
     "BigQuery",
+    "Cloud Spanner",
     "Incident response",
     "Observability",
     "Deployment automation"
@@ -77,6 +93,7 @@
         "Java",
         "Python",
         "FastAPI",
+        "Cloud Spanner",
         "Cassandra",
         "Elasticsearch",
         "BigQuery",
@@ -93,6 +110,9 @@
         "Terraform",
         "cdk8s",
         "Spinnaker",
+        "Kubernetes CronJobs",
+        "Workload Identity",
+        "Secret Manager / External Secrets",
         "Docker",
         "CI/CD"
       ]
