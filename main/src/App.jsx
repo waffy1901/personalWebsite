@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react"
-import { Navigate, Routes, Route } from "react-router-dom"
+import { Navigate, Routes, Route } from "react-router"
 import Home from "./pages/Home.jsx"
 import Navbar from "./components/Navbar.jsx"
 import Seo from "./components/Seo.jsx"
