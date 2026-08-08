@@ -2,8 +2,9 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PR #139 (`feat/ga4-privacy-audit-reconciliation`) at merge commit `4089f8d7e9d812b0bda194e034a28bcbe26d418f`, including PR #137 (`dependabot/npm_and_yarn/main/development-dependencies-7a15a521a3`), PR #136 (`feat/portfolio-metadata-automation-hardening`), PR #135 (`feat/route-metadata-integrity`), PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
-**Latest audit pass:** Jul 15, 2026 post-deploy validation of PR #139 on `main` at `4089f8d7e9d812b0bda194e034a28bcbe26d418f`, production release `deploy-20260715T222758Z-4089f8d`, GitHub Actions run `29455441731`, independent production HTTP and bundle inspection, and user-supplied GA4 Admin redaction-preview evidence; no production browser was used<br>
+**Reconciled through:** PR #150 (`@vitejs/plugin-react` 6.0.5 and Vite 8.2.0) at merge commit `281df64bdc16c6163dd7d089936e2fe36d982e5a`, including PR #152 (`github/codeql-action` 4.37.4), PR #148 (`@testing-library/jest-dom` 7.0.0), PR #146 (`@vitejs/plugin-react` 6.0.4 and `globals` 17.8.0), PR #145 (React and React DOM 19.2.8), PR #149 (`feat/fix-npm-audit`), PR #144 (Actions setup-node 7), PR #143 (Vite 8.1.5), PR #142 (`feat/tailwind-v4-migration`), PR #140 (website creation-date reconciliation), PR #139 (`feat/ga4-privacy-audit-reconciliation`), PR #137 (`dependabot/npm_and_yarn/main/development-dependencies-7a15a521a3`), PR #136 (`feat/portfolio-metadata-automation-hardening`), PR #135 (`feat/route-metadata-integrity`), PR #134 (`feat/portfolio-performance-security-automation`), PR #131 (`feat/generate-public-artifacts`), and PR #129 (`prerenderRouteMetadata`)<br>
+**Current release snapshot:** Aug 8, 2026 local verification found `main` and `origin/main` aligned at `281df64bdc16c6163dd7d089936e2fe36d982e5a`, tagged `deploy-20260805T232342Z-281df64`; this Aug 5 dependency/workflow release postdates the latest full production/browser audit<br>
+**Latest full audit pass:** Aug 1, 2026 UTC adversarial post-deploy verification of PRs #145, #146, and #148 on `main` at `d3886ac6a8e07b1013867bed25971ca9986c1033`, production release `deploy-20260801T170233Z-d3886ac`, release run `30709425910`, CodeQL run `30709425950`, exact-commit clean-room verification under Node 22.22.0 and npm 10.9.4, deterministic baseline-versus-current bundle comparison, production HTTP/asset/header inspection, and Chromium production QA at 1440x900 and 390x844; the browser pass generated GA4 traffic as documented below<br>
 **Website creation date:** Sep 12, 2024 at 2:17 PM<br>
 **Audit scope:** React application, content and data modules, tests, dependencies, Netlify configuration, public metadata, accessibility and interaction failure paths, resume PDF structure, security controls, and GitHub settings and Actions.
 
@@ -11,8 +12,11 @@
 > or visual-regression run. The post-deploy addendum records later live
 > production validation, and resolved items are marked as such where follow-up
 > PRs addressed them. The Jul 12 re-audit adds focused local browser,
-> failure-path, keyboard, and PDF evidence, but still does not include Lighthouse
-> or automated visual regression.
+> failure-path, keyboard, and PDF evidence. The Jul 18, Jul 30, and Aug 1
+> addenda add exact-release and deployed HTTP evidence; the Aug 1 pass also adds
+> fresh production Chromium coverage at desktop and mobile widths. The audit
+> still does not establish fresh Safari/Firefox parity, Lighthouse, field Core
+> Web Vitals, or automated pixel-level visual regression.
 
 ---
 
@@ -39,8 +43,29 @@ query strings and fragments, and the exact deployed bundle plus release-time and
 independent HTTP checks confirm the production change without generating a
 browser-based GA4 session.
 
-No Critical or High issue was found. The highest-value remaining work is a
-focused accessibility and resilience backlog:
+PR #140 merged the exact supplied website creation date and deployed at
+`70c67f39bfb22df739f0920fa09eb10d5a6bafce`. PR #142 then completed the
+Tailwind CSS 4 migration, while PR #143 and PR #144 updated Vite and
+`actions/setup-node` without changing the current finding set.
+
+PR #149 is merged and deployed. It moved the app to React Router 8.3.0, patched
+the production and build-tool dependency findings from scheduled npm-audit run
+`30285361531`, aligned app, CI, and Netlify runtimes on Node 22.22.0, and added
+a repository-owned audit policy.
+
+PRs #145, #146, and #148 subsequently deployed React and React DOM 19.2.8,
+`@vitejs/plugin-react` 6.0.4, `globals` 17.8.0, and
+`@testing-library/jest-dom` 7.0.0. Their combined change is confined to
+`main/package.json` and `main/package-lock.json`. Exact-tree pull-request and
+post-merge checks, a fresh clean-room audit, deterministic bundle comparison,
+production HTTP inspection, and desktop/mobile browser QA found no dependency
+regression. The Aug 1 raw audit is clean at every severity, so the six-entry
+dev-only advisory graph recorded on Jul 30 is historical rather than current.
+The temporary policy exception remains in source and keeps F-014 open until it
+is removed or made structurally complete.
+
+No Critical or High production issue was found. The highest-value remaining
+work is a focused accessibility, resilience, and delivery-governance backlog:
 
 1. Correct repeated normal-text contrast failures and add route-level
    accessibility checks.
@@ -51,8 +76,11 @@ focused accessibility and resilience backlog:
 4. Add deliberate route scroll/focus management and keep keyboard-focused
    mobile navigation destinations visible.
 5. Strengthen delivery governance and monitoring by protecting `main`, enabling
-   Dependabot vulnerability alerts/security updates, and running live header
-   validation before release creation.
+   Dependabot vulnerability alerts/security updates, running live header
+   validation before release creation, and removing the now-unused npm-audit
+   exception or making it enforce its complete expected graph if retained.
+6. Disable duplicate automatic GA4 history page views while preserving the
+   pathname-only manual tracker and its query/fragment privacy boundary.
 
 ---
 
@@ -106,11 +134,13 @@ Production validation also surfaced four follow-up findings:
    starts off-screen until the nav is scrolled. This is not broken behavior, but
    it is a small usability caveat for mobile visitors.
 
-Current classification: item 3 was resolved by PR #129 and the later PR #135
-hydration fix. Item 4 remains current as F-005 after Jul 12 keyboard testing
-confirmed that focus can stay clipped. Items 1 and 2 remain historical live
-observations whose current impact was not reverified in a production browser or
-final lowercase-alias request during the Jul 12 re-audit.
+Current classification through Aug 1: item 3 was resolved by PR #129 and the
+later PR #135 hydration fix. Item 4 remains current as F-005 after Jul 12
+keyboard testing confirmed that focus can stay clipped. Item 1 remains a
+historical CSP observation; fresh production browser QA delivered analytics
+through the current allowlist with no CSP console error on the tested routes.
+Item 2 remains a Low canonicalization caveat: the lowercase alias still serves
+the correct PDF with HTTP 200, and the exact pre-#145 deploy behaves identically.
 
 The multi-agent validation attempt was partially limited by sandbox DNS access:
 several sub-agents could not resolve `waffy.dev`. The successful production
@@ -358,8 +388,10 @@ unverified in this pass. `scripts/check-deployed-routes.py` currently filters
 that PDF alias out of its legacy app redirect inventory, so the status also
 remains an automation gap if canonicalization matters.
 
-The re-audit found no Critical or High issue and no release blocker. Its 13
-current findings are retained in the maintained sections below:
+The re-audit found no Critical or High issue and no release blocker. The Jul 30
+reconciliation added the Low-severity audit-policy control finding F-014, and
+the Aug 1 production browser pass adds the independent Low-severity GA4
+measurement finding F-015, bringing the maintained set to 15:
 
 | ID | Severity | Current finding |
 | --- | --- | --- |
@@ -374,20 +406,25 @@ current findings are retained in the maintained sections below:
 | F-009 | Low | Prerendered route shells contain metadata but no rendered route body. |
 | F-010 | Low | AI-readable outputs include avoidable website implementation detail. |
 | F-011 | Informational | Hashed assets use browser revalidation rather than immutable caching. |
-| F-012 | Informational | GitHub Actions use mutable major-version tags. |
+| F-012 | Informational | GitHub Actions use mutable major-version tags, and CodeQL has avoidable least-privilege exposure. |
 | F-013 | Informational | Analytics and form processing need an explicit privacy decision. |
+| F-014 | Low | The now-unused npm-audit exception remains in source and would not require the complete historical six-entry graph if findings returned. |
+| F-015 | Low | GA4 sends paired manual and automatic page views on several SPA transitions, inflating route-view counts. |
 
 Across the previous audit's 17 numbered and deployed follow-up items, current
 evidence classifies 9 as fixed, 5 as remaining or partially addressed, and 3 as
 unable to verify. For only the original 13 numbered findings, the count is 8
 fixed, 4 remaining or partial, and 1 unable to verify. No current application
 issue was introduced by PR #137; F-001 predates that dependency-only change and
-is a previously missed lazy-loading failure mode.
+is a previously missed lazy-loading failure mode. F-014 was identified by the
+Jul 30 adversarial policy pass, and F-015 by the Aug 1 production browser pass;
+neither is included in those historical counts.
 
 The header and this change set's canonical app data align on the supplied
 creation date, `Sep 12, 2024 at 2:17 PM`
-(`2024-09-12T14:17:00-04:00`). The date-alignment edit postdates deployed PR
-#139 and is not yet production-verified.
+(`2024-09-12T14:17:00-04:00`). PR #140 merged that alignment at
+`70c67f39bfb22df739f0920fa09eb10d5a6bafce`; release run `29461017438`
+created `deploy-20260716T001807Z-70c67f3` for the exact merge commit.
 
 ### Jul 15, 2026 PR #139 GA4 Privacy Deployment Closure
 
@@ -421,6 +458,258 @@ deployed application's event construction, not downstream GA4 receipt or the
 separate Enhanced Measurement browser-history setting. The query-string
 disclosure sub-finding is resolved in production; F-013 remains Informational
 because the broader transparency and consent decision is still open.
+
+### Jul 18, 2026 PR #142 Tailwind CSS 4 Deployment
+
+PR #142 merged at `3c2ab9cd8882e3ab74f99ab3fee0d3c8ceb624ae` after replacing
+the blocked package-only Tailwind update with a complete Vite-native migration.
+Its Main PR CI, Portfolio Integrity, npm audit, CodeQL, and Netlify deploy
+preview checks passed.
+
+Release workflow run `29647183925` used Node 22.13.0 and npm 10.9.2, passed
+lint, all 26 app tests, the production build, the exact Netlify deploy wait,
+deployed-route validation, the legacy-domain redirect, and release creation. It
+produced `deploy-20260718T140037Z-3c2ab9c` for the exact merge commit.
+
+The authoritative release build reported Tailwind CSS 4.3.3, 69 transformed
+modules, a 68.71 kB CSS asset (11.51 kB gzip), a 264.92 kB main JavaScript
+asset (85.13 kB gzip), and 9 prerendered metadata shells. Compared with the
+pre-migration CSS at 47.88 kB (8.46 kB gzip), the migration added a modest CSS
+payload while leaving JavaScript effectively unchanged.
+
+Independent production route and security-header checks passed. Representative
+desktop and 390 px Chromium checks on the deploy preview found no flip-card,
+overflow, route, or console regression. That browser lane used the preview
+rather than production, but browser execution can still contribute analytics
+traffic unless explicitly blocked. Safari, Firefox, Lighthouse, field Core Web
+Vitals, and broad visual regression were not freshly tested. The migration did
+not resolve or worsen F-001 through F-013.
+
+### Jul 30, 2026 PR #149 npm Audit Remediation and Deployment
+
+Scheduled `npm audit` run `30285361531` failed on Jul 27 against `main` at
+`86ea6da5d38ccb1cf88a18302a84fc438eedd6de`. It reported four high-severity
+dependency findings: two `brace-expansion` advisories, the PostCSS
+path-traversal advisory, and the React Router CSRF-bypass advisory.
+
+PR #149 addressed the production and patchable build-tool findings by:
+
+- migrating from `react-router-dom` 7 to `react-router` 8.3.0;
+- updating PostCSS to 8.5.25 and `brace-expansion` to 1.1.17;
+- pinning the app engine, six GitHub Actions runtime entries, and Netlify to
+  Node 22.22.0; and
+- adding `main/scripts/check-npm-audit.mjs`, which keeps production dependencies
+  strict at Moderate severity while permitting only the known dev-only
+  `GHSA-mh99-v99m-4gvg` ESLint/minimatch chain.
+
+PR head `56a7547b2161c27202ba31e61ee5aa18e0e47732`, its synthetic
+pull-request merge, and final merge commit
+`012eb6977b36ca4868be3d1db6561eadafd71468` share Git tree
+`74a7960c556f49ed85af6526271fff37e38819b7`. The successful pull-request
+checks therefore tested the exact repository contents now merged to `main`.
+
+Verification evidence:
+
+- npm-audit run `30510681579` used Node 22.22.0 and npm 10.9.4. Production
+  dependencies passed, while exactly 6 known dev-only ESLint/minimatch entries
+  derived solely from `GHSA-mh99-v99m-4gvg` were accepted.
+- Main PR CI, Portfolio Integrity, CodeQL, and the Netlify deploy preview passed.
+- An immutable local export installed 368 packages under the same Node/npm
+  toolchain. Lint, 26 app tests, the production build, AI discovery, SPA SEO,
+  GA4, frontend performance, six performance-checker regression tests, audit
+  script syntax, and all eight workflow YAML parses passed.
+- Release run `30510767077` checked out exact merge commit `012eb697...`,
+  passed lint, 26 tests, a 128-module build, the exact Netlify deploy wait,
+  deployed-route validation, the legacy-domain redirect, and release creation.
+  It produced `deploy-20260730T031752Z-012eb69`.
+- The release-run build reported a 263.75 kB main JavaScript asset
+  (84.84 kB gzip), 68.71 kB CSS (11.51 kB gzip), and 9 prerendered shells.
+  The actual Netlify production build reported 264.32 kB JavaScript
+  (85.08 kB gzip) with the same CSS size; these are kept separate because the
+  Netlify build environment is the authoritative deployed-bundle evidence.
+- CodeQL run `30510767088` passed on the exact merge commit, and the live
+  repository query returned zero open code-scanning alerts.
+
+Netlify site `fe34f210-bda0-483d-b5b8-084d71f91bff` reports production deploy
+`6a6ac22fa9787d0008b9b3be`, build `6a6ac22fa9787d0008b9b3bc`, `ready` for
+exact commit `012eb697...`. It was published at
+`2026-07-30T03:17:21.762Z`; its immutable permalink is
+`https://6a6ac22fa9787d0008b9b3be--waffy.netlify.app`.
+
+Independent production HTTP validation confirmed:
+
+- the homepage, 8 canonical routes, 6 legacy app redirects, and real
+  unknown-route 404 remain healthy;
+- route-specific initial titles, descriptions, canonicals, robots, Open Graph,
+  and Twitter metadata match the source-derived expectations;
+- `.html` aliases, a generic missing route, and an invalid case-study slug
+  return real 404 responses with `noindex, nofollow`;
+- configured CSP, `X-Content-Type-Options`, `Referrer-Policy`, HSTS, and
+  `Permissions-Policy` match production responses;
+- the canonical resume, Open Graph image, `llms.txt`, `ai-summary.txt`,
+  `portfolio.json`, `sitemap.xml`, `robots.txt`, and `manifest.json` return the
+  expected content types and match the exact commit; and
+- `ai-summary.txt` matches production byte for byte at SHA-256
+  `99a8d6f53c45e4b7f9cdef8955ec05e2932a6480e6a7b2491105dcd0141e3a1b`,
+  and every JavaScript or CSS asset referenced by the deployed bundle returned
+  HTTP 200.
+
+The previously documented URL caveats remain real but Low severity: slashless
+canonical routes redirect to trailing-slash response URLs while declaring
+slashless canonicals, and `/waffyahmedresume.pdf` serves the byte-identical PDF
+with HTTP 200 rather than redirecting to `/waffyAhmedResume.pdf`. Neither is a
+functional outage or a PR #149 regression.
+
+The audit-policy adversarial pass found one new Low-severity control gap,
+recorded as F-014 below: when findings are nonempty, the policy validates each
+reported exception entry but does not require the report to contain the
+complete six-entry expected graph. This does not admit another package, GHSA,
+production path, or lockfile node, but it weakens the promised graph-drift
+detection.
+
+The production validation was HTTP-only. No browser JavaScript or Formspree
+submission was used, so it should not contribute GA4 page views or users.
+Production hydration, interactive navigation, visual layout, browser CSP
+console behavior, Safari/Firefox parity, and contact submission remain outside
+this release pass.
+
+### Aug 1, 2026 PRs #145, #146, and #148 Dependency Deployment Verification
+
+The three Dependabot updates landed sequentially from the exact PR #149 release
+baseline `012eb6977b36ca4868be3d1db6561eadafd71468`:
+
+- PR #145 updated React and React DOM from 19.2.7 to 19.2.8. Head
+  `dc22f91b80d931f96f8fce436f5f9868cde5ac4c` and merge commit
+  `33be40fe56a6880b4dc01777dc35bbca026bd753` share tree
+  `332ce3421449e31bbdfaaadcbba85141d25f5ddc`.
+- PR #146 updated `@vitejs/plugin-react` from 6.0.3 to 6.0.4 and `globals`
+  from 17.7.0 to 17.8.0. Rebased head
+  `1540f2a302607e8eeef617e1b7eb8da939d0e621` and merge commit
+  `27d0675e96a6603e646b08d2361b959dd17aa08f` share tree
+  `f1ff6b99d76871bae9f0c4c906e4bc6e9333e8a1`.
+- PR #148 updated `@testing-library/jest-dom` from 6.9.1 to 7.0.0.
+  Rebased head `8bc0a5dc205463b3b40e76acc28e48146f24c981` and merge commit
+  `d3886ac6a8e07b1013867bed25971ca9986c1033` share tree
+  `c68ceef22b8163f4bbfef8279d32a5b91ab17d4a`. That merge was current `main`
+  and production for the Aug 1 pass.
+
+The combined `012eb697...d3886ac` patch changes only `main/package.json` and
+`main/package-lock.json` (`+22/-19`). It introduces no application, route,
+content, analytics, header, workflow, or unexpected transitive-package change.
+React DOM's React peer is satisfied; plugin React 6.0.4's Vite 8 peer is
+satisfied by Vite 8.1.5; and Jest DOM 7's Node `>=22` and
+`@testing-library/dom >=10 <11` requirements are satisfied by the repository's
+Node 22.22.0 pin and Testing Library DOM 10.4.0.
+
+Each PR's exact landed tree passed Main PR CI, npm audit, Portfolio Integrity,
+CodeQL Advanced, and Netlify preview/header/redirect checks:
+
+| PR | Main CI | npm audit | Portfolio Integrity | PR CodeQL |
+| --- | --- | --- | --- | --- |
+| #145 | `30510872231` | `30510872204` | `30510872230` | `30510872220` |
+| #146 | `30709138988` | `30709138959` | `30709138964` | `30709138976` |
+| #148 | `30709356169` | `30709356145` | `30709356112` | `30709356114` |
+
+PR #145's PR checks ran about 61.5 hours before merge, but neither its base,
+head, nor tree changed. The fresh Aug 1 clean-room audit and exact post-merge
+release run independently remove advisory-freshness uncertainty for the final
+combined state.
+
+Post-merge provenance is exact:
+
+| PR | Release run | Merge CodeQL | Netlify deploy / build (published UTC) | Release |
+| --- | --- | --- | --- | --- |
+| #145 | `30709002813` | `30709002798` | `6a6e23b1fd2c510008bb1e36` / `6a6e23b1fd2c510008bb1e34` (`2026-08-01T16:50:11.278Z`) | `deploy-20260801T165044Z-33be40f` |
+| #146 | `30709198721` | `30709198714` | `6a6e24fa1f441d000826332a` / `6a6e24fa1f441d0008263328` (`2026-08-01T16:55:44.819Z`) | `deploy-20260801T165615Z-27d0675` |
+| #148 | `30709425910` | `30709425950` | `6a6e266ff081030008984d2d` / `6a6e266ff081030008984d2b` (`2026-08-01T17:01:51.659Z`) | `deploy-20260801T170233Z-d3886ac` |
+
+Each release workflow checked out its exact merge SHA, passed clean install,
+lint, all 26 tests, and the production build, waited for Netlify to report that
+exact commit `ready`, validated deployed routes and the legacy-domain redirect,
+and created the exact-SHA release. The final workflow used Node 22.22.0 and npm
+10.9.4, installed 368 packages, audited 369 packages with zero vulnerabilities,
+and built 128 modules with 9 prerendered metadata shells.
+
+An independent clean clone of `d3886ac...` under the same Node/npm toolchain
+passed `npm ci`, `npm run audit:ci`, raw `npm audit --audit-level=low`, full
+dependency-tree validation, lint, all 26 tests, the production build, release
+preflight, and `git diff --check`. The raw audit reported zero findings at every
+severity. The six-entry dev-only exception added by PR #149 is therefore no
+longer active; the script itself reports that the temporary exception can be
+removed. F-014 remains open because the obsolete exception code is still
+present and would accept an incomplete historical subset if that advisory path
+reappeared.
+
+The deterministic build comparison found no bundle or lazy-route regression:
+
+| Measurement | Pre-#145 | Current | Delta |
+| --- | ---: | ---: | ---: |
+| JavaScript files | 12 | 12 | 0 |
+| JavaScript raw | 333,137 bytes | 333,137 bytes | 0 |
+| JavaScript gzip | 110,269 bytes | 110,271 bytes | +2 bytes |
+| CSS raw | 68,717 bytes | 68,717 bytes | 0 |
+| CSS gzip | 11,396 bytes | 11,396 bytes | 0 |
+
+Both revisions retained one eager entry and the same seven lazy page entries.
+After normalizing content-addressed import names and React's 19.2.7/19.2.8
+version literals, every JavaScript chunk and generated HTML shell matched.
+
+Independent production HTTP validation on the final deploy confirmed the
+homepage, 8 canonical routes, 6 legacy app redirects, and real noindex 404;
+all 27 crawled entry, lazy-route, image, resume, and CSS references returned
+HTTP 200 without an SPA-shell fallback; and live CSP,
+`X-Content-Type-Options`, `Referrer-Policy`, HSTS, and `Permissions-Policy`
+matched `netlify.toml`. The lowercase `/waffyahmedresume.pdf` alias still serves
+the correct PDF with HTTP 200 instead of redirecting. The immutable pre-#145
+deploy `6a6ac22fa9787d0008b9b3be` behaves identically, proving this remains a
+pre-existing canonicalization caveat rather than a dependency regression.
+
+Production Chromium QA at 1440x900 and 390x844 exercised `/`, `/projects`,
+`/experience`, `/case-studies`, `/case-studies/kubernetes-autoscaling`,
+`/resume`, and `/contact`. Hydration, SPA navigation, active-route state,
+project-detail expansion, images, and responsive geometry passed with zero
+console warnings or errors, no broken rendered images, and no page-level
+horizontal overflow. The mobile nav remains intentionally horizontally
+scrollable, consistent with F-005. The contact form was not submitted, and PDF
+or external-link actions were not activated.
+
+Analytics blocking was unavailable in the browser harness. The pass generated
+25 Google Analytics collection requests, including 22 `page_view` requests.
+Several SPA routes produced a pair for the same URL: one app-supplied manual
+event with `dp=<route>` and no `ae`, and one automatic/history event with no
+`dp` and `ae=a`. That shape is not a React duplicate effect and is not caused
+by these dependency PRs. It confirms a pre-existing GA4 measurement-quality
+issue now tracked separately as F-015. Screenshot capture timed out, so the
+browser evidence establishes runtime behavior and geometry rather than a
+pixel-level visual baseline. Safari, Firefox, Lighthouse, field Core Web
+Vitals, and a real Formspree submission remain unverified.
+
+No adverse application, dependency, bundle, route, asset, header, or browser
+effect is attributable to PR #145, #146, or #148. They do not resolve or worsen
+F-001 through F-014; the browser pass adds F-015 for the independent GA4
+configuration interaction.
+
+---
+
+### Aug 5, 2026 PRs #152 and #150 Release Reconciliation
+
+As verified locally on Aug 8, `main` and `origin/main` both resolve to
+`281df64bdc16c6163dd7d089936e2fe36d982e5a`, with release tag
+`deploy-20260805T232342Z-281df64` pointing at that exact merge commit.
+
+PR #152 merged at `4aafee72e8781f8c4ab33b860eeb6ea952bef74b` and pinned the
+CodeQL `init` and `analyze` actions from mutable `v4` references to version
+`v4.37.4`. PR #150 then merged at
+`281df64bdc16c6163dd7d089936e2fe36d982e5a` and updated the lockfile
+resolutions for `@vitejs/plugin-react` from 6.0.4 to 6.0.5 and Vite from 8.1.5
+to 8.2.0. The combined `d3886ac...281df64` patch is limited to
+`.github/workflows/codeql.yml` and `main/package-lock.json`; it does not change
+application or public content.
+
+This entry reconciles source and release-tag provenance only. No fresh
+production HTTP or browser pass was performed for the Aug 5 release, so the
+Aug 1 entry remains the latest full deployed audit and its evidence is not
+attributed to PR #150 or PR #152.
 
 ---
 
@@ -908,12 +1197,12 @@ responses.
 
 The separate production finding from Jun 30, 2026 is not general CSP hardening:
 that production-browser pass observed attempts to reach additional Google
-collection endpoints. The current CSP still omits those hosts, but the Jul 12
-re-audit did not execute analytics in a production browser and could not confirm
-current event loss. Treat this as an analytics follow-up rather than a regression
-in the original hardening work. Measure the impact in GA before widening
-`connect-src`; adding third-party hosts without current evidence is not
-automatically a security improvement.
+collection endpoints. The Aug 1 production browser pass sent current analytics
+events through allowed `analytics.google.com` endpoints with zero CSP console
+errors on the tested routes, so it did not reproduce current event loss. Do not
+widen `connect-src` from the historical observation alone. The current
+analytics finding is the paired manual/automatic page-view behavior in F-015,
+not a demonstrated CSP regression.
 
 ---
 
@@ -921,9 +1210,13 @@ automatically a security improvement.
 
 GitHub's current repository settings report Dependabot vulnerability alerts and
 security updates disabled, with automated security fixes also disabled. Weekly
-version-update pull requests and the weekly/pull-request npm audit remain active,
-and the current npm audit is clean, but a newly disclosed vulnerability may wait
-for the scheduled audit and GitHub will not open a security-update pull request.
+version-update pull requests and the weekly/pull-request npm audit remain active.
+The Aug 1 raw full-tree audit reports zero vulnerabilities at every severity.
+The policy source still contains the historical six-entry dev-only
+ESLint/minimatch exception for `GHSA-mh99-v99m-4gvg`, but no current audit
+finding uses it. A newly disclosed vulnerability may still wait for the
+scheduled audit, and GitHub will not open a security-update pull request while
+these settings remain disabled.
 
 Enable vulnerability alerts and Dependabot security updates while retaining the
 existing version-update and npm-audit workflows. This is supply-chain monitoring
@@ -934,6 +1227,44 @@ hardening, not evidence of a current vulnerable dependency.
 - `.github/dependabot.yml`
 - `.github/workflows/npm-audit.yml`
 - GitHub repository security settings
+
+---
+
+## Low: Now-Unused npm Audit Exception Does Not Require the Complete Graph (F-014)
+
+PR #149's policy map defines the exact six vulnerability entries that the
+dev-only ESLint/minimatch path produced on Jul 30. It fails closed on an
+unexpected package, GHSA URL, production finding, node path, direct-dependency
+status, lockfile version, malformed audit response, or exit-status/report
+mismatch.
+
+The final acceptance step checks that every reported Moderate-or-higher entry
+matches the policy, but it does not require the nonempty report's vulnerability
+name set to equal all six policy keys. An adversarial npm v2 fixture containing
+only the otherwise valid `brace-expansion` leaf exited successfully and logged
+one allowed entry. That report is incomplete relative to the promised graph,
+yet it does not trigger review.
+
+The Aug 1 raw audit reports zero findings, and `npm run audit:ci` explicitly
+says the temporary exception can be removed. This is therefore a dormant
+Low-severity control-integrity gap, not evidence of current production or
+development exposure. Prefer removing the obsolete exception. If it is
+intentionally retained, require exact set equality with
+`allowedDevVulnerabilityPolicy.keys()` before applying the per-entry checks.
+The exception still cannot admit a different package, GHSA, production path,
+or lockfile node.
+
+The policy intentionally identifies the advisory by package name and GHSA URL.
+Changes to the same advisory's title, affected range, or severity do not force a
+review. That stable-identity behavior is acceptable if deliberate, but the
+documentation should describe "advisory drift" as package/GHSA-identity drift
+rather than all advisory metadata drift.
+
+**Relevant files:**
+
+- `main/scripts/check-npm-audit.mjs`
+- `.github/workflows/npm-audit.yml`
+- `main/package-lock.json`
 
 ---
 
@@ -989,8 +1320,9 @@ A short footer-level disclosure would improve transparency for this portfolio:
 
 The code now treats query strings and fragments as unnecessary for manual page
 views. Preserve the property redaction list as defense in depth, verify the
-separate email-pattern toggle and Enhanced Measurement history-event setting,
-and retain dated property-side evidence alongside the deployment record.
+separate email-pattern toggle, remediate the confirmed automatic history-event
+interaction described in F-015, and retain dated property-side evidence
+alongside the deployment record.
 Whether opt-in consent is required depends on the audience, configuration,
 policy, and jurisdiction; this audit does not make a legal-compliance
 determination. If an applicable requirement calls for it, default analytics
@@ -1003,6 +1335,48 @@ consent to denied until the visitor chooses.
 - `main/src/App.test.jsx`
 - `main/src/components/ContactForm.jsx`
 - `docs/analytics.md`
+
+---
+
+## Low: GA4 SPA Transitions Emit Paired Page Views (F-015)
+
+The Aug 1 production browser pass on exact release
+`deploy-20260801T170233Z-d3886ac` generated 25 Google Analytics collection
+requests, including 22 requests whose event name was `page_view`. Several SPA
+transitions emitted two page views for the same route:
+
+- the application's manual event included `dp=<route>` and no `ae`; and
+- the second request used the same document URL, omitted `dp`, and included
+  `ae=a`, consistent with a Google-tag automatic/history page view.
+
+This is a confirmed analytics data-quality issue because route-view counts can
+be inflated. It is not evidence that React ran the same effect twice: a React
+duplicate would produce two same-shaped manual requests. It is also not
+attributable to PR #145, #146, or #148. The manual tracker and
+`send_page_view: false` initialization predate those changes in commit
+`0af63b783b5f29cfd3d3cd39334533e4f41785cd` from Jun 7, 2026, and the
+dependency PRs did not modify analytics source or configuration. The precise
+property-side setting remains an inference because GA4 Admin was not inspected
+during this pass.
+
+The existing app tests prove one pathname-only manual event in the local
+`dataLayer`, but they do not load the external Google tag, exercise its browser
+history integration, or inspect network beacons. Keep the privacy-preserving
+manual tracker and disable GA4 Enhanced Measurement page views based on browser
+history events, or otherwise choose one explicit page-view owner. Then use a
+controlled browser pass to prove exactly one request for the initial page and
+each SPA transition, including a route with a query string and fragment.
+
+The verification browser could not block analytics, so the recorded 25
+collection requests may have contributed to production GA4 data. No contact
+form submission, download, or external-link action occurred.
+
+**Relevant files and settings:**
+
+- `main/src/utils/analytics.js`
+- `main/src/hooks/usePageTracking.jsx`
+- `main/src/App.test.jsx`
+- GA4 Enhanced Measurement page-view settings
 
 ---
 
@@ -1087,7 +1461,9 @@ commit before release creation. PR #136 then tightened the route checker to
 require exact source-derived metadata, added offline regression fixtures, and
 proved the combined gate in release run `29195319984`. The route checker does
 not execute React, so browser-hydrated metadata remains covered by App tests and
-the Jul 11 production browser validation.
+the Jul 11 production browser validation. The Aug 1 production Chromium pass
+adds fresh hydration, SPA-navigation, console, image, and responsive-geometry
+coverage on seven representative routes.
 
 Recommended additions, in descending order of value:
 
@@ -1102,14 +1478,20 @@ The authenticated GitHub branch-protection endpoint reports `main` is not
 protected, and the repository rulesets endpoint returns an empty list. Lint,
 tests, and build run for pull requests and again in the push-triggered release
 workflow. Portfolio Integrity is pull-request-only, however, so a direct push
-bypasses review and those focused content/metadata checks. Netlify can also
-deploy the push before GitHub's post-push verification completes.
+bypasses review and those focused content/metadata checks. The npm-audit
+workflow also runs only for matching pull requests, weekly schedule, or manual
+dispatch; it has no `push` trigger, and the release workflow does not run
+`audit:ci`. A direct dependency push could therefore deploy before the next
+weekly audit. Netlify can also deploy the push before GitHub's post-push
+verification completes.
 
 Add a `main` ruleset that requires pull requests and the Verify app, Validate
-portfolio surfaces, and CodeQL checks; block force pushes and deletion; and
-decide explicitly whether the solo owner should be exempt. Push-time app and
-production-route verification provide meaningful compensation, so this remains
-Low severity.
+portfolio surfaces, npm audit, and CodeQL checks; block force pushes and
+deletion; and decide explicitly whether the solo owner should be exempt. If
+direct dependency pushes remain intentionally allowed, add matching push-time
+audit coverage instead. The repository's branch-first working agreement and
+push-time app/production-route verification provide meaningful compensation,
+so this remains Low severity rather than a current deployment defect.
 
 ## Low: Release Creation Omits Live Header Verification (F-008)
 
@@ -1128,10 +1510,10 @@ deploy wait and before release creation.
 - `.github/workflows/deployed-security-headers.yml`
 - `scripts/check-deployed-security-headers.py`
 
-## Informational: Actions Use Mutable Major-Version Tags (F-012)
+## Informational: Actions Supply-Chain and Least-Privilege Hardening (F-012)
 
 Workflow `uses:` entries reference mutable major tags such as
-`actions/checkout@v7`, `actions/setup-node@v6`,
+`actions/checkout@v7`, `actions/setup-node@v7`,
 `actions/github-script@v9`, and `github/codeql-action/*@v4` rather than immutable
 commit SHAs. Current publishers are GitHub-owned, workflow permissions are
 generally narrow, and Dependabot updates Actions. The release job's
@@ -1139,9 +1521,17 @@ generally narrow, and Dependabot updates Actions. The release job's
 the release, making that mutable reference the most sensitive one. Practical
 risk remains Low and the finding remains Informational.
 
+The CodeQL job also grants `packages: read` for internal/private CodeQL packs
+and `actions: read` for private repositories even though this repository is
+public and does not currently need those capabilities. Its checkout step leaves
+credentials persisted by default. The Jul 30 CodeQL run passed and the live
+query returned zero open alerts, so this is least-privilege hardening rather
+than evidence of a compromised or ineffective scan.
+
 For stronger supply-chain immutability, pin Actions to full commit SHAs with
 human-readable version comments and retain the existing Actions Dependabot
-updater.
+updater. Remove the unused CodeQL read grants and set
+`persist-credentials: false` on its checkout step.
 
 ---
 
@@ -1232,12 +1622,16 @@ repository configuration.
 3. Add deliberate route scroll/focus behavior and keep keyboard-focused mobile
    navigation links visible.
 4. Protect `main`, enable Dependabot vulnerability alerts/security updates, and
-   add live deployed-header validation to the release path.
-5. Refocus AI-readable artifacts on professional engineering evidence, add a
-   concise GA4/Formspree disclosure, and review Formspree account controls.
+   add live deployed-header validation to the release path. Make the npm-audit
+   exception require its complete expected graph.
+5. Resolve the paired GA4 SPA page views, refocus AI-readable artifacts on
+   professional engineering evidence, add a concise GA4/Formspree disclosure,
+   and review Formspree account controls.
 6. Add a modest Node 22 bundle budget, then consider immutable hashed-asset
-   caching, Action SHA pinning, or full static body rendering as optional
-   hardening. Re-test GA in a production browser before widening CSP.
+   caching, Action SHA pinning, CodeQL least-privilege cleanup, or full static
+   body rendering as optional hardening. After F-015 is remediated, run a
+   targeted production browser check for exactly one page view per navigation;
+   do not widen CSP without fresh endpoint-loss evidence.
 7. After the verified backlog, revisit card information hierarchy and ownership
    disclosure behavior, then record dated Search Console, link-preview, and GA4
    property verification.
@@ -1246,24 +1640,41 @@ repository configuration.
 
 # Final Assessment
 
-The repository remains healthy and production-ready through deployed PR #139 at
-`4089f8d7e9d812b0bda194e034a28bcbe26d418f`. PR #135 and the Jul 11 production
-validation closed the trailing-slash hydration regression. PR #136's offline
-exact-metadata fixtures and inventory checks remain active in pull-request
-automation, while release automation applies the checker to the deployed site.
-PR #137's patch-level development-tool update introduced no meaningful bundle
-regression. PR #139 then removed query strings and fragments from manual GA4
-page-view fields, passed the exact-commit release workflow, and was confirmed in
-the deployed bundle without opening a production browser session.
+The repository and release history are reconciled through PR #150 at
+`281df64bdc16c6163dd7d089936e2fe36d982e5a`, tagged
+`deploy-20260805T232342Z-281df64`. The latest full deployed audit remains the
+Aug 1 verification of PR #148 at
+`d3886ac6a8e07b1013867bed25971ca9986c1033`; the Aug 5 release has source and
+tag provenance here but no fresh production HTTP or browser pass. PR #135 and
+the Jul 11 production validation closed the trailing-slash hydration
+regression. PR #136's offline exact-metadata fixtures and inventory checks
+remain active in pull-request automation, while release automation applies the
+checker to the deployed site. PR #139 removed query strings and fragments from
+manual GA4 page-view fields. PR #140 preserved the exact supplied creation
+date, PR #142 completed the Tailwind CSS 4 migration, and PR #149 remediated the
+scheduled production dependency findings, aligned Node 22.22.0 across app and
+deployment surfaces, and deployed React Router 8.3.0. PRs #145, #146, and #148
+then updated React, Vite tooling, globals data, and Jest DOM without an
+attributable application, dependency, bundle, route, asset, header, or browser
+regression. PRs #152 and #150 subsequently pinned CodeQL 4.37.4 and advanced
+the lockfile to `@vitejs/plugin-react` 6.0.5 and Vite 8.2.0.
 
-Within its F-001 through F-013 set, the Jul 12 re-audit found 3 Medium, 7 Low,
-and 3 Informational current findings, with no Critical or High issue and no
-rollback or deployment hold. Historical partial and unable-to-verify items
-remain separately classified above. The Medium work is concentrated in concrete
-accessibility and failure-recovery gaps: contrast, lazy-route rejection
-handling, and resume PDF semantics. Lower severity work covers navigation
-context, repository governance, monitoring timing, crawler/AI boundaries,
-caching, workflow immutability, and privacy decisions.
+The current F-001 through F-015 set contains 3 Medium, 9 Low, and 3
+Informational findings, with no Critical or High production issue and no
+rollback or deployment hold. The Aug 1 raw full-tree audit is clean at every
+severity. The historical six-entry ESLint/minimatch exception remains in the
+audit script as dormant policy code, which is why F-014 remains open. Historical
+partial and unable-to-verify items remain separately classified above.
+
+The Medium work is concentrated in concrete accessibility and failure-recovery
+gaps: contrast, lazy-route rejection handling, and resume PDF semantics. Lower
+severity work covers navigation context, repository governance, audit-policy
+drift detection, monitoring timing, crawler/AI boundaries, caching, workflow
+immutability and least privilege, GA4 measurement quality, and privacy
+decisions. The Aug 1 pass establishes fresh production Chromium hydration,
+navigation, console, image, and responsive-geometry behavior, but not
+Safari/Firefox parity, Lighthouse, field Core Web Vitals, pixel-level visual
+regression, or a real Formspree submission.
 
 Addressing that backlog will make the implementation demonstrate the same
 operational rigor, accessibility awareness, and reliability mindset that the
