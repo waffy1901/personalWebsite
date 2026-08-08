@@ -1,5 +1,12 @@
 import React from "react"
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { BrowserRouter, MemoryRouter } from "react-router"
 import { execFileSync } from "node:child_process"
@@ -10,6 +17,7 @@ import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { resume, socialLinks } from "./data/profile.js"
+import { currentEmployment } from "./data/siteIdentity.js"
 import {
   defaultRouteMetadata,
   getRouteMetadata,
@@ -129,6 +137,9 @@ describe("App routes", () => {
     expect(
       screen.getByRole("link", { name: /download resume/i })
     ).toHaveAttribute("href", "/waffyAhmedResume.pdf")
+    expect(
+      screen.getByText(/^software engineer ii focused on kubernetes/i)
+    ).toBeInTheDocument()
     expectImagePolicy(
       screen.getByRole("img", { name: /waffy ahmed/i }),
       {
@@ -499,16 +510,38 @@ describe("App routes", () => {
     const profilePage = jsonLd["@graph"].find(
       (item) => item["@type"] === "ProfilePage"
     )
+    const person = jsonLd["@graph"].find((item) => item["@type"] === "Person")
 
     expect(profilePage.mainEntity).toEqual({
       "@id": "https://waffy.dev/#person",
     })
+    expect(person.jobTitle).toBe("Software Engineer II")
   })
 
   it("publishes structured portfolio JSON for AI-readable profile data", () => {
     const portfolioJson = readJsonFile("public/portfolio.json")
 
     expect(portfolioJson.person.name).toBe("Waffy Ahmed")
+    expect(portfolioJson.schemaVersion).toBe("1.1")
+    expect(portfolioJson.person.currentRole).toMatchObject({
+      title: "Software Engineer II",
+      organization: "The Home Depot",
+      startDate: "2026-07",
+    })
+    expect(portfolioJson.person.roleHistory).toEqual([
+      {
+        title: "Software Engineer II",
+        organization: "The Home Depot",
+        startDate: "2026-07",
+        endDate: null,
+      },
+      {
+        title: "Software Engineer I",
+        organization: "The Home Depot",
+        startDate: "2025-01",
+        endDate: "2026-07",
+      },
+    ])
     expect(portfolioJson.links.resume).toBe(
       "https://waffy.dev/waffyAhmedResume.pdf"
     )
@@ -572,6 +605,34 @@ describe("App routes", () => {
     expect(portfolioJson.links.sitemap).toBe("https://waffy.dev/sitemap.xml")
     expect(portfolioJson.analyticsEvents).toEqual(
       publicPortfolio.analyticsEvents
+    )
+    expect(portfolioJson.person.currentRole).toEqual(
+      publicPortfolio.person.currentRole
+    )
+    expect(portfolioJson.person.roleHistory).toEqual(
+      publicPortfolio.person.roleHistory
+    )
+    expect(llms).toContain(
+      `${currentEmployment.currentTitle} at ${currentEmployment.organization}`
+    )
+    expect(aiSummary).toContain(
+      `${currentEmployment.currentTitle} at ${currentEmployment.organization}`
+    )
+    expect(aiSummary).toContain(
+      "Productionized a daily order-reconciliation process"
+    )
+    expect(aiSummary).toContain("Adapted the workflow from Cloud SQL to Cloud Spanner")
+    expect(portfolioJson.skills).toContain("Cloud Spanner")
+    expect(
+      portfolioJson.technicalDomains.find(
+        (domain) => domain.label === "Platform reliability"
+      )?.items
+    ).toEqual(
+      expect.arrayContaining([
+        "Kubernetes CronJobs",
+        "Workload Identity",
+        "Secret Manager / External Secrets",
+      ])
     )
     expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.slug)).toEqual(
       caseStudies.map((caseStudy) => caseStudy.slug)
@@ -734,8 +795,11 @@ describe("App routes", () => {
       screen.queryByRole("region", { name: /experience details/i })
     ).not.toBeInTheDocument()
 
+    expect(screen.getByText("July 2026 - Present")).toBeInTheDocument()
+    expect(screen.getByText("January 2025 - July 2026")).toBeInTheDocument()
+
     const detailsButton = screen.getByRole("button", {
-      name: /view details for software engineer at the home depot/i,
+      name: /view details for software engineer ii at the home depot/i,
     })
     await user.click(detailsButton)
 
@@ -743,22 +807,27 @@ describe("App routes", () => {
       name: /experience details/i,
     })
     const backButton = screen.getByRole("button", {
-      name: /hide details for software engineer at the home depot/i,
+      name: /hide details for software engineer ii at the home depot/i,
     })
     const copyButton = screen.getByRole("button", {
-      name: /copy software engineer details/i,
+      name: /copy software engineer ii details/i,
     })
 
     expect(detailsRegion).toBeInTheDocument()
+    expect(
+      screen.getByText(/productionized a daily order-reconciliation process/i)
+    ).toBeInTheDocument()
+    expect(screen.getByText(/cloud sql to cloud spanner/i)).toBeInTheDocument()
+    expect(screen.getByText(/nodeport usage/i)).toBeInTheDocument()
     await waitFor(() => expect(backButton).toHaveFocus())
 
     await user.click(copyButton)
 
     expect(clipboardWriteMock).toHaveBeenCalledWith(
-      expect.stringContaining("Improved scalability")
+      expect.stringContaining("Productionized a daily order-reconciliation process")
     )
     expect(screen.getByRole("status")).toHaveTextContent(
-      /software engineer details copied/i
+      /software engineer ii details copied/i
     )
 
     await user.keyboard("{Escape}")
@@ -767,5 +836,41 @@ describe("App routes", () => {
     expect(
       screen.queryByRole("region", { name: /experience details/i })
     ).not.toBeInTheDocument()
+  })
+
+  it("places Software Engineer I above Fintech and expands its full accomplishments", async () => {
+    const user = userEvent.setup()
+    renderRoute("/experience")
+
+    await screen.findByRole("heading", { name: /work experience/i })
+    const softwareEngineerOneHeading = screen.getByRole("heading", {
+      name: "Software Engineer I",
+    })
+    const fintechHeading = screen.getByRole("heading", {
+      name: "Frontend Engineer",
+    })
+    const softwareEngineerOneEntry = softwareEngineerOneHeading.closest("article")
+
+    expect(
+      softwareEngineerOneHeading.compareDocumentPosition(fintechHeading) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
+    expect(within(softwareEngineerOneEntry).getAllByRole("listitem")).toHaveLength(5)
+
+    const expandButton = within(softwareEngineerOneEntry).getByRole("button", {
+      name: /view all accomplishments for software engineer i at the home depot/i,
+    })
+    expect(expandButton).toHaveAttribute("aria-expanded", "false")
+
+    await user.click(expandButton)
+
+    expect(within(softwareEngineerOneEntry).getAllByRole("listitem")).toHaveLength(12)
+    expect(expandButton).toHaveAttribute("aria-expanded", "true")
+    expect(expandButton).toHaveTextContent(/show fewer accomplishments/i)
+
+    await user.click(expandButton)
+
+    expect(within(softwareEngineerOneEntry).getAllByRole("listitem")).toHaveLength(5)
+    expect(expandButton).toHaveAttribute("aria-expanded", "false")
   })
 })

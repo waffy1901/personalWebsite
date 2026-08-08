@@ -4,3 +4,8 @@ node_modules
 .qodo
 .netlify/
 handoff.md
+.tokensave/
+
+# Machine-specific Codex/Headroom configuration
+.codex/config.toml
+.codex/hooks.json

@@ -1,22 +1,33 @@
+import { currentEmployment } from "./siteIdentity.js"
+
 export const publicPortfolio = {
-  schemaVersion: "1.0",
-  contentLastReviewed: "2026-07-05",
+  schemaVersion: "1.1",
+  contentLastReviewed: "2026-08-08",
   person: {
-    title: "Software Engineer",
+    title: currentEmployment.currentTitle,
     location: "United States",
     summary:
-      "Software engineer focused on platform reliability, Kubernetes operations, deployment automation, observability, incident response, and high-throughput production systems.",
+      "Software Engineer II focused on platform reliability, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.",
     currentRole: {
-      title: "Software Engineer",
-      organization: "The Home Depot",
+      title: currentEmployment.currentTitle,
+      organization: currentEmployment.organization,
+      startDate: currentEmployment.roleHistory[0].startDate,
       focus: [
-        "Platform reliability",
-        "Kubernetes autoscaling",
+        "Production workflow automation",
+        "Kubernetes CronJobs",
+        "Cloud Spanner migrations",
+        "Workload Identity and least-privilege IAM",
         "Deployment automation",
-        "Observability",
-        "Incident response",
       ],
     },
+    roleHistory: currentEmployment.roleHistory.map(
+      ({ title, startDate, endDate }) => ({
+        title,
+        organization: currentEmployment.organization,
+        startDate,
+        endDate,
+      })
+    ),
     education: {
       institution: "Georgia Institute of Technology",
       degree: "Bachelor of Science in Computer Science",
@@ -39,6 +50,7 @@ export const publicPortfolio = {
         "Java",
         "Python",
         "FastAPI",
+        "Cloud Spanner",
         "Cassandra",
         "Elasticsearch",
         "BigQuery",
@@ -55,6 +67,9 @@ export const publicPortfolio = {
         "Terraform",
         "cdk8s",
         "Spinnaker",
+        "Kubernetes CronJobs",
+        "Workload Identity",
+        "Secret Manager / External Secrets",
         "Docker",
         "CI/CD",
       ],
@@ -106,6 +121,7 @@ export const publicPortfolio = {
     "Cassandra",
     "Elasticsearch",
     "BigQuery",
+    "Cloud Spanner",
     "Incident response",
     "Observability",
     "Deployment automation",
@@ -122,6 +138,9 @@ export const publicPortfolio = {
     "Credential rotation",
     "CVE remediation",
     "Container build hardening",
+    "Kubernetes CronJobs",
+    "Workload Identity",
+    "Cloud Spanner migrations",
     "Cassandra",
     "Elasticsearch",
     "BigQuery",

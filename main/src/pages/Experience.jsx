@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId, useState } from "react";
 import { HiCog, HiLockClosed, HiServer, HiShieldCheck } from "react-icons/hi";
 import ExperienceCard from "../components/ExperienceCard";
 import {
@@ -47,15 +47,26 @@ const impactMetrics = [
 ];
 
 const timelineRankById = {
-  "fintech-gt-frontend-engineer": 0,
-  "home-depot-intern-2024": 1,
-  "cdc-project-manager-full-stack-developer": 2,
-  "home-depot-intern-2023": 3,
-  "gt-undergraduate-teaching-assistant": 4,
-  "landis-gyr-firmware-intern": 5,
+  "home-depot-software-engineer-i": 0,
+  "fintech-gt-frontend-engineer": 1,
+  "home-depot-intern-2024": 2,
+  "cdc-project-manager-full-stack-developer": 3,
+  "home-depot-intern-2023": 4,
+  "gt-undergraduate-teaching-assistant": 5,
+  "landis-gyr-firmware-intern": 6,
 };
 
 function TimelineEntry({ experience }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const accomplishmentsId = useId();
+  const previewCount = experience.timelinePreviewCount ?? 3;
+  const canExpand = Boolean(
+    experience.timelineExpandable && experience.bullets.length > previewCount
+  );
+  const visibleBullets = isExpanded
+    ? experience.bullets
+    : experience.bullets.slice(0, previewCount);
+
   return (
     <article className="relative border-l border-slate-300 pb-8 pl-6 last:pb-0">
       <span className="absolute -left-2 top-1 h-4 w-4 rounded-full border-2 border-[#F4F1EA] bg-[#2563EB]" />
@@ -69,13 +80,25 @@ function TimelineEntry({ experience }) {
           <p>{experience.location}</p>
         </div>
       </div>
-      <ul className="mt-4 space-y-2">
-        {experience.bullets.slice(0, 3).map((bullet) => (
+      <ul id={canExpand ? accomplishmentsId : undefined} className="mt-4 space-y-2">
+        {visibleBullets.map((bullet) => (
           <li key={bullet} className="text-sm leading-relaxed text-slate-600">
             {bullet}
           </li>
         ))}
       </ul>
+      {canExpand ? (
+        <button
+          type="button"
+          aria-expanded={isExpanded}
+          aria-controls={accomplishmentsId}
+          aria-label={`${isExpanded ? "Show fewer" : "View all"} accomplishments for ${experience.title} at ${experience.company}`}
+          className="mt-4 text-sm font-black text-[#1D4ED8] underline decoration-2 underline-offset-4 transition hover:text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+          onClick={() => setIsExpanded((expanded) => !expanded)}
+        >
+          {isExpanded ? "Show fewer accomplishments" : "View all accomplishments"}
+        </button>
+      ) : null}
     </article>
   );
 }
