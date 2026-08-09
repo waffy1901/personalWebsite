@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=22.22.0"
+    "node": ">=22.22.2"
   },
   "dependencies": {
     "@formspree/react": "^3.0.0",
@@ -45,7 +45,7 @@
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^7.0.0",
     "globals": "^17.7.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "tailwindcss": "^4.3.3",
     "vite": "^8.1.0",
     "vitest": "^4.1.7"
