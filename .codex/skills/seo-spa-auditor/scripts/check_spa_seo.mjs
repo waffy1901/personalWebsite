@@ -21,7 +21,7 @@ const caseStudyRoutes = extract(caseStudySeo, /slug:\s*"([^"]+)"/g).map((slug) =
 const routes = unique([...literalRoutes, ...caseStudyRoutes])
 
 for (const route of routes) {
-  const url = route === "/" ? "https://waffy.dev/" : `https://waffy.dev${route}`
+  const url = route === "/" ? "https://waffy.dev/" : `https://waffy.dev${route}/`
   if (!sitemap.includes(`<loc>${url}</loc>`)) errors.push(`sitemap.xml missing ${url}`)
 }
 

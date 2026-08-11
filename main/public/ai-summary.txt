@@ -264,7 +264,7 @@ written around production constraints, technical choices, and measurable
 outcomes.
 
 Kubernetes Autoscaling for Transaction-Critical Services:
-* URL: https://waffy.dev/case-studies/kubernetes-autoscaling
+* URL: https://waffy.dev/case-studies/kubernetes-autoscaling/
 * Organization: The Home Depot
 * Timeframe: 2025
 * Summary: Validated and deployed Horizontal Pod Autoscaling (HPA) for a
@@ -276,7 +276,7 @@ Kubernetes Autoscaling for Transaction-Critical Services:
   Prometheus/PromQL, k6, Postman
 
 Legacy Deployment Recovery and Credential Rotation:
-* URL: https://waffy.dev/case-studies/legacy-deployment-recovery
+* URL: https://waffy.dev/case-studies/legacy-deployment-recovery/
 * Organization: The Home Depot
 * Timeframe: 2026
 * Summary: Rebuilt deployment workflows for abandoned Java 1.8 Tomcat services
@@ -287,7 +287,7 @@ Legacy Deployment Recovery and Credential Rotation:
 * Stack: Java 1.8, Tomcat, Cassandra, CI/CD, Spinnaker, Docker, Artifactory
 
 CDC Data Reconciliation Platform:
-* URL: https://waffy.dev/case-studies/cdc-data-reconciliation
+* URL: https://waffy.dev/case-studies/cdc-data-reconciliation/
 * Organization: Centers for Disease Control and Prevention
 * Timeframe: 2023-2024
 * Summary: Led a team of six building a full-stack reconciliation platform for
@@ -361,29 +361,30 @@ React Router and publishes the following primary routes:
 * / - Home: Software engineering portfolio for Waffy Ahmed, focused on
   reliability, Kubernetes, deployment automation, observability, and
   high-throughput systems.
-* /case-studies - Case Studies: Engineering case studies covering Kubernetes
+* /case-studies/ - Case Studies: Engineering case studies covering Kubernetes
   autoscaling, legacy deployment recovery, and CDC data reconciliation work.
-* /case-studies/kubernetes-autoscaling - Kubernetes Autoscaling for
+* /case-studies/kubernetes-autoscaling/ - Kubernetes Autoscaling for
   Transaction-Critical Services: Validated and deployed Horizontal Pod
   Autoscaling (HPA) for a high-throughput service previously capped at static
   capacity, improving latency, errors, throughput, and CPU efficiency under
   production traffic.
-* /case-studies/legacy-deployment-recovery - Legacy Deployment Recovery and
+* /case-studies/legacy-deployment-recovery/ - Legacy Deployment Recovery and
   Credential Rotation: Rebuilt deployment workflows for abandoned Java 1.8
   Tomcat services so mission-critical repositories could support zero-downtime
   Cassandra credential rotation.
-* /case-studies/cdc-data-reconciliation - CDC Data Reconciliation Platform:
+* /case-studies/cdc-data-reconciliation/ - CDC Data Reconciliation Platform:
   Led a team of six building a full-stack reconciliation platform for
   infectious disease case-count discrepancies between state health departments
   and CDC datasets.
-* /experience - Experience: Professional experience across platform
+* /experience/ - Experience: Professional experience across platform
   reliability, production operations, infrastructure, deployment automation,
   and full-stack engineering.
-* /projects - Projects: Selected software projects spanning public health data
-  reconciliation, mobile job search tooling, and campus discovery workflows.
-* /resume - Resume: Resume preview and PDF download for Waffy Ahmed, software
+* /projects/ - Projects: Selected software projects spanning public health
+  data reconciliation, mobile job search tooling, and campus discovery
+  workflows.
+* /resume/ - Resume: Resume preview and PDF download for Waffy Ahmed, software
   engineer focused on reliability and production systems.
-* /contact - Contact: Contact Waffy Ahmed by form, email, LinkedIn, or GitHub
+* /contact/ - Contact: Contact Waffy Ahmed by form, email, LinkedIn, or GitHub
   for engineering opportunities and professional conversations.
 * /ai-summary.txt - this AI-readable portfolio summary.
 * /llms.txt - a short LLM-oriented entry point linking to canonical sources.
@@ -449,5 +450,5 @@ Public discovery links:
 * /llms.txt - https://waffy.dev/llms.txt
 * /portfolio.json - https://waffy.dev/portfolio.json
 * /sitemap.xml - https://waffy.dev/sitemap.xml
-* /contact - https://waffy.dev/contact
+* /contact/ - https://waffy.dev/contact/
 * Email link - mailto:waffyahmed@gmail.com

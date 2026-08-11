@@ -43,12 +43,12 @@ function App() {
             <Route caseSensitive path="/case-studies/:slug" element={<CaseStudy />} />
             <Route caseSensitive path="/experience" element={<Experience />} />
             <Route caseSensitive path="/projects" element={<Projects />} />
-            <Route caseSensitive path="/Resume" element={<Navigate to="/resume" replace />} />
-            <Route caseSensitive path="/Contact" element={<Navigate to="/contact" replace />} />
-            <Route caseSensitive path="/CaseStudies" element={<Navigate to="/case-studies" replace />} />
-            <Route caseSensitive path="/Case-Studies" element={<Navigate to="/case-studies" replace />} />
-            <Route caseSensitive path="/Experience" element={<Navigate to="/experience" replace />} />
-            <Route caseSensitive path="/Projects" element={<Navigate to="/projects" replace />} />
+            <Route caseSensitive path="/Resume" element={<Navigate to="/resume/" replace />} />
+            <Route caseSensitive path="/Contact" element={<Navigate to="/contact/" replace />} />
+            <Route caseSensitive path="/CaseStudies" element={<Navigate to="/case-studies/" replace />} />
+            <Route caseSensitive path="/Case-Studies" element={<Navigate to="/case-studies/" replace />} />
+            <Route caseSensitive path="/Experience" element={<Navigate to="/experience/" replace />} />
+            <Route caseSensitive path="/Projects" element={<Navigate to="/projects/" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

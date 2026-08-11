@@ -102,19 +102,19 @@ const autoscalingNodes = [
 const routeCards = [
   {
     label: "Case Studies",
-    to: "/case-studies",
+    to: "/case-studies/",
     title: "Production outcomes",
     detail: "Reliability, deployment recovery, and data systems with measurable results.",
   },
   {
     label: "Experience",
-    to: "/experience",
+    to: "/experience/",
     title: "Career story",
     detail: "Platform ownership, release governance, infrastructure auth, and recovery work.",
   },
   {
     label: "Projects",
-    to: "/projects",
+    to: "/projects/",
     title: "Build portfolio",
     detail: "Full-stack and mobile projects shaped around practical workflows.",
   },
@@ -162,7 +162,7 @@ function Home() {
                     <FaDownload className="mr-2" aria-hidden="true" />
                     Download Resume
                   </a>
-                  <Link to="/contact" className="mc-button-secondary">
+                  <Link to="/contact/" className="mc-button-secondary">
                     Contact
                     <FaArrowRight className="ml-2" aria-hidden="true" />
                   </Link>
@@ -225,7 +225,7 @@ function Home() {
               scaling, improving latency, errors, throughput, and CPU efficiency
               under production traffic.
             </p>
-            <Link to="/case-studies/kubernetes-autoscaling" className="mc-button-primary mt-7">
+            <Link to="/case-studies/kubernetes-autoscaling/" className="mc-button-primary mt-7">
               Read the case study
               <FaArrowRight className="ml-2" aria-hidden="true" />
             </Link>

@@ -5,11 +5,11 @@ import {
   toAbsoluteUrl,
 } from "../src/data/seo.js"
 
-const routes = routeMetadata.map(({ path, title, description }) => ({
+const routes = routeMetadata.map(({ path, canonicalPath, title, description }) => ({
   path,
   title,
   description,
-  canonicalUrl: toAbsoluteUrl(path),
+  canonicalUrl: toAbsoluteUrl(canonicalPath),
 }))
 
 process.stdout.write(

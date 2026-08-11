@@ -22,6 +22,9 @@ import {
   defaultRouteMetadata,
   getRouteMetadata,
   routeMetadata,
+  sitemapRoutes,
+  toCanonicalRoutePath,
+  toCanonicalRouteUrl,
 } from "./data/seo.js"
 
 const formspreeSubmitMock = vi.hoisted(() =>
@@ -184,7 +187,7 @@ describe("App routes", () => {
     })
     expect(firstCaseStudyLink).toHaveAttribute(
       "href",
-      "/case-studies/kubernetes-autoscaling"
+      "/case-studies/kubernetes-autoscaling/"
     )
   })
 
@@ -211,7 +214,7 @@ describe("App routes", () => {
     )
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://waffy.dev/case-studies/kubernetes-autoscaling"
+      "https://waffy.dev/case-studies/kubernetes-autoscaling/"
     )
     expect(document.querySelector('meta[property="og:title"]')).toHaveAttribute(
       "content",
@@ -232,7 +235,7 @@ describe("App routes", () => {
     )
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://waffy.dev/projects"
+      "https://waffy.dev/projects/"
     )
     expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
       "content",
@@ -240,19 +243,30 @@ describe("App routes", () => {
     )
   })
 
-  it("matches known trailing-slash paths without masking unknown routes", () => {
-    routeMetadata
-      .filter((route) => route.path !== "/")
-      .forEach((route) => {
-        expect(getRouteMetadata(`${route.path}/`)).toBe(route)
-      })
+  it("keeps route lookup slashless while publishing one canonical trailing slash", () => {
+    for (const route of routeMetadata) {
+      expect(route.canonicalPath).toBe(toCanonicalRoutePath(route.path))
+      expect(toCanonicalRoutePath(route.canonicalPath)).toBe(
+        route.canonicalPath
+      )
+
+      if (route.path !== "/") {
+        expect(getRouteMetadata(route.canonicalPath)).toBe(route)
+      }
+    }
 
     expect(getRouteMetadata("/missing-page/")).toBe(defaultRouteMetadata)
+    expect(sitemapRoutes).toEqual(
+      routeMetadata.map((route) => route.canonicalPath)
+    )
+    expect(toCanonicalRouteUrl("/projects///")).toBe(
+      "https://waffy.dev/projects/"
+    )
   })
 
   it("sends analytics page views when analytics is configured", async () => {
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
-    renderRoute("/projects")
+    renderRoute("/projects/")
 
     await waitFor(() =>
       expect(document.getElementById("google-analytics-script")).toHaveAttribute(
@@ -268,7 +282,7 @@ describe("App routes", () => {
             "event",
             "page_view",
             expect.objectContaining({
-              page_path: "/projects",
+              page_path: "/projects/",
               send_to: "G-TEST123",
             }),
           ],
@@ -280,7 +294,7 @@ describe("App routes", () => {
   it("excludes query strings and fragments from analytics page views", async () => {
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     renderBrowserRoute(
-      "/projects?email=alice%40example.com&token=reset-secret#access_token=fragment-secret"
+      "/projects/?email=alice%40example.com&token=reset-secret#access_token=fragment-secret"
     )
 
     await waitFor(() => expect(getAnalyticsEvents("page_view")).toHaveLength(1))
@@ -289,8 +303,8 @@ describe("App routes", () => {
 
     expect(pageViewParams).toEqual(
       expect.objectContaining({
-        page_location: "http://localhost:3000/projects",
-        page_path: "/projects",
+        page_location: "http://localhost:3000/projects/",
+        page_path: "/projects/",
         send_to: "G-TEST123",
       })
     )
@@ -648,7 +662,7 @@ describe("App routes", () => {
     )
 
     for (const caseStudy of caseStudies) {
-      const caseStudyUrl = `https://waffy.dev/case-studies/${caseStudy.slug}`
+      const caseStudyUrl = `https://waffy.dev/case-studies/${caseStudy.slug}/`
 
       expect(sitemap).toContain(caseStudyUrl)
       expect(llms).toContain(caseStudyUrl)
@@ -725,7 +739,7 @@ describe("App routes", () => {
     )
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
       "href",
-      "https://waffy.dev/projects"
+      "https://waffy.dev/projects/"
     )
   })
 
@@ -766,7 +780,7 @@ describe("App routes", () => {
           `${route.path} ${route.path}/index.html 200`
         )
       })
-    expect(redirectLines).toContain("/Projects /projects 301")
+    expect(redirectLines).toContain("/Projects /projects/ 301")
     expect(redirectLines.at(-1)).toBe("/* /404.html 404")
 
     const notFoundHtml = readFileSync("public/404.html", "utf8")

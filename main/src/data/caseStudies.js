@@ -110,7 +110,7 @@ export const caseStudies = [
     links: [
       {
         label: "View related experience",
-        to: "/experience",
+        to: "/experience/",
       },
     ],
   },
@@ -194,7 +194,7 @@ export const caseStudies = [
     links: [
       {
         label: "View related experience",
-        to: "/experience",
+        to: "/experience/",
       },
     ],
   },
@@ -282,7 +282,7 @@ export const caseStudies = [
       },
       {
         label: "View projects",
-        to: "/projects",
+        to: "/projects/",
       },
     ],
   },

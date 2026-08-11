@@ -5,12 +5,12 @@ http://www.waffy.dev/* https://waffy.dev/:splat 301!
 /waffyahmedresume.pdf /waffyAhmedResume.pdf 301
 
 # Legacy app routes.
-/Resume /resume 301
-/Contact /contact 301
-/CaseStudies /case-studies 301
-/Case-Studies /case-studies 301
-/Experience /experience 301
-/Projects /projects 301
+/Resume /resume/ 301
+/Contact /contact/ 301
+/CaseStudies /case-studies/ 301
+/Case-Studies /case-studies/ 301
+/Experience /experience/ 301
+/Projects /projects/ 301
 
 # Canonical React app routes.
 /case-studies /case-studies/index.html 200

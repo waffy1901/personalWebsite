@@ -107,7 +107,7 @@ const validateRoute = (route) => {
 const renderRouteHtml = (templateHtml, route) => {
   validateRoute(route)
 
-  const canonicalUrl = toAbsoluteUrl(route.path)
+  const canonicalUrl = toAbsoluteUrl(route.canonicalPath)
   const imageUrl = toAbsoluteUrl(siteMetadata.imagePath)
 
   let html = templateHtml
