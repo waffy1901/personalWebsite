@@ -25,6 +25,11 @@ export const siteMetadata = {
   ],
 }
 
+export const toCanonicalRoutePath = (routePath = "/") => {
+  const slashlessPath = routePath.replace(/\/+$/, "")
+  return slashlessPath ? `${slashlessPath}/` : "/"
+}
+
 export const routeMetadata = [
   {
     path: "/",
@@ -66,7 +71,10 @@ export const routeMetadata = [
     description:
       "Contact Waffy Ahmed by form, email, LinkedIn, or GitHub for engineering opportunities and professional conversations.",
   },
-]
+].map((route) => ({
+  ...route,
+  canonicalPath: toCanonicalRoutePath(route.path),
+}))
 
 export const defaultRouteMetadata = {
   title: "Page Not Found | Waffy Ahmed",
@@ -91,4 +99,7 @@ export const toAbsoluteUrl = (path = "/") => {
   return path === "/" ? `${baseUrl}/` : `${baseUrl}${path}`
 }
 
-export const sitemapRoutes = routeMetadata.map((route) => route.path)
+export const toCanonicalRouteUrl = (routePath = "/") =>
+  toAbsoluteUrl(toCanonicalRoutePath(routePath))
+
+export const sitemapRoutes = routeMetadata.map((route) => route.canonicalPath)

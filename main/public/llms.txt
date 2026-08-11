@@ -18,14 +18,14 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer II 
 ## Key Pages
 
 - Home: https://waffy.dev/
-- Case Studies: https://waffy.dev/case-studies
-- Kubernetes Autoscaling for Transaction-Critical Services: https://waffy.dev/case-studies/kubernetes-autoscaling
-- Legacy Deployment Recovery and Credential Rotation: https://waffy.dev/case-studies/legacy-deployment-recovery
-- CDC Data Reconciliation Platform: https://waffy.dev/case-studies/cdc-data-reconciliation
-- Experience: https://waffy.dev/experience
-- Projects: https://waffy.dev/projects
-- Resume: https://waffy.dev/resume
-- Contact: https://waffy.dev/contact
+- Case Studies: https://waffy.dev/case-studies/
+- Kubernetes Autoscaling for Transaction-Critical Services: https://waffy.dev/case-studies/kubernetes-autoscaling/
+- Legacy Deployment Recovery and Credential Rotation: https://waffy.dev/case-studies/legacy-deployment-recovery/
+- CDC Data Reconciliation Platform: https://waffy.dev/case-studies/cdc-data-reconciliation/
+- Experience: https://waffy.dev/experience/
+- Projects: https://waffy.dev/projects/
+- Resume: https://waffy.dev/resume/
+- Contact: https://waffy.dev/contact/
 
 ## High-Signal Topics
 

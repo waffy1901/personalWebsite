@@ -4,7 +4,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 
 sys.dont_write_bytecode = True
@@ -22,7 +22,7 @@ EXPECTED = CHECKER.RouteMetadataExpectation(
     path="/projects",
     title="Projects | Waffy Ahmed",
     description="Selected software projects.",
-    canonical_url="https://waffy.dev/projects",
+    canonical_url="https://waffy.dev/projects/",
     image_url="https://waffy.dev/og-image-v2.png",
 )
 
@@ -107,7 +107,7 @@ class DeployedRoutesTest(unittest.TestCase):
         args = types.SimpleNamespace(timeout=10, retries=0, retry_delay=0)
         failures = []
 
-        with patch.object(CHECKER, "fetch", return_value=response):
+        with patch.object(CHECKER, "fetch", return_value=response) as fetch_mock:
             CHECKER.check_shell(
                 "https://preview.example",
                 "/projects/",
@@ -116,11 +116,129 @@ class DeployedRoutesTest(unittest.TestCase):
                 failures,
             )
 
+        fetch_mock.assert_called_once_with(
+            "https://preview.example/projects/",
+            10,
+            0,
+            0,
+            follow=False,
+        )
         self.assertEqual(len(failures), 1)
         self.assertIn(" title mismatch:", failures[0])
 
+    def test_canonical_route_requires_slashless_301_and_direct_trailing_200(self):
+        responses = [
+            CHECKER.CurlResponse(
+                status=301,
+                effective_url="https://preview.example/projects",
+                redirect_url="https://preview.example/projects/",
+                body="",
+            ),
+            CHECKER.CurlResponse(
+                status=200,
+                effective_url="https://preview.example/projects/",
+                redirect_url="",
+                body=shell_html(),
+            ),
+        ]
+        args = types.SimpleNamespace(timeout=10, retries=0, retry_delay=0)
+        failures = []
+
+        with patch.object(CHECKER, "fetch", side_effect=responses) as fetch_mock:
+            CHECKER.check_canonical_route(
+                "https://preview.example",
+                "/projects",
+                EXPECTED,
+                args,
+                failures,
+            )
+
+        self.assertEqual(failures, [])
+        self.assertEqual(
+            fetch_mock.call_args_list,
+            [
+                call(
+                    "https://preview.example/projects",
+                    10,
+                    0,
+                    0,
+                    head=True,
+                ),
+                call(
+                    "https://preview.example/projects/",
+                    10,
+                    0,
+                    0,
+                    follow=False,
+                ),
+            ],
+        )
+
+    def test_canonical_route_rejects_a_redirect_from_the_trailing_path(self):
+        responses = [
+            CHECKER.CurlResponse(
+                status=301,
+                effective_url="https://preview.example/projects",
+                redirect_url="https://preview.example/projects/",
+                body="",
+            ),
+            CHECKER.CurlResponse(
+                status=301,
+                effective_url="https://preview.example/projects/",
+                redirect_url="https://preview.example/projects//",
+                body="",
+            ),
+        ]
+        args = types.SimpleNamespace(timeout=10, retries=0, retry_delay=0)
+        failures = []
+
+        with patch.object(CHECKER, "fetch", side_effect=responses):
+            CHECKER.check_canonical_route(
+                "https://preview.example",
+                "/projects",
+                EXPECTED,
+                args,
+                failures,
+            )
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn(
+            "Expected HTTP 200 from https://preview.example/projects/",
+            failures[0],
+        )
+
+    def test_legacy_redirect_targets_the_canonical_route_in_one_hop(self):
+        rule = CHECKER.RedirectRule("/Projects", "/projects/", 301)
+        responses = [
+            CHECKER.CurlResponse(
+                status=301,
+                effective_url="https://preview.example/Projects",
+                redirect_url="https://preview.example/projects/",
+                body="",
+            ),
+            CHECKER.CurlResponse(
+                status=200,
+                effective_url="https://preview.example/projects/",
+                redirect_url="",
+                body=shell_html(),
+            ),
+        ]
+        args = types.SimpleNamespace(timeout=10, retries=0, retry_delay=0)
+        failures = []
+
+        with patch.object(CHECKER, "fetch", side_effect=responses):
+            CHECKER.check_legacy_redirect(
+                "https://preview.example",
+                rule,
+                {"/projects": EXPECTED},
+                args,
+                failures,
+            )
+
+        self.assertEqual(failures, [])
+
     def test_source_metadata_inventory_matches_canonical_rewrites(self):
-        canonical_routes, _ = CHECKER.load_redirect_rules(REPO_ROOT)
+        canonical_routes, local_redirects = CHECKER.load_redirect_rules(REPO_ROOT)
         route_metadata = CHECKER.load_route_metadata(REPO_ROOT)
 
         self.assertEqual(
@@ -129,7 +247,11 @@ class DeployedRoutesTest(unittest.TestCase):
         )
         self.assertEqual(
             route_metadata["/projects"].canonical_url,
-            "https://waffy.dev/projects",
+            "https://waffy.dev/projects/",
+        )
+        self.assertIn(
+            CHECKER.RedirectRule("/Projects", "/projects/", 301),
+            local_redirects,
         )
 
 

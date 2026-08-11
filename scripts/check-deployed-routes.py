@@ -224,6 +224,10 @@ def site_url(origin, path):
     return f"{origin}{path}"
 
 
+def normalize_route_path(path):
+    return "/" if path == "/" else path.rstrip("/")
+
+
 def fetch(url, timeout, retries, retry_delay, *, follow=False, head=False):
     command = [
         "curl",
@@ -340,6 +344,7 @@ def check_shell(
     failures,
     *,
     expected_effective_path=None,
+    follow=False,
 ):
     request_url = site_url(origin, request_path)
     expected_effective = site_url(
@@ -352,7 +357,7 @@ def check_shell(
             args.timeout,
             args.retries,
             args.retry_delay,
-            follow=True,
+            follow=follow,
         )
     except RuntimeError as error:
         failures.append(str(error))
@@ -402,8 +407,7 @@ def check_canonical_route(origin, route, expected_metadata, args, failures):
 def check_legacy_redirect(origin, rule, route_metadata, args, failures):
     source_url = site_url(origin, rule.source)
     expected_redirect = site_url(origin, rule.destination)
-    served_route = f"{rule.destination}/"
-    accepted_redirects = {expected_redirect, site_url(origin, served_route)}
+    metadata_path = normalize_route_path(rule.destination)
 
     try:
         response = fetch(
@@ -421,21 +425,21 @@ def check_legacy_redirect(origin, rule, route_metadata, args, failures):
         failures.append(
             f"Expected HTTP {rule.status} from {source_url}, got {response.status}."
         )
-    if response.redirect_url not in accepted_redirects:
+    if response.redirect_url != expected_redirect:
         failures.append(
-            f"{source_url} redirect mismatch: expected one of "
-            f"{sorted(accepted_redirects)!r}, "
+            f"{source_url} redirect mismatch: expected {expected_redirect!r}, "
             f"got {response.redirect_url or '<missing>'!r}."
         )
 
-    if rule.destination in route_metadata:
+    if metadata_path in route_metadata:
         check_shell(
             origin,
             rule.source,
-            route_metadata[rule.destination],
+            route_metadata[metadata_path],
             args,
             failures,
-            expected_effective_path=served_route,
+            expected_effective_path=rule.destination,
+            follow=True,
         )
 
 
@@ -513,7 +517,9 @@ def main():
 
     canonical_route_set = set(canonical_routes)
     app_redirects = [
-        rule for rule in local_redirects if rule.destination in canonical_route_set
+        rule
+        for rule in local_redirects
+        if normalize_route_path(rule.destination) in canonical_route_set
     ]
     for rule in app_redirects:
         check_legacy_redirect(

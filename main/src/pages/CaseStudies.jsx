@@ -78,7 +78,7 @@ function CaseStudyCard({ caseStudy, featured = false }) {
         </p>
 
         <Link
-          to={`/case-studies/${caseStudy.slug}`}
+          to={`/case-studies/${caseStudy.slug}/`}
           onClick={() =>
             trackEvent("case_study_card_click", {
               case_study_slug: caseStudy.slug,

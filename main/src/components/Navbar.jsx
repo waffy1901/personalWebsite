@@ -3,11 +3,11 @@ import { NavLink, useLocation } from "react-router";
 
 const navItems = [
   { to: "/", label: "Home" },
-  { to: "/projects", label: "Projects" },
-  { to: "/experience", label: "Experience" },
-  { to: "/case-studies", label: "Case Studies", shortLabel: "Cases" },
-  { to: "/resume", label: "Resume" },
-  { to: "/contact", label: "Contact" },
+  { to: "/projects/", label: "Projects" },
+  { to: "/experience/", label: "Experience" },
+  { to: "/case-studies/", label: "Case Studies", shortLabel: "Cases" },
+  { to: "/resume/", label: "Resume" },
+  { to: "/contact/", label: "Contact" },
 ];
 
 function Navbar() {

@@ -57,7 +57,7 @@ function CaseStudy() {
     <PageShell>
       <PageContainer>
         <Link
-          to="/case-studies"
+          to="/case-studies/"
           className="mb-5 inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-black text-[#0B1220] transition hover:border-[#2563EB]/50 hover:bg-[#E8EDF2] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
         >
           <FaArrowLeft className="mr-2" aria-hidden="true" />

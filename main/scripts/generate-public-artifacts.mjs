@@ -194,6 +194,7 @@ const buildStructuredPortfolio = (model) => {
     socialLinks,
     profile,
     toAbsoluteUrl,
+    toCanonicalRouteUrl,
   } = model
   const socialById = Object.fromEntries(
     socialLinks.map((link) => [link.id, link.href])
@@ -233,7 +234,7 @@ const buildStructuredPortfolio = (model) => {
       timeframe: caseStudy.timeframe,
       category: caseStudy.category,
       summary: caseStudy.summary,
-      url: toAbsoluteUrl(`/case-studies/${caseStudy.slug}`),
+      url: toCanonicalRouteUrl(`/case-studies/${caseStudy.slug}`),
       metrics: caseStudy.metrics.map(metricLabel),
       stack: caseStudy.stack,
     })),
@@ -249,7 +250,13 @@ const buildStructuredPortfolio = (model) => {
 }
 
 const buildJsonLd = (model, portfolio) => {
-  const { caseStudies, profile, siteMetadata, toAbsoluteUrl } = model
+  const {
+    caseStudies,
+    profile,
+    siteMetadata,
+    toAbsoluteUrl,
+    toCanonicalRouteUrl,
+  } = model
 
   return {
     "@context": "https://schema.org",
@@ -306,7 +313,7 @@ const buildJsonLd = (model, portfolio) => {
           ...caseStudies.map((caseStudy) => ({
             "@type": "Article",
             headline: caseStudy.title,
-            url: toAbsoluteUrl(`/case-studies/${caseStudy.slug}`),
+            url: toCanonicalRouteUrl(`/case-studies/${caseStudy.slug}`),
             description: caseStudy.summary,
           })),
         ],
@@ -316,11 +323,11 @@ const buildJsonLd = (model, portfolio) => {
 }
 
 const buildSitemap = (model) => {
-  const { routeMetadata, toAbsoluteUrl } = model
+  const { routeMetadata, toAbsoluteUrl, toCanonicalRouteUrl } = model
   const publicResources = ["/llms.txt", "/ai-summary.txt", "/portfolio.json"]
   const urlEntries = [
     ...routeMetadata.map((route) => ({
-      url: toAbsoluteUrl(route.path),
+      url: toCanonicalRouteUrl(route.path),
       priority: routePriority(route.path),
     })),
     ...publicResources.map((resourcePath) => ({
@@ -344,11 +351,11 @@ const buildSitemap = (model) => {
 }
 
 const buildLlms = (model, portfolio) => {
-  const { profile, routeMetadata, toAbsoluteUrl } = model
+  const { profile, routeMetadata, toCanonicalRouteUrl } = model
   const currentRoleLabel = `${portfolio.person.currentRole.title} at ${portfolio.person.currentRole.organization}`
   const keyPages = routeMetadata.map((route) => {
     const label = route.path === "/" ? "Home" : titleWithoutSuffix(route.title)
-    return `- ${label}: ${toAbsoluteUrl(route.path)}`
+    return `- ${label}: ${toCanonicalRouteUrl(route.path)}`
   })
 
   return `${[
@@ -400,6 +407,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
     routeMetadata,
     socialLinks,
     toAbsoluteUrl,
+    toCanonicalRouteUrl,
     workExperiences,
   } = model
   const socialById = Object.fromEntries(
@@ -468,7 +476,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
   add(...wrapText(caseStudiesPage.description), "")
   for (const caseStudy of caseStudies) {
     add(`${caseStudy.title}:`)
-    add(...bullet(`URL: ${toAbsoluteUrl(`/case-studies/${caseStudy.slug}`)}`))
+    add(...bullet(`URL: ${toCanonicalRouteUrl(`/case-studies/${caseStudy.slug}`)}`))
     add(...bullet(`Organization: ${caseStudy.organization}`))
     add(...bullet(`Timeframe: ${caseStudy.timeframe}`))
     add(...bullet(`Summary: ${caseStudy.summary}`))
@@ -504,7 +512,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
   )
   for (const route of routeMetadata) {
     const label = route.path === "/" ? "Home" : titleWithoutSuffix(route.title)
-    add(...bullet(`${route.path} - ${label}: ${route.description}`))
+    add(...bullet(`${route.canonicalPath} - ${label}: ${route.description}`))
   }
   add(
     ...bullet("/ai-summary.txt - this AI-readable portfolio summary."),
@@ -539,7 +547,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
     ...bullet(`/llms.txt - ${portfolio.links.llms}`),
     ...bullet(`/portfolio.json - ${portfolio.links.llms.replace("/llms.txt", "/portfolio.json")}`),
     ...bullet(`/sitemap.xml - ${portfolio.links.sitemap}`),
-    ...bullet(`/contact - ${toAbsoluteUrl("/contact")}`),
+    ...bullet(`/contact/ - ${toCanonicalRouteUrl("/contact")}`),
     ...bullet(`Email link - ${socialById.email}`)
   )
 
@@ -596,7 +604,7 @@ const buildRootReadmeBlock = (model, portfolio, packageJson) => {
 }
 
 const buildAppReadmeBlock = (model, portfolio, packageJson) => {
-  const { routeMetadata, toAbsoluteUrl } = model
+  const { routeMetadata, toCanonicalRouteUrl } = model
 
   return [
     "## Generated App Snapshot",
@@ -611,7 +619,7 @@ const buildAppReadmeBlock = (model, portfolio, packageJson) => {
     "",
     ...routeMetadata.map((route) => {
       const label = route.path === "/" ? "Home" : titleWithoutSuffix(route.title)
-      return `- ${route.path} - ${label}: ${toAbsoluteUrl(route.path)}`
+      return `- ${route.canonicalPath} - ${label}: ${toCanonicalRouteUrl(route.path)}`
     }),
     "",
     "**Generated public files:**",
