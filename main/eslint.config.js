@@ -5,7 +5,14 @@ const globals = require("globals")
 
 module.exports = [
   {
-    ignores: ["build/**", "coverage/**", "dist/**", "node_modules/**"],
+    ignores: [
+      "build/**",
+      "coverage/**",
+      "dist/**",
+      "node_modules/**",
+      "playwright-report/**",
+      "test-results/**",
+    ],
   },
   js.configs.recommended,
   {
@@ -52,6 +59,16 @@ module.exports = [
         ...globals.browser,
         ...globals.es2021,
         ...globals.vitest,
+      },
+    },
+  },
+  {
+    files: ["playwright.production.config.js", "e2e/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "commonjs",
+      globals: {
+        ...globals.node,
       },
     },
   },

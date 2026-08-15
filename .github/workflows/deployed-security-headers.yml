@@ -1,4 +1,4 @@
-name: Deployed security headers
+name: Production health
 
 "on":
   schedule:
@@ -9,32 +9,93 @@ permissions:
   contents: read
 
 concurrency:
-  group: deployed-security-headers
+  group: production-health
   cancel-in-progress: false
 
 jobs:
   verify:
-    name: Verify waffy.dev headers
+    name: Verify deployed production contracts
     runs-on: ubuntu-latest
 
     steps:
+      - name: Resolve current ready production deploy
+        id: production
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID secrets are required for production health checks."
+            exit 1
+          fi
+
+          deploy_json="$(curl -fsS \
+            -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
+            "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/deploys?production=true&state=ready&latest-published=true&per_page=1")"
+          deploy_fields="$(printf '%s' "$deploy_json" | python3 -c 'import json, sys; deploys = json.load(sys.stdin); deploy = deploys[0] if deploys else {}; print("\t".join((deploy.get("state", ""), deploy.get("commit_ref", ""), deploy.get("deploy_ssl_url") or deploy.get("ssl_url") or "")))')"
+          IFS=$'\t' read -r deploy_state deploy_commit deploy_url <<< "$deploy_fields"
+
+          if [ "$deploy_state" != "ready" ]; then
+            echo "Netlify did not return a ready production deploy."
+            exit 1
+          fi
+
+          if [[ ! "$deploy_commit" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "Netlify returned an invalid production commit_ref."
+            exit 1
+          fi
+
+          echo "Production deploy is ready for ${deploy_commit}: ${deploy_url}"
+          printf 'commit=%s\n' "$deploy_commit" >> "$GITHUB_OUTPUT"
+          printf 'deploy_url=%s\n' "$deploy_url" >> "$GITHUB_OUTPUT"
+
       - name: Check out repository
         uses: actions/checkout@v7
         with:
           persist-credentials: false
-
-      - name: Test deployed header checker
-        run: python3 scripts/test_deployed_security_headers.py
+          ref: ${{ steps.production.outputs.commit }}
 
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
           node-version: 22.22.3
 
+      - name: Test deployed route checker
+        run: python3 scripts/test_deployed_routes.py
+
+      - name: Test deployed header checker
+        run: python3 scripts/test_deployed_security_headers.py
+
+      - name: Test deployed artifact checker
+        run: python3 scripts/test_deployed_artifacts.py
+
       - name: Verify CSP JSON-LD hash
         run: node .codex/skills/csp-security-header-maintainer/scripts/check_csp_jsonld_hash.mjs "$GITHUB_WORKSPACE"
+
+      - name: Check production routes
+        env:
+          SITE_URL: https://waffy.dev
+        run: python3 scripts/check-deployed-routes.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
 
       - name: Check production headers
         env:
           SITE_URL: https://waffy.dev/
         run: python3 scripts/check-deployed-security-headers.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+
+      - name: Check production artifacts
+        env:
+          SITE_URL: https://waffy.dev/
+        run: python3 scripts/check-deployed-artifacts.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+
+      - name: Summarize production health
+        if: always()
+        env:
+          DEPLOYED_COMMIT: ${{ steps.production.outputs.commit }}
+          PRODUCTION_HEALTH_STATUS: ${{ job.status }}
+        run: |
+          echo "## Production health" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Deployed commit: \`${DEPLOYED_COMMIT:-unresolved}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Site: https://waffy.dev/" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: ${PRODUCTION_HEALTH_STATUS}" >> "$GITHUB_STEP_SUMMARY"

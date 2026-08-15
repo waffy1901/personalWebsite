@@ -2,8 +2,8 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PRs #158, #157, and #156 at current `main` commit `8ab5889bbaad94a1462c6e4b08d3140f57f4ae21`, plus the F-014, F-002, and F-001 remediations on `feat/audit-remediation`<br>
-**Current production release:** `deploy-20260811T011448Z-8ab5889`, release workflow `31448668753`; exact-commit Netlify readiness, app verification, deployed-route checks, and the legacy-domain redirect check passed<br>
+**Reconciled through:** PR #159 at current `main` commit `a01c8283114b84c33474df09ed981b15360cd2a4`<br>
+**Current production release:** `deploy-20260815T003910Z-a01c828`, release workflow `31854220597`; exact-commit Netlify readiness, app verification, deployed-route checks, and the legacy-domain redirect check passed<br>
 **Latest independently maintained full deployed audit:** Aug 1, 2026, at `d3886ac6a8e07b1013867bed25971ca9986c1033`, release `deploy-20260801T170233Z-d3886ac`  
 **Latest supplied external audit:** Aug 8, 2026, against the PR #154 release  
 **Website creation date:** Sep 12, 2024 at 2:17 PM (`2024-09-12T14:17:00-04:00`)  
@@ -26,17 +26,14 @@ The maintained set contains **14 open findings: 1 Medium, 10 Low, and 3
 Informational**. The highest-value work is concentrated in accessibility,
 delivery governance, asset optimization, and GA4 measurement quality.
 
-The Aug 11 PR #156 release kept the production and full repository dependency
-audits clean. The current feature-branch cleanup resolves F-014 by deleting the
-obsolete dev-only advisory exception, so every future moderate-or-higher
-full-tree finding blocks directly. This policy simplification is pending merge and
-deployment; the production checker still contains the dormant exception branch,
-which has no effect while the dependency graph is clean.
+The PR #159 production and full repository dependency audits passed, and the
+Aug 15 release resolves F-014 by deleting the obsolete dev-only advisory
+exception, so every future moderate-or-higher full-tree finding blocks directly.
 
-The current feature-branch frontend work resolves F-002 with WCAG AA contrast
-tokens and dark-surface variants, then resolves F-001 with focused lazy-route
-recovery that preserves navigation and offers retry and home actions. These changes are not
-yet merged or deployed.
+The same release resolves F-002 with WCAG AA contrast tokens and dark-surface
+variants, then resolves F-001 with focused lazy-route recovery that preserves
+navigation and offers retry and home actions. The merged tree is deployed; the
+production HTTP and analytics-disabled local browser evidence is scoped below.
 
 Current strengths include pull-request lint/test/build checks, focused portfolio
 integrity validation, scheduled npm audit and CodeQL, deployment-to-commit
@@ -64,13 +61,23 @@ AI/SEO artifacts, React route splitting, and analytics contract tests.
   Actions update and the PR #156 development-dependency refresh. Workflow
   `31448668753` passed exact-commit app and route verification; the superseded
   PR #157 release run `31447799817` was cancelled.
-- The current feature-branch F-014 cleanup is supported by production and
-  full-tree `npm audit` results plus static script validation. It does not
-  execute the production site or create GA4 traffic and remains pending merge and release.
-- The current feature-branch F-002 and F-001 remediations passed lint, 30
-  tests, the production build, focused performance checks, and local Chromium
-  inspection at 1440px and 390px. GA4 was disabled for browser QA, no contact form was
-  submitted, and no production or deployed-route claim is made.
+- The Aug 15 PR #159 release at
+  `a01c8283114b84c33474df09ed981b15360cd2a4` includes the F-014, F-002, and
+  F-001 remediations. PR npm-audit run `31854084993` passed its production and
+  full-tree phases. Release workflow `31854220597` passed exact-commit app
+  verification, waited for the matching Netlify production deploy, validated
+  deployed routes and the legacy-domain redirect, and created release
+  `deploy-20260815T003910Z-a01c828`.
+- An independent Aug 15 HTTP recheck against `https://waffy.dev/` confirmed
+  canonical and legacy redirects, route-specific initial metadata, the real
+  404 with `noindex, nofollow`, and public assets. HTTP validation did not
+  execute site JavaScript or create GA4 traffic.
+- PR #159 head `4bd4f7bdca94270dc89961bab08bd6ebbccbd827` and merge
+  `a01c8283114b84c33474df09ed981b15360cd2a4` share tree
+  `bd043f09d70dafbdd9b95b480492e7348f6bcdbe`. That tree passed lint, 30 tests,
+  the production build, focused performance checks, and analytics-disabled
+  local Chromium inspection at 1440px and 390px. No contact form was submitted,
+  and no production browser claim is made.
 - HTTP, source, build, npm, and workflow checks do not execute the production
   site JavaScript and should not create GA4 page views.
 - This audit does not establish current Safari/Firefox parity, Lighthouse, field
@@ -276,8 +283,7 @@ full chronology to GitHub and Git history.
 | Aug 9, 2026 | PR #155, `a314d2bfa9ce101e836353c9c668696d4d672d50`, `deploy-20260809T153725Z-a314d2b`, workflow `31321568112` | Upgraded jsdom and aligned the Node runtime; the full dependency audit is clean, exact-commit production route/redirect validation passed, and F-014 now remains only as obsolete exception cleanup. |
 | Aug 11, 2026 | PR #158, `681f10e9d9dd6779f8f92a37a8df14294230121e`, `deploy-20260811T004705Z-681f10e`, workflow `31447166391` | Aligned canonical URLs, redirects, the sitemap, generated artifacts, and internal links on trailing-slash route URLs; exact-commit route, redirect, real-404, and legacy-domain validation passed. |
 | Aug 11, 2026 | PRs #157 and #156, `8ab5889bbaad94a1462c6e4b08d3140f57f4ae21`, `deploy-20260811T011448Z-8ab5889`, workflow `31448668753` | Updated CodeQL Actions and lockfile-only development dependencies; the final release superseded PR #157's cancelled release run and kept the full dependency audit clean. |
-| Aug 11, 2026 | `feat/audit-remediation`, pending merge and release | Removed the obsolete dev-only npm-audit exception so all future moderate-or-higher full-tree findings block directly; production and full-tree audits pass. F-014 is resolved on the feature branch. |
-| Aug 13, 2026 | `feat/audit-remediation`, pending merge and release | Remediated F-002 shared contrast states and added F-001 lazy-route recovery; lint, 30 tests, production build, focused performance checks, and analytics-disabled Chromium QA at 1440px and 390px passed. |
+| Aug 15, 2026 | PR #159, `a01c8283114b84c33474df09ed981b15360cd2a4`, `deploy-20260815T003910Z-a01c828`, workflow `31854220597` | Removed the obsolete dev-only npm-audit exception, remediated shared contrast states, and added lazy-route recovery. Exact-commit release validation, independent production HTTP checks, and analytics-disabled local Chromium QA passed; F-014, F-002, and F-001 are resolved. |
 
 ## Recommended Execution Order
 

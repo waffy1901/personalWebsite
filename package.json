@@ -8,6 +8,7 @@
     "generate:public": "npm --prefix main run generate:public --",
     "lint": "npm --prefix main run lint --",
     "test": "npm --prefix main run test --",
+    "test:e2e:production": "npm --prefix main run test:e2e:production --",
     "preview": "npm --prefix main run preview --"
   }
 }
