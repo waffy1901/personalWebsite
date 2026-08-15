@@ -216,7 +216,7 @@ function Home() {
       <section className="mc-blue-section text-white">
         <PageContainer className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
           <div>
-            <StatusBadge tone="orange">Featured case study</StatusBadge>
+            <StatusBadge tone="orange" surface="dark">Featured case study</StatusBadge>
             <h2 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
               Kubernetes autoscaling for transaction-critical services.
             </h2>

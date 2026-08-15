@@ -2,8 +2,8 @@
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PR #155 at merge commit `a314d2bfa9ce101e836353c9c668696d4d672d50`  
-**Current production release:** `deploy-20260809T153725Z-a314d2b`, release workflow `31321568112`; exact-commit Netlify readiness, app verification, deployed-route checks, and the legacy-domain redirect check passed  
+**Reconciled through:** PRs #158, #157, and #156 at current `main` commit `8ab5889bbaad94a1462c6e4b08d3140f57f4ae21`, plus the F-014, F-002, and F-001 remediations on `feat/audit-remediation`<br>
+**Current production release:** `deploy-20260811T011448Z-8ab5889`, release workflow `31448668753`; exact-commit Netlify readiness, app verification, deployed-route checks, and the legacy-domain redirect check passed<br>
 **Latest independently maintained full deployed audit:** Aug 1, 2026, at `d3886ac6a8e07b1013867bed25971ca9986c1033`, release `deploy-20260801T170233Z-d3886ac`  
 **Latest supplied external audit:** Aug 8, 2026, against the PR #154 release  
 **Website creation date:** Sep 12, 2024 at 2:17 PM (`2024-09-12T14:17:00-04:00`)  
@@ -22,15 +22,21 @@ route-specific initial metadata, generated public artifacts, resume delivery,
 security headers, and core desktop/mobile rendering were healthy at the current
 release snapshot.
 
-The maintained set contains **17 open findings: 3 Medium, 11 Low, and 3
+The maintained set contains **14 open findings: 1 Medium, 10 Low, and 3
 Informational**. The highest-value work is concentrated in accessibility,
-lazy-route failure recovery, development dependency maintenance, delivery
-governance, and GA4 measurement quality.
+delivery governance, asset optimization, and GA4 measurement quality.
 
-The Aug 9 PR #155 production and full repository dependency audits were clean.
-The checker now reports that its temporary dev-only advisory exception can be
-removed. The remaining F-014 work is obsolete policy cleanup, not an active
-production or development vulnerability.
+The Aug 11 PR #156 release kept the production and full repository dependency
+audits clean. The current feature-branch cleanup resolves F-014 by deleting the
+obsolete dev-only advisory exception, so every future moderate-or-higher
+full-tree finding blocks directly. This policy simplification is pending merge and
+deployment; the production checker still contains the dormant exception branch,
+which has no effect while the dependency graph is clean.
+
+The current feature-branch frontend work resolves F-002 with WCAG AA contrast
+tokens and dark-surface variants, then resolves F-001 with focused lazy-route
+recovery that preserves navigation and offers retry and home actions. These changes are not
+yet merged or deployed.
 
 Current strengths include pull-request lint/test/build checks, focused portfolio
 integrity validation, scheduled npm audit and CodeQL, deployment-to-commit
@@ -50,6 +56,21 @@ AI/SEO artifacts, React route splitting, and analytics contract tests.
   lint/tests/build, deployed routes, the real 404, and the legacy-domain
   redirect. The PR checks and current local audit confirmed the cleaned
   dependency graph. No fresh browser or full live-header pass was performed.
+- The Aug 11 PR #158 release aligned trailing-slash canonical routes and passed
+  exact-commit production route, redirect, real-404, and legacy-domain checks at
+  `681f10e9d9dd6779f8f92a37a8df14294230121e` in workflow `31447166391`.
+- The Aug 11 PR #156 release at
+  `8ab5889bbaad94a1462c6e4b08d3140f57f4ae21` includes the PR #157 GitHub
+  Actions update and the PR #156 development-dependency refresh. Workflow
+  `31448668753` passed exact-commit app and route verification; the superseded
+  PR #157 release run `31447799817` was cancelled.
+- The current feature-branch F-014 cleanup is supported by production and
+  full-tree `npm audit` results plus static script validation. It does not
+  execute the production site or create GA4 traffic and remains pending merge and release.
+- The current feature-branch F-002 and F-001 remediations passed lint, 30
+  tests, the production build, focused performance checks, and local Chromium
+  inspection at 1440px and 390px. GA4 was disabled for browser QA, no contact form was
+  submitted, and no production or deployed-route claim is made.
 - HTTP, source, build, npm, and workflow checks do not execute the production
   site JavaScript and should not create GA4 page views.
 - This audit does not establish current Safari/Firefox parity, Lighthouse, field
@@ -60,28 +81,6 @@ AI/SEO artifacts, React route splitting, and analytics contract tests.
   evidence.
 
 ## Current Findings
-
-### F-001 — Lazy-route failure has no recovery UI (Medium)
-
-A rejected dynamic import can remove the React root after navigation to an
-unloaded route. `Suspense` covers loading, but no error boundary preserves the
-shell or offers retry/reload behavior. Add a route-level error boundary and a
-regression test for a rejected lazy import. Current production chunks are
-healthy, so this is a resilience gap rather than a release blocker.
-
-**Surfaces:** `main/src/App.jsx`, `main/src/main.jsx`, `main/src/App.test.jsx`
-
-### F-002 — Shared normal-text treatments fail WCAG AA contrast (Medium)
-
-Confirmed failures include white primary-action text on orange (3.08:1; hover
-4.02:1), green StatusBadge text on the dark Contact surface (about 2.51:1), blue
-eyebrow text on navy (3.62:1), orange StatusBadge text on the composited blue
-section (2.84:1), the blue `Explore` label on `#E8EDF2` (4.39:1), and the small
-slate navbar subtitle on cream (4.22:1). Correct shared tokens for normal,
-hover, focus, disabled, and dark-panel states, then add route-level contrast or
-axe coverage.
-
-**Surfaces:** `main/src/index.css`, `main/src/components/MissionControl.jsx`, `main/src/components/Navbar.jsx`, `main/src/pages/Contact.jsx`, `main/src/pages/Home.jsx`
 
 ### F-003 — Resume PDF lacks structural accessibility (Medium)
 
@@ -165,16 +164,6 @@ portfolio story.
 
 **Surfaces:** `main/scripts/generate-public-artifacts.mjs`, `main/public/ai-summary.txt`, `main/public/portfolio.json`, `main/public/llms.txt`
 
-### F-014 — The dev-audit exception is obsolete (Low)
-
-At the PR #155 lockfile, `npm run audit:ci` passes both production and full-
-repository phases, and the checker reports that its temporary dev-only advisory
-exception can be removed. Delete the unused `allowedDevAdvisory`,
-`allowedDevVulnerabilityPolicy`, `allowedBraceExpansionVersion`, and exception
-matching branch so every future moderate-or-higher finding blocks directly.
-
-**Surfaces:** `main/scripts/check-npm-audit.mjs`, `main/package-lock.json`, `.github/workflows/npm-audit.yml`
-
 ### F-015 — GA4 SPA transitions emit paired page views (Low)
 
 The Aug 1 production browser pass on
@@ -253,11 +242,6 @@ fresh evidence of user impact:
 
 - `/waffyahmedresume.pdf` still serves the correct PDF with HTTP 200 instead of
   redirecting to canonical `/waffyAhmedResume.pdf`.
-- At the PR #155 production release, Netlify redirects slashless application
-  URLs to trailing-slash responses while pages declare slashless canonicals.
-  The current uncommitted migration aligns redirects, canonical metadata,
-  generated artifacts, the sitemap, and internal links locally; retire this
-  dated note after exact post-deploy route validation.
 - Rendered images still benefit from intrinsic dimensions or stable aspect
   ratios, and the repository has no bundle/Lighthouse budget. Current browser
   evidence did not show a layout or bundle regression.
@@ -290,22 +274,22 @@ full chronology to GitHub and Git history.
 | Aug 5, 2026 | PRs #152 and #150, `281df64bdc16c6163dd7d089936e2fe36d982e5a`, `deploy-20260805T232342Z-281df64`, workflow `31056160538` | CodeQL 4.37.4 and Vite tooling updates; the release workflow validated production routes and redirects, but no independent full header/browser pass was performed. |
 | Aug 8, 2026 | PR #154, `06b962eca05c4f80519a35be30cb1f24ef1f70a9`, `deploy-20260808T173357Z-06b962e`, workflow `31269705120` | Portfolio/resume/public-artifact refresh; current source, HTTP, and release provenance verified. F-016 and F-017 were added from reconciled external evidence. |
 | Aug 9, 2026 | PR #155, `a314d2bfa9ce101e836353c9c668696d4d672d50`, `deploy-20260809T153725Z-a314d2b`, workflow `31321568112` | Upgraded jsdom and aligned the Node runtime; the full dependency audit is clean, exact-commit production route/redirect validation passed, and F-014 now remains only as obsolete exception cleanup. |
+| Aug 11, 2026 | PR #158, `681f10e9d9dd6779f8f92a37a8df14294230121e`, `deploy-20260811T004705Z-681f10e`, workflow `31447166391` | Aligned canonical URLs, redirects, the sitemap, generated artifacts, and internal links on trailing-slash route URLs; exact-commit route, redirect, real-404, and legacy-domain validation passed. |
+| Aug 11, 2026 | PRs #157 and #156, `8ab5889bbaad94a1462c6e4b08d3140f57f4ae21`, `deploy-20260811T011448Z-8ab5889`, workflow `31448668753` | Updated CodeQL Actions and lockfile-only development dependencies; the final release superseded PR #157's cancelled release run and kept the full dependency audit clean. |
+| Aug 11, 2026 | `feat/audit-remediation`, pending merge and release | Removed the obsolete dev-only npm-audit exception so all future moderate-or-higher full-tree findings block directly; production and full-tree audits pass. F-014 is resolved on the feature branch. |
+| Aug 13, 2026 | `feat/audit-remediation`, pending merge and release | Remediated F-002 shared contrast states and added F-001 lazy-route recovery; lint, 30 tests, production build, focused performance checks, and analytics-disabled Chromium QA at 1440px and 390px passed. |
 
 ## Recommended Execution Order
 
-1. Remove the obsolete npm-audit exception now that the full dependency graph
-   is clean (F-014).
-2. Fix shared contrast tokens and lazy-route rejection recovery, with focused
-   regression coverage (F-002, F-001).
-3. Add a skip link and correct the footer landmark, then address route
+1. Add a skip link and correct the footer landmark, then address route
    scroll/focus and clipped mobile-nav focus (F-016, F-004, F-005).
-4. Regenerate the tagged resume and optimize root image assets with byte and
+2. Regenerate the tagged resume and optimize root image assets with byte and
    accessibility checks (F-003, F-017).
-5. Protect `main`, enable Dependabot security features, and add live header
+3. Protect `main`, enable Dependabot security features, and add live header
    checks to release creation (F-006, F-007, F-008).
-6. Resolve duplicate GA4 history page views and make the Google Signals,
+4. Resolve duplicate GA4 history page views and make the Google Signals,
    disclosure, and consent choices explicit (F-015, F-013).
-7. Refocus AI outputs on professional evidence (F-010); treat static route-body
+5. Refocus AI outputs on professional evidence (F-010); treat static route-body
    rendering, immutable caching, and workflow hardening as lower-priority
    architectural improvements (F-009, F-011, F-012).
 

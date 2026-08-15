@@ -67,7 +67,10 @@ function CaseStudy() {
         <PresentationPanel as="header" className="p-5 text-white sm:p-7">
           <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(22rem,1.05fr)] lg:items-start">
             <div>
-              <StatusBadge tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}>
+              <StatusBadge
+                tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}
+                surface="dark"
+              >
                 {caseStudy.category}
               </StatusBadge>
               <h1 className="mt-5 max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl">

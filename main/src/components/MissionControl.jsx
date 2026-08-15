@@ -31,6 +31,33 @@ const toneClasses = {
   },
 }
 
+const darkToneClasses = {
+  cyan: {
+    text: "text-[#93B4FF]",
+    border: "border-[#93B4FF]/40",
+    bg: "bg-[#93B4FF]/10",
+    dot: "bg-[#93B4FF]",
+  },
+  green: {
+    text: "text-[#86EFAC]",
+    border: "border-[#86EFAC]/40",
+    bg: "bg-[#86EFAC]/10",
+    dot: "bg-[#86EFAC]",
+  },
+  orange: {
+    text: "text-[#FFB077]",
+    border: "border-[#FFB077]/40",
+    bg: "bg-[#FFB077]/10",
+    dot: "bg-[#FFB077]",
+  },
+  zinc: {
+    text: "text-[#CBD5E1]",
+    border: "border-[#CBD5E1]/40",
+    bg: "bg-[#CBD5E1]/10",
+    dot: "bg-[#CBD5E1]",
+  },
+}
+
 const nodeToneClasses = {
   blue: "mc-system-node-blue",
   green: "mc-system-node-green",
@@ -90,7 +117,11 @@ export function SectionHeader({
 
   return (
     <header className={`mb-8 ${alignment} ${className}`}>
-      {eyebrow ? <p className="mc-eyebrow">{eyebrow}</p> : null}
+      {eyebrow ? (
+        <p className={`mc-eyebrow ${isDark ? "mc-eyebrow-dark" : ""}`}>
+          {eyebrow}
+        </p>
+      ) : null}
       <div className={align === "center" ? "mx-auto max-w-3xl" : "max-w-4xl"}>
         <h1 className={`text-4xl font-black leading-tight sm:text-5xl ${titleClass}`}>
           {title}
@@ -106,8 +137,14 @@ export function SectionHeader({
   )
 }
 
-export function StatusBadge({ children, tone = "green", className = "" }) {
-  const toneClass = toneClasses[tone] ?? toneClasses.green
+export function StatusBadge({
+  children,
+  tone = "green",
+  surface = "light",
+  className = "",
+}) {
+  const surfaceToneClasses = surface === "dark" ? darkToneClasses : toneClasses
+  const toneClass = surfaceToneClasses[tone] ?? surfaceToneClasses.green
 
   return (
     <span
@@ -126,7 +163,7 @@ export function SignalCard({
   tone = "orange",
   className = "",
 }) {
-  const toneClass = toneClasses[tone] ?? toneClasses.orange
+  const toneClass = darkToneClasses[tone] ?? darkToneClasses.orange
 
   return (
     <article className={`mc-signal-card ${className}`}>

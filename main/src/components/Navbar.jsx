@@ -42,12 +42,12 @@ function Navbar() {
           className="group inline-flex items-center gap-3 text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
           aria-label="Waffy Ahmed home"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-md border border-[#0B1220] bg-[#0B1220] font-black text-white transition group-hover:border-[#F96302] group-hover:bg-[#F96302]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md border border-[#0B1220] bg-[#0B1220] font-black text-white transition group-hover:border-[#F96302] group-hover:bg-[#F96302] group-hover:text-[#0B1220]">
             WA
           </span>
           <span className="leading-tight">
             <span className="block text-sm font-black">Waffy Ahmed</span>
-            <span className="block text-xs font-bold text-slate-500">Platform reliability engineer</span>
+            <span className="block text-xs font-bold text-slate-600">Platform reliability engineer</span>
           </span>
         </NavLink>
 

@@ -91,7 +91,7 @@ function Projects() {
           >
             <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,0.92fr)_minmax(21rem,1.08fr)] lg:items-center">
               <div>
-                <StatusBadge tone="orange">Public build</StatusBadge>
+                <StatusBadge tone="orange" surface="dark">Public build</StatusBadge>
                 <h2
                   id="featured-project-heading"
                   className="mt-5 text-4xl font-black leading-tight sm:text-5xl"

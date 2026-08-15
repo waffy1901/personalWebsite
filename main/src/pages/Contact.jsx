@@ -25,7 +25,7 @@ function Contact() {
           <ContactForm />
 
           <aside className="h-fit rounded-lg border border-white/10 bg-white/[0.08] p-5">
-            <StatusBadge tone="green">Open channel</StatusBadge>
+            <StatusBadge tone="green" surface="dark">Open channel</StatusBadge>
             <h2 className="mt-4 text-xl font-black text-white">
               Alternative routes
             </h2>
