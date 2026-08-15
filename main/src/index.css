@@ -161,11 +161,15 @@
   }
 
   .mc-eyebrow {
-    @apply mb-3 text-xs font-black uppercase text-[#2563EB];
+    @apply mb-3 text-xs font-black uppercase text-[#1D4ED8];
+  }
+
+  .mc-eyebrow-dark {
+    @apply text-[#93B4FF];
   }
 
   .mc-button-primary {
-    @apply inline-flex items-center justify-center rounded-md bg-[#F96302] px-4 py-2 text-sm font-black text-white shadow-[0_14px_34px_rgba(249,99,2,0.22)] transition hover:bg-[#d95402] focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#0B1220];
+    @apply inline-flex items-center justify-center rounded-md bg-[#F96302] px-4 py-2 text-sm font-black text-[#0B1220] shadow-[0_14px_34px_rgba(249,99,2,0.22)] transition hover:bg-[#FFB077] focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#0B1220] disabled:cursor-not-allowed disabled:bg-[#CBD5E1] disabled:text-[#334155] disabled:shadow-none disabled:hover:bg-[#CBD5E1];
   }
 
   .mc-button-secondary {

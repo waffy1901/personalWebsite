@@ -49,7 +49,10 @@ function CaseStudyCard({ caseStudy, featured = false }) {
       <div className={featured ? "relative z-10" : "relative z-10 flex flex-1 flex-col"}>
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
-            <StatusBadge tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}>
+            <StatusBadge
+              tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}
+              surface="dark"
+            >
               {caseStudy.category}
             </StatusBadge>
             <p className={`mt-3 text-sm font-bold ${metaText}`}>

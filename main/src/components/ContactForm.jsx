@@ -203,7 +203,7 @@ function ContactFormFields({ formKey }) {
           <button
             type="submit"
             disabled={state.submitting}
-            className="mc-button-primary px-5 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mc-button-primary px-5"
           >
             Send Message
           </button>

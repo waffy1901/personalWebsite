@@ -102,6 +102,36 @@ const expectImagePolicy = (image, { loading, fetchPriority }) => {
   }
 }
 
+const relativeLuminance = (hexColor) => {
+  const normalized = hexColor.replace("#", "")
+  const channels = [0, 2, 4].map((offset) => {
+    const channel = Number.parseInt(normalized.slice(offset, offset + 2), 16) / 255
+
+    return channel <= 0.04045
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4
+  })
+
+  return (0.2126 * channels[0]) + (0.7152 * channels[1]) + (0.0722 * channels[2])
+}
+
+const contrastRatio = (foreground, background) => {
+  const lighter = Math.max(
+    relativeLuminance(foreground),
+    relativeLuminance(background)
+  )
+  const darker = Math.min(
+    relativeLuminance(foreground),
+    relativeLuminance(background)
+  )
+
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+const expectNormalTextContrast = (foreground, background) => {
+  expect(contrastRatio(foreground, background)).toBeGreaterThanOrEqual(4.5)
+}
+
 beforeEach(() => {
   formspreeSubmitMock.mockClear()
   formspreeMockState.current = {
@@ -150,6 +180,24 @@ describe("App routes", () => {
         fetchPriority: "high",
       }
     )
+  })
+
+  it("uses accessible shared contrast treatments on the home route", async () => {
+    renderRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+
+    expect(screen.getByText("Explore")).toHaveClass("mc-eyebrow")
+    expect(
+      screen.getByText("Featured case study", { selector: "span.inline-flex" })
+    ).toHaveClass("text-[#FFB077]", "border-[#FFB077]/40")
+
+    const stylesheet = readFileSync("src/index.css", "utf8")
+    const eyebrowRule = stylesheet.match(/\.mc-eyebrow\s*\{[^}]+\}/)?.[0]
+
+    expect(eyebrowRule).toContain("text-[#1D4ED8]")
+    expectNormalTextContrast("#1D4ED8", "#E8EDF2")
+    expectNormalTextContrast("#FFB077", "#10254A")
   })
 
   it("renders the projects route", async () => {
@@ -724,6 +772,49 @@ describe("App routes", () => {
     expect(screen.getByLabelText(/email/i)).toHaveAttribute("maxlength", "254")
     expect(screen.getByLabelText(/message/i)).toHaveAttribute("minlength", "10")
     expect(screen.getByLabelText(/message/i)).toHaveValue("")
+  })
+
+  it("uses accessible dark-surface, action, and navigation contrast treatments", async () => {
+    renderRoute("/contact")
+
+    await screen.findByRole("heading", { name: /let's connect/i })
+
+    expect(screen.getByText("Open channel", { selector: "p" })).toHaveClass(
+      "mc-eyebrow-dark"
+    )
+    expect(
+      screen.getByText("Open channel", { selector: "span.inline-flex" })
+    ).toHaveClass("text-[#86EFAC]", "border-[#86EFAC]/40")
+    expect(screen.getByText("Platform reliability engineer")).toHaveClass(
+      "text-slate-600"
+    )
+    expect(screen.getByText("WA")).toHaveClass("group-hover:text-[#0B1220]")
+
+    const submitButton = screen.getByRole("button", { name: /send message/i })
+    const stylesheet = readFileSync("src/index.css", "utf8")
+    const darkEyebrowRule = stylesheet.match(
+      /\.mc-eyebrow-dark\s*\{[^}]+\}/
+    )?.[0]
+    const primaryButtonRule = stylesheet.match(
+      /\.mc-button-primary\s*\{[^}]+\}/
+    )?.[0]
+
+    expect(darkEyebrowRule).toContain("text-[#93B4FF]")
+    expect(submitButton).toHaveClass("mc-button-primary")
+    expect(submitButton).not.toHaveClass("disabled:opacity-60")
+    expect(primaryButtonRule).toContain("text-[#0B1220]")
+    expect(primaryButtonRule).toContain("hover:bg-[#FFB077]")
+    expect(primaryButtonRule).toContain("disabled:bg-[#CBD5E1]")
+    expect(primaryButtonRule).toContain("disabled:text-[#334155]")
+    expect(primaryButtonRule).toContain("focus:ring-[#F96302]")
+    expect(primaryButtonRule).toContain("focus:ring-offset-[#0B1220]")
+
+    expectNormalTextContrast("#93B4FF", "#0B1220")
+    expectNormalTextContrast("#86EFAC", "#0B1220")
+    expectNormalTextContrast("#0B1220", "#F96302")
+    expectNormalTextContrast("#0B1220", "#FFB077")
+    expectNormalTextContrast("#334155", "#CBD5E1")
+    expectNormalTextContrast("#475569", "#F4F1EA")
   })
 
   it("redirects legacy uppercase routes to lowercase pages", async () => {

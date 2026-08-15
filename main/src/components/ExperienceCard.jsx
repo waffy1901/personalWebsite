@@ -191,7 +191,7 @@ const ExperienceCard = ({
             <div>
               <StatusBadge
                 tone={isHomeDepot ? "orange" : "cyan"}
-                className="border-white/15 bg-white/10 text-slate-100"
+                surface="dark"
               >
                 {isHomeDepot ? "Production platform" : "Engineering signal"}
               </StatusBadge>
