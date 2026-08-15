@@ -18,9 +18,10 @@
     "start": "vite",
     "generate:public": "node scripts/generate-public-artifacts.mjs",
     "build": "npm run generate:public && VITE_DEPLOY_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) VITE_SITE_URL=https://waffy.dev vite build && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/prerender-route-metadata.mjs",
-    "lint": "eslint src",
+    "lint": "eslint src e2e playwright.production.config.js",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run --exclude=e2e/**",
+    "test:e2e:production": "playwright test --config=playwright.production.config.js"
   },
   "browserslist": {
     "production": [
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.0",

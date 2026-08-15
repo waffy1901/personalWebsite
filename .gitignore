@@ -5,6 +5,8 @@ node_modules
 .netlify/
 handoff.md
 .tokensave/
+main/playwright-report/
+main/test-results/
 
 # Machine-specific Codex/Headroom configuration
 .codex/config.toml

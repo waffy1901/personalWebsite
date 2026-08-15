@@ -9,6 +9,10 @@ name: Create deployment release
 permissions:
   contents: read
 
+concurrency:
+  group: production-release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     name: Verify app
@@ -99,10 +103,29 @@ jobs:
       - name: Test deployed route checker
         run: python3 scripts/test_deployed_routes.py
 
+      - name: Test deployed header checker
+        run: python3 scripts/test_deployed_security_headers.py
+
+      - name: Test deployed artifact checker
+        run: python3 scripts/test_deployed_artifacts.py
+
+      - name: Verify CSP JSON-LD hash
+        run: node .codex/skills/csp-security-header-maintainer/scripts/check_csp_jsonld_hash.mjs "$GITHUB_WORKSPACE"
+
       - name: Validate deployed routes
         env:
           SITE_URL: https://waffy.dev
         run: python3 scripts/check-deployed-routes.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+
+      - name: Validate deployed security headers
+        env:
+          SITE_URL: https://waffy.dev/
+        run: python3 scripts/check-deployed-security-headers.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+
+      - name: Validate deployed artifacts
+        env:
+          SITE_URL: https://waffy.dev/
+        run: python3 scripts/check-deployed-artifacts.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
 
       - name: Validate legacy Netlify domain redirect
         env:
@@ -144,3 +167,59 @@ jobs:
               prerelease: false,
               generate_release_notes: true,
             });
+
+  production-browser-smoke:
+    name: Advisory production browser smoke
+    runs-on: ubuntu-latest
+    needs: release
+    continue-on-error: true
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: main/package-lock.json
+
+      - name: Install dependencies
+        working-directory: main
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: main
+        run: npx playwright install --with-deps chromium
+
+      - name: Run telemetry-safe production smoke tests
+        env:
+          PLAYWRIGHT_PRODUCTION_BASE_URL: https://waffy.dev
+        run: npm run test:e2e:production
+
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: production-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            main/playwright-report/
+            main/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Summarize advisory browser result
+        if: always()
+        env:
+          BROWSER_JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ "$BROWSER_JOB_STATUS" = "success" ]; then
+            echo "### Advisory production browser smoke: passed" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Advisory production browser smoke: warning" >> "$GITHUB_STEP_SUMMARY"
+            echo "The release was already created. Review the uploaded Playwright evidence before promoting this lane to a release blocker." >> "$GITHUB_STEP_SUMMARY"
+          fi
