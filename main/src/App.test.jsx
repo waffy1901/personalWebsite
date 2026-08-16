@@ -37,6 +37,7 @@ const formspreeMockState = vi.hoisted(() => ({
     succeeded: false,
   },
 }))
+const routePreloadMock = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 
 vi.mock("@formspree/react", () => ({
   useForm: () => [
@@ -44,6 +45,10 @@ vi.mock("@formspree/react", () => ({
     formspreeSubmitMock,
   ],
   ValidationError: () => null,
+}))
+
+vi.mock("./utils/routePrefetch.js", () => ({
+  preloadRoute: routePreloadMock,
 }))
 
 const renderRoute = (route) =>
@@ -134,6 +139,7 @@ const expectNormalTextContrast = (foreground, background) => {
 
 beforeEach(() => {
   formspreeSubmitMock.mockClear()
+  routePreloadMock.mockClear()
   formspreeMockState.current = {
     errors: null,
     submitting: false,
@@ -180,6 +186,27 @@ describe("App routes", () => {
         fetchPriority: "high",
       }
     )
+  })
+
+  it("preloads lazy routes when primary navigation shows intent", async () => {
+    renderRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    const navigation = screen.getByRole("navigation", {
+      name: /primary navigation/i,
+    })
+    const projectsLink = within(navigation).getByRole("link", {
+      name: /projects/i,
+    })
+
+    expect(routePreloadMock).not.toHaveBeenCalled()
+
+    fireEvent.pointerEnter(projectsLink)
+    expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
+
+    routePreloadMock.mockClear()
+    fireEvent.focus(projectsLink)
+    expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
   })
 
   it("uses accessible shared contrast treatments on the home route", async () => {
