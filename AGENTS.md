@@ -24,6 +24,9 @@ These instructions apply to the whole repository. This is Waffy Ahmed's React/Vi
 - `main/index.html` contains the static shell and JSON-LD profile data.
 - `netlify.toml` owns Netlify build settings, headers, and CSP.
 - `scripts/pre-push-checks.sh` runs the local pre-push lint, test, and build sequence.
+- `docs/quality-and-verification-policy.md` defines finding classification,
+  evidence, project workflow, and closure requirements. Current work lives in
+  GitHub issues and the Portfolio Quality & Improvements project.
 
 ## Commands
 
@@ -68,6 +71,9 @@ node .codex/skills/portfolio-change-impact/scripts/check_change_impact.mjs --sou
 - Use `$ai-discovery-maintainer` when changing `llms.txt`, `ai-summary.txt`, `portfolio.json`, JSON-LD, structured project/case-study metadata, or AI-agent discovery guidance.
 - Use `$csp-security-header-maintainer` when changing JSON-LD, Google Analytics, Formspree, external assets, security headers, CSP hashes, redirects, or frame/object/base policies.
 - Use `$ga4-portfolio-analytics` when adding, removing, auditing, testing, or documenting GA4 events.
+- Use `$portfolio-audit-maintainer` when creating, updating, validating, or
+  closing quality findings; maintaining the GitHub quality project; recording
+  deployed evidence; or consulting the archived audit snapshot.
 - Use `$git-pr-publisher` when asked to stage files, commit changes, push the current or dev branch, create or update a PR against `main`, or safely ship local changes after implementation.
 
 ## Content And Metadata Rules
@@ -104,4 +110,4 @@ node .codex/skills/portfolio-change-impact/scripts/check_change_impact.mjs --sou
 
 ## Done Criteria
 
-Before finishing, summarize changed files, commands run, and any checks not run. If public content, SEO, AI discovery, resume, analytics, CSP, or routes changed, explicitly mention the corresponding alignment or verification step.
+Before finishing, summarize changed files, commands run, and any checks not run. If public content, SEO, AI discovery, resume, analytics, CSP, or routes changed, explicitly mention the corresponding alignment or verification step. When a persistent finding is created or closed, update its GitHub issue and project state according to `docs/quality-and-verification-policy.md`; never update the archived audit as current state.

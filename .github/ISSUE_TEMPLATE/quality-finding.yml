@@ -1,0 +1,107 @@
+name: Quality finding
+description: Record an evidence-backed portfolio quality, security, accessibility, or operational finding.
+title: "[F-XXX] "
+assignees:
+  - waffy1901
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use one stable finding ID per issue. Search open and closed issues first,
+        and keep severity separate from scheduling priority.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the observed problem and its practical impact.
+      placeholder: What is wrong, who or what is affected, and why does it matter?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+        - Informational
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Now
+        - Next
+        - Later
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Accessibility
+        - Analytics
+        - Content / AI discovery
+        - Governance
+        - Performance
+        - Privacy
+        - Security / Automation
+        - SEO / Architecture
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include the date, exact observation, and evidence class.
+      placeholder: Source, local checks, production HTTP, browser, or external account evidence.
+    validations:
+      required: true
+
+  - type: textarea
+    id: surfaces
+    attributes:
+      label: Affected surfaces
+      description: List exact files, routes, settings, workflows, or external systems.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use a Markdown checklist with independently verifiable outcomes.
+      placeholder: |
+        - [ ] First observable outcome
+        - [ ] Required regression coverage
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: verification
+    attributes:
+      label: Verification required
+      options:
+        - label: Source inspection
+        - label: Focused local checks
+        - label: Lint, tests, or production build
+        - label: Production HTTP validation
+        - label: Browser validation
+        - label: External-account validation
+
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Related provenance
+      description: Link related issues, pull requests, releases, workflow runs, or prior evidence.
