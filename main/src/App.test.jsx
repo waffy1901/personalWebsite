@@ -179,12 +179,26 @@ describe("App routes", () => {
     expect(
       screen.getByText(/^software engineer ii focused on kubernetes/i)
     ).toBeInTheDocument()
-    expectImagePolicy(
-      screen.getByRole("img", { name: /waffy ahmed/i }),
-      {
-        loading: "eager",
-        fetchPriority: "high",
-      }
+    const profileImage = screen.getByRole("img", { name: /waffy ahmed/i })
+    const profileWebpSource = profileImage
+      .closest("picture")
+      ?.querySelector('source[type="image/webp"]')
+
+    expectImagePolicy(profileImage, {
+      loading: "eager",
+      fetchPriority: "high",
+    })
+    expect(profileImage).toHaveAttribute("width", "675")
+    expect(profileImage).toHaveAttribute("height", "900")
+    expect(profileWebpSource).toHaveAttribute(
+      "srcset",
+      expect.stringMatching(
+        /profilePic-450\.webp 450w, .*profilePic-675\.webp 675w/
+      )
+    )
+    expect(profileWebpSource).toHaveAttribute(
+      "sizes",
+      "(min-width: 640px) 448px, calc(100vw - 5rem)"
     )
   })
 
