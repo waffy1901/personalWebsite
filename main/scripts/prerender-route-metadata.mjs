@@ -12,6 +12,14 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const appRoot = path.resolve(scriptDir, "..")
 const distDir = path.join(appRoot, "dist")
 const indexPath = path.join(distDir, "index.html")
+const manifestPath = path.join(distDir, ".vite", "manifest.json")
+const routeModuleSources = new Map([
+  ["/resume", "src/pages/Resume.jsx"],
+  ["/contact", "src/pages/Contact.jsx"],
+  ["/case-studies", "src/pages/CaseStudies.jsx"],
+  ["/experience", "src/pages/Experience.jsx"],
+  ["/projects", "src/pages/Projects.jsx"],
+])
 
 const escapeAttribute = (value) =>
   String(value)
@@ -104,7 +112,95 @@ const validateRoute = (route) => {
   }
 }
 
-const renderRouteHtml = (templateHtml, route) => {
+const routeModuleSource = (routePath) => {
+  const normalizedPath = routePath.replace(/\/+$/, "") || "/"
+
+  if (normalizedPath.startsWith("/case-studies/")) {
+    return "src/pages/CaseStudy.jsx"
+  }
+
+  return routeModuleSources.get(normalizedPath)
+}
+
+const findManifestKey = (manifest, source) =>
+  Object.entries(manifest).find(
+    ([key, chunk]) => key === source || chunk.src === source
+  )?.[0]
+
+const collectModulePreloadFiles = (manifest, manifestKey) => {
+  const files = []
+  const visited = new Set()
+
+  const visit = (key) => {
+    if (visited.has(key)) {
+      return
+    }
+
+    const chunk = manifest[key]
+    if (!chunk?.file) {
+      throw new Error(`Missing manifest chunk for ${key}`)
+    }
+
+    visited.add(key)
+    files.push(chunk.file)
+
+    for (const importedKey of chunk.imports ?? []) {
+      visit(importedKey)
+    }
+  }
+
+  visit(manifestKey)
+  return files
+}
+
+const addRouteModulePreloads = (html, route, manifest) => {
+  const source = routeModuleSource(route.path)
+
+  if (!source) {
+    return html
+  }
+
+  const manifestKey = findManifestKey(manifest, source)
+  if (!manifestKey) {
+    throw new Error(`Missing manifest entry for ${source}`)
+  }
+
+  const existingHrefs = new Set([
+    ...[
+      ...html.matchAll(
+        /<link\b(?=[^>]*\brel="modulepreload")[^>]*\bhref="([^"]+)"[^>]*>/gi
+      ),
+    ].map((match) => match[1]),
+    ...[
+      ...html.matchAll(
+        /<script\b(?=[^>]*\btype="module")[^>]*\bsrc="([^"]+)"[^>]*>/gi
+      ),
+    ].map((match) => match[1]),
+  ])
+  const preloadHrefs = collectModulePreloadFiles(manifest, manifestKey)
+    .map((file) => `/${file}`)
+    .filter((href) => !existingHrefs.has(href))
+
+  if (preloadHrefs.length === 0) {
+    return html
+  }
+
+  const preloadTags = preloadHrefs
+    .map(
+      (href) =>
+        `<link rel="modulepreload" crossorigin href="${escapeAttribute(href)}">`
+    )
+    .join("\n    ")
+
+  return replaceRequired(
+    html,
+    "head closing tag",
+    /\n\s*<\/head>/i,
+    `\n    ${preloadTags}\n  </head>`
+  )
+}
+
+const renderRouteHtml = (templateHtml, route, manifest) => {
   validateRoute(route)
 
   const canonicalUrl = toAbsoluteUrl(route.canonicalPath)
@@ -124,6 +220,7 @@ const renderRouteHtml = (templateHtml, route) => {
   html = updateMetaContent(html, "name", "twitter:title", route.title)
   html = updateMetaContent(html, "name", "twitter:description", route.description)
   html = updateMetaContent(html, "name", "twitter:image", imageUrl)
+  html = addRouteModulePreloads(html, route, manifest)
 
   return html
 }
@@ -151,9 +248,10 @@ const run = async () => {
   }
 
   const templateHtml = await readFile(indexPath, "utf8")
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"))
 
   for (const route of routeMetadata) {
-    await writeRouteHtml(route, renderRouteHtml(templateHtml, route))
+    await writeRouteHtml(route, renderRouteHtml(templateHtml, route, manifest))
   }
 
   console.log(`Pre-rendered metadata shells for ${routeMetadata.length} routes`)

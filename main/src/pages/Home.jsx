@@ -176,14 +176,23 @@ function Home() {
                 <div className="absolute -bottom-3 -left-3 h-28 w-28 border-b-4 border-l-4 border-[#F96302]" aria-hidden="true" />
 
                 <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-2 shadow-[0_26px_80px_rgba(0,0,0,0.36)]">
-                  <img
-                    src={profile.profilePicture}
-                    alt={profile.name}
-                    loading="eager"
-                    fetchPriority="high"
-                    decoding="async"
-                    className="h-[30rem] w-full rounded-2xl object-cover object-center"
-                  />
+                  <picture>
+                    <source
+                      type="image/webp"
+                      srcSet={profile.profilePictureSources.webp}
+                      sizes="(min-width: 640px) 448px, calc(100vw - 5rem)"
+                    />
+                    <img
+                      src={profile.profilePicture}
+                      alt={profile.name}
+                      width="675"
+                      height="900"
+                      loading="eager"
+                      fetchPriority="high"
+                      decoding="async"
+                      className="h-[30rem] w-full rounded-2xl object-cover object-center"
+                    />
+                  </picture>
                 </div>
 
 

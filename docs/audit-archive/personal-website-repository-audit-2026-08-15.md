@@ -1,15 +1,22 @@
-# Personal Website Repository Audit
+# Archived Personal Website Repository Audit - Aug 15, 2026
+
+> This is the final file-based audit snapshot. Active findings were migrated
+> to [GitHub issues #161-#172](https://github.com/waffy1901/personalWebsite/issues?q=is%3Aissue%20state%3Aopen%20author%3Awaffy1901%20%22%5BF-%22)
+> and the [Portfolio Quality & Improvements project](https://github.com/users/waffy1901/projects/2).
+> Do not update this archive; follow
+> [the quality and verification policy](../quality-and-verification-policy.md)
+> for current tracking.
 
 **Repository:** `waffy1901/personalWebsite`  
 **Baseline reviewed:** `main` at `4f05b954309f7f6117549fee9d9537eab8014367`  
-**Reconciled through:** PR #159 at current `main` commit `a01c8283114b84c33474df09ed981b15360cd2a4`<br>
-**Current production release:** `deploy-20260815T003910Z-a01c828`, release workflow `31854220597`; exact-commit Netlify readiness, app verification, deployed-route checks, and the legacy-domain redirect check passed<br>
-**Latest independently maintained full deployed audit:** Aug 1, 2026, at `d3886ac6a8e07b1013867bed25971ca9986c1033`, release `deploy-20260801T170233Z-d3886ac`  
+**Reconciled through:** PR #160 at current `main` commit `712e902d33b12e7a21c15b7450205fcdb1f35c75`<br>
+**Current production release:** `deploy-20260815T205440Z-712e902`, release workflow `31907929880`; exact-commit Netlify readiness, app verification, deployed-route, security-header, CSP, artifact-parity, legacy-domain redirect, and advisory desktop/mobile Chromium checks passed<br>
+**Latest independently maintained deployed validation:** Aug 15, 2026, at `712e902d33b12e7a21c15b7450205fcdb1f35c75`, release `deploy-20260815T205440Z-712e902`<br>
 **Latest supplied external audit:** Aug 8, 2026, against the PR #154 release  
 **Website creation date:** Sep 12, 2024 at 2:17 PM (`2024-09-12T14:17:00-04:00`)  
 **Scope:** Application code and content, accessibility, dependencies, tests, GitHub automation, Netlify delivery, public metadata, analytics, privacy, and resume assets.
 
-This is the canonical current-state audit. Git history, pull requests, workflow
+At the time of archival, this was the canonical current-state audit. Git history, pull requests, workflow
 runs, and release tags preserve the detailed chronology; this file retains only
 the evidence needed to understand current risk, close open findings, and avoid
 reopening verified work.
@@ -22,7 +29,7 @@ route-specific initial metadata, generated public artifacts, resume delivery,
 security headers, and core desktop/mobile rendering were healthy at the current
 release snapshot.
 
-The maintained set contains **14 open findings: 1 Medium, 10 Low, and 3
+The maintained set contains **12 open findings: 1 Medium, 8 Low, and 3
 Informational**. The highest-value work is concentrated in accessibility,
 delivery governance, asset optimization, and GA4 measurement quality.
 
@@ -35,10 +42,24 @@ variants, then resolves F-001 with focused lazy-route recovery that preserves
 navigation and offers retry and home actions. The merged tree is deployed; the
 production HTTP and analytics-disabled local browser evidence is scoped below.
 
+The PR #160 release resolves F-008 by making live production security-header
+checks, CSP verification, and deployed artifact parity release-blocking after
+exact-commit Netlify readiness. Its advisory production Chromium lane also
+passed 18 of 18 desktop/mobile checks with analytics hosts intercepted and no
+contact-form submission.
+
+An authenticated Aug 15 GitHub repository-settings update resolves F-007 by
+enabling Dependabot alerts and Dependabot security updates. The dependency
+graph, weekly version updates, scheduled and pull-request npm audits, and CodeQL
+remain active, so the change adds vulnerability monitoring and security-fix
+pull requests without removing existing coverage.
+
 Current strengths include pull-request lint/test/build checks, focused portfolio
-integrity validation, scheduled npm audit and CodeQL, deployment-to-commit
-verification, route and real-404 checks, weekly header checks, source-generated
-AI/SEO artifacts, React route splitting, and analytics contract tests.
+integrity validation, Dependabot alerts, version and security updates, scheduled
+npm audit and CodeQL, deployment-to-commit verification, release-blocking
+route/header/CSP/artifact checks, weekly production-health checks,
+source-generated AI/SEO artifacts, React route splitting, advisory
+telemetry-safe production browser smoke, and analytics contract tests.
 
 ## Evidence Boundary
 
@@ -68,10 +89,28 @@ AI/SEO artifacts, React route splitting, and analytics contract tests.
   verification, waited for the matching Netlify production deploy, validated
   deployed routes and the legacy-domain redirect, and created release
   `deploy-20260815T003910Z-a01c828`.
-- An independent Aug 15 HTTP recheck against `https://waffy.dev/` confirmed
-  canonical and legacy redirects, route-specific initial metadata, the real
-  404 with `noindex, nofollow`, and public assets. HTTP validation did not
-  execute site JavaScript or create GA4 traffic.
+- The Aug 15 PR #160 release at
+  `712e902d33b12e7a21c15b7450205fcdb1f35c75` is current. Release workflow
+  `31907929880` passed lint, 30 tests, and the production build; waited for the
+  exact SHA at `https://main--waffy.netlify.app`; verified deployed routes,
+  security headers, the CSP hash, nine byte-for-byte public artifacts, and the
+  legacy-domain redirect; and created release
+  `deploy-20260815T205440Z-712e902`. Its advisory production browser job passed
+  18 of 18 desktop/mobile Chromium tests in 17.7 seconds.
+- An independent Aug 15 recheck against `https://waffy.dev/` confirmed the
+  home page, eight canonical routes, six legacy redirects, the unknown-route
+  404, all five configured security headers, and nine byte-for-byte public
+  artifacts. A separate production Chromium rerun passed 18 of 18 desktop and
+  mobile checks. Analytics hosts were intercepted and the contact form was not
+  submitted, so the browser pass did not validate GA4 delivery or a real
+  Formspree submission.
+- An authenticated Aug 15 GitHub repository-admin settings check confirmed the
+  dependency graph was enabled, then enabled and re-verified Dependabot alerts
+  and Dependabot security updates. Both settings exposed their `Disable`
+  controls after a full page reload, and the Dependabot alert view reported zero
+  open and zero closed alerts. The GitHub settings action changed no workflows,
+  dependencies, or deployed site behavior; this audit reconciliation is local
+  documentation only.
 - PR #159 head `4bd4f7bdca94270dc89961bab08bd6ebbccbd827` and merge
   `a01c8283114b84c33474df09ed981b15360cd2a4` share tree
   `bd043f09d70dafbdd9b95b480492e7348f6bcdbe`. That tree passed lint, 30 tests,
@@ -87,7 +126,7 @@ AI/SEO artifacts, React route splitting, and analytics contract tests.
   cache, or Formspree account settings. Those claims require dated external
   evidence.
 
-## Current Findings
+## Findings Open at Archival
 
 ### F-003 — Resume PDF lacks structural accessibility (Medium)
 
@@ -129,26 +168,6 @@ force pushes and deletion; and decide explicitly whether the solo owner is
 exempt.
 
 **Surfaces:** GitHub repository rules, `.github/workflows/`
-
-### F-007 — Dependabot security features are disabled (Low)
-
-Vulnerability alerts, security updates, and automated security fixes were
-disabled while version updates and scheduled/pull-request npm audits remained
-active. Enable alerts and security-update pull requests without removing the
-existing version-update and audit coverage. This is monitoring hardening, not
-evidence of a production vulnerability.
-
-**Surfaces:** GitHub security settings, `.github/dependabot.yml`, `.github/workflows/npm-audit.yml`
-
-### F-008 — Release creation omits live header verification (Low)
-
-The release workflow waits for the exact Netlify deploy and validates routes,
-the real 404, and the legacy domain, but the deployed security-header check runs
-only weekly or manually. Run the header-checker tests, CSP/JSON-LD hash check,
-and live deployed-header check after the exact deploy wait and before creating
-the release.
-
-**Surfaces:** `.github/workflows/release-on-deploy.yml`, `.github/workflows/deployed-security-headers.yml`, `scripts/check-deployed-security-headers.py`
 
 ### F-009 — Prerendered route shells omit route body content (Low)
 
@@ -259,6 +278,9 @@ fresh evidence of user impact:
 - Record dated external evidence for Search Console ownership/sitemap state,
   high-value link previews, GA4 key-event classifications, and the GA4 Admin
   settings relevant to F-013 and F-015.
+- Keep the production browser smoke advisory until it has passed five
+  consecutive production deployments. PR #160 is clean deployment 1 of 5;
+  additional reruns of the same deployment do not advance that count.
 - Card hierarchy, case-study tradeoff narratives, and explicit
   `OwnershipCard` disclosure controls remain product hypotheses, not confirmed
   defects.
@@ -284,6 +306,8 @@ full chronology to GitHub and Git history.
 | Aug 11, 2026 | PR #158, `681f10e9d9dd6779f8f92a37a8df14294230121e`, `deploy-20260811T004705Z-681f10e`, workflow `31447166391` | Aligned canonical URLs, redirects, the sitemap, generated artifacts, and internal links on trailing-slash route URLs; exact-commit route, redirect, real-404, and legacy-domain validation passed. |
 | Aug 11, 2026 | PRs #157 and #156, `8ab5889bbaad94a1462c6e4b08d3140f57f4ae21`, `deploy-20260811T011448Z-8ab5889`, workflow `31448668753` | Updated CodeQL Actions and lockfile-only development dependencies; the final release superseded PR #157's cancelled release run and kept the full dependency audit clean. |
 | Aug 15, 2026 | PR #159, `a01c8283114b84c33474df09ed981b15360cd2a4`, `deploy-20260815T003910Z-a01c828`, workflow `31854220597` | Removed the obsolete dev-only npm-audit exception, remediated shared contrast states, and added lazy-route recovery. Exact-commit release validation, independent production HTTP checks, and analytics-disabled local Chromium QA passed; F-014, F-002, and F-001 are resolved. |
+| Aug 15, 2026 | PR #160, `712e902d33b12e7a21c15b7450205fcdb1f35c75`, `deploy-20260815T205440Z-712e902`, workflow `31907929880` | Added exact-production route, header, CSP, and artifact release gates plus advisory telemetry-safe browser smoke. Release and independent production validation passed; F-008 is resolved, and the browser lane is at clean deployment 1 of 5. |
+| Aug 15, 2026 | GitHub repository security settings | Enabled Dependabot alerts and Dependabot security-update pull requests while retaining weekly version updates and scheduled/pull-request npm-audit coverage; F-007 is resolved. |
 
 ## Recommended Execution Order
 
@@ -291,15 +315,14 @@ full chronology to GitHub and Git history.
    scroll/focus and clipped mobile-nav focus (F-016, F-004, F-005).
 2. Regenerate the tagged resume and optimize root image assets with byte and
    accessibility checks (F-003, F-017).
-3. Protect `main`, enable Dependabot security features, and add live header
-   checks to release creation (F-006, F-007, F-008).
+3. Protect `main` with required quality gates (F-006).
 4. Resolve duplicate GA4 history page views and make the Google Signals,
    disclosure, and consent choices explicit (F-015, F-013).
 5. Refocus AI outputs on professional evidence (F-010); treat static route-body
    rendering, immutable caching, and workflow hardening as lower-priority
    architectural improvements (F-009, F-011, F-012).
 
-## Audit Maintenance Rule
+## Historical Audit Maintenance Rule
 
 Update the section that owns current truth instead of appending a dated
 narrative. When a finding closes, remove it from **Current Findings** and add one

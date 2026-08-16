@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router";
+import { preloadRoute } from "../utils/routePrefetch.js";
 
 const navItems = [
   { to: "/", label: "Home" },
@@ -60,6 +61,9 @@ function Navbar() {
             <NavLink
               key={item.to}
               to={item.to}
+              onPointerEnter={() => void preloadRoute(item.to)}
+              onPointerDown={() => void preloadRoute(item.to)}
+              onFocus={() => void preloadRoute(item.to)}
               className={({ isActive }) =>
                 [
                   "group relative shrink-0 rounded-md px-2 py-1.5 text-slate-600 transition hover:bg-[#0B1220]/5 hover:text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 sm:rounded-none sm:px-0 sm:hover:bg-transparent",

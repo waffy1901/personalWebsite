@@ -22,7 +22,7 @@ description: Orchestrate adversarial, multi-agent regression verification for Wa
    - Use `$csp-security-header-maintainer` for CSP, security headers, JSON-LD hashes, GA/Formspree allowlists, redirects, frames, or third-party connections.
    - Use `$ga4-portfolio-analytics` for GA4 events, page tracking, key-event candidates, or analytics tests.
    - Use `$portfolio-performance-auditor` for route splitting, image loading priority, asset delivery, layout stability, or Vite bundle output.
-   - Use `$portfolio-audit-maintainer` for `docs/personal-website-repository-audit.md`, deployed evidence, finding classification, or audit provenance.
+   - Use `$portfolio-audit-maintainer` for GitHub quality findings and project state, `docs/quality-and-verification-policy.md`, deployed evidence, finding classification, or archived audit provenance.
    - Use `$portfolio-github-automation-maintainer` for GitHub Actions workflows, Dependabot, CodeQL, deployed-header automation, or workflow-run behavior.
 
 3. Build a lane plan from the diff and the user's wording.
@@ -47,4 +47,4 @@ description: Orchestrate adversarial, multi-agent regression verification for Wa
    - Separate true regressions from caveats and nitpicks in practical language.
    - If no issues are found, say so clearly and mention remaining test gaps or live checks not run.
    - Include commands run, checks skipped, and whether live browser QA may have affected GA4.
-   - If deployed findings must persist, update the repo audit artifact only when the user asks or the task explicitly includes audit documentation.
+   - If findings must persist, create or update the corresponding GitHub issue and project item only when the user asks or the task explicitly includes tracking updates. Never rewrite the archived audit as current state.
