@@ -21,8 +21,8 @@ export const workExperiences = [
     location: currentEmployment.location,
     date: currentEmployment.roleHistory[0].date,
     bullets: [
-      "Productionized a daily order-reconciliation process, replacing engineer-run scripts, laptop-initiated database tunnels, and human GCP credentials with a containerized Kubernetes workflow deployed through cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets.",
-      "Adapted the workflow from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container PGAdapter implementation, resolving cross-project IAM provisioning failures, and hardening no-data and failure paths through staged production validation before automating execution as a Kubernetes CronJob.",
+      "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets, eliminating human production access.",
+      "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation; automated 7 weekly runs via Kubernetes CronJob, eliminating ~120 engineer-hours of recurring toil annually.",
       "Diagnosed and resolved post\u2013cluster-rebuild service timeouts (1s failures) by identifying stale node-level routing caused by NodePort usage; migrated internal services to ClusterIP, eliminating node dependency and restoring reliable service-to-service communication.",
     ],
     logo: hdLogo,

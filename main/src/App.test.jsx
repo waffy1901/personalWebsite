@@ -722,9 +722,11 @@ describe("App routes", () => {
       `${currentEmployment.currentTitle} at ${currentEmployment.organization}`
     )
     expect(aiSummary).toContain(
-      "Productionized a daily order-reconciliation process"
+      "Productionized daily order reconciliation"
     )
-    expect(aiSummary).toContain("Adapted the workflow from Cloud SQL to Cloud Spanner")
+    expect(aiSummary).toContain(
+      "Re-architected order reconciliation from Cloud SQL to Cloud Spanner"
+    )
     expect(portfolioJson.skills).toContain("Cloud Spanner")
     expect(
       portfolioJson.technicalDomains.find(
@@ -961,16 +963,21 @@ describe("App routes", () => {
 
     expect(detailsRegion).toBeInTheDocument()
     expect(
-      screen.getByText(/productionized a daily order-reconciliation process/i)
+      screen.getByText(/productionized daily order reconciliation/i)
     ).toBeInTheDocument()
-    expect(screen.getByText(/cloud sql to cloud spanner/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /re-architected order reconciliation from cloud sql to cloud spanner/i
+      )
+    ).toBeInTheDocument()
+    expect(screen.getByText(/7 weekly runs via kubernetes cronjob/i)).toBeInTheDocument()
     expect(screen.getByText(/nodeport usage/i)).toBeInTheDocument()
     await waitFor(() => expect(backButton).toHaveFocus())
 
     await user.click(copyButton)
 
     expect(clipboardWriteMock).toHaveBeenCalledWith(
-      expect.stringContaining("Productionized a daily order-reconciliation process")
+      expect.stringContaining("Productionized daily order reconciliation")
     )
     expect(screen.getByRole("status")).toHaveTextContent(
       /software engineer ii details copied/i
