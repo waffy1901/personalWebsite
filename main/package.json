@@ -21,6 +21,7 @@
     "lint": "eslint src e2e playwright.production.config.js",
     "preview": "vite preview",
     "test": "vitest run --exclude=e2e/**",
+    "test:release": "vitest run scripts/release-version.test.mjs",
     "test:e2e:production": "playwright test --config=playwright.production.config.js"
   },
   "browserslist": {
