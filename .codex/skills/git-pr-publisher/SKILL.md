@@ -1,6 +1,6 @@
 ---
 name: git-pr-publisher
-description: Publish local repository changes as a focused GitHub pull request. Use when Codex is asked to stage files, commit changes, push the current or dev branch, create or update a PR against main, prepare PR title/body text, or safely ship local changes after implementation.
+description: Use when Codex is asked to stage files, commit changes, push the current or dev branch, create or update a GitHub pull request, prepare PR title, body, or label metadata, or safely ship local changes after implementation.
 ---
 
 # Git PR Publisher
@@ -51,8 +51,37 @@ Publish a local branch to GitHub with a reviewable commit and pull request. Opti
    - Check for an existing PR for the branch before creating a duplicate.
    - Default base branch: `main`.
    - Default head branch: current branch.
+   - Before creating a new PR, complete the label-selection process below and include the selected labels in the creation request.
+   - When updating an existing PR, preserve its labels unless the user asks to revise them.
    - Create a draft PR only if the user asks for draft or the branch is intentionally not ready for review.
    - Write a PR body with a short summary, verification performed, and any known risks or skipped checks.
+
+## PR Label Selection
+
+For every new PR:
+
+1. Retrieve the base repository's current labels and descriptions.
+2. Infer change signals from the reviewed diff and intended outcome, not the title alone.
+3. Select every existing label whose definition clearly matches. Multiple labels may apply.
+4. Include the labels in the same creation request. Use connector label metadata when supported; otherwise use one `--label <name>` argument per label with `gh pr create`.
+5. If no existing label clearly matches, create the PR without labels. Do not create a repository label as part of this workflow.
+
+Use this repository's labels when present:
+
+| Change signal | Label |
+| --- | --- |
+| Functional defect correction | `bug` |
+| New or improved product behavior | `enhancement` |
+| Documentation-focused change | `documentation` |
+| Dependency manifest, lockfile, or pinned action version update | `dependencies` |
+| GitHub Actions workflow or action update | `github_actions` |
+| JavaScript or JSX source change | `javascript` |
+
+Example: a JavaScript defect fix selects both `bug` and `javascript` when both labels exist.
+
+Treat documentation corrections as `documentation`, not `bug`, unless the same diff also repairs functional behavior.
+
+Common mistakes: validate names against the current label list instead of guessing, evaluate each matching signal instead of choosing only one primary label, and leave existing PR labels unchanged unless label revision is requested.
 
 ## PR Body Shape
 
