@@ -130,6 +130,7 @@ Run these commands from the repository root:
 | `npm run generate:public` | Regenerate public AI/discovery artifacts and README snapshots |
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the Vitest test suite |
+| `npm run test:release` | Run semantic-release version validator tests |
 | `npm run test:e2e:production` | Run telemetry-safe Chromium smoke tests against production |
 | `npm run build` | Create the production build |
 | `npm run preview` | Preview the production build locally |
@@ -238,6 +239,8 @@ Release tags use the following format:
 ```text
 deploy-YYYYMMDDTHHMMSSZ-<short-sha>
 ```
+
+Curated semantic milestones use `vMAJOR.MINOR.PATCH` alongside these immutable deployment records. See [docs/release-versioning.md](./docs/release-versioning.md) for the version policy and authenticated production-release procedure.
 
 The release workflow requires the `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID`
 repository secrets. Keep the token's expiration date in the

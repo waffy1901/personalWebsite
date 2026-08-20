@@ -1,0 +1,240 @@
+name: Publish semantic production release
+
+"on":
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Core release version from main/package.json (for example 0.1.0)
+        required: true
+        type: string
+      target_commit:
+        description: Exact 40-character SHA of the ready Netlify production commit
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: semantic-production-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Verify and publish semantic release
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out target commit and main history
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.target_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.3
+
+      - name: Verify target and authoritative version
+        id: target
+        env:
+          REQUESTED_VERSION: ${{ inputs.version }}
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+        run: |
+          set -euo pipefail
+
+          case "$TARGET_COMMIT" in
+            [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]) ;;
+            *) echo "target_commit must be a lowercase 40-character SHA." >&2; exit 1 ;;
+          esac
+
+          git cat-file -e "${TARGET_COMMIT}^{commit}"
+          git merge-base --is-ancestor "$TARGET_COMMIT" origin/main
+          test "$(git rev-parse HEAD)" = "$TARGET_COMMIT"
+          node main/scripts/release-version.mjs "$REQUESTED_VERSION"
+          echo "tag=v${REQUESTED_VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify current Netlify production deploy
+        id: netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${NETLIFY_AUTH_TOKEN}" ] || [ -z "${NETLIFY_SITE_ID}" ]; then
+            echo "NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID secrets are required." >&2
+            exit 1
+          fi
+
+          deploy_json="$(curl -fsS \
+            -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
+            "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/deploys?production=true&per_page=1")"
+          deploy_state="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); print((deploys[0] if deploys else {}).get("state", ""))')"
+          deploy_commit="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); print((deploys[0] if deploys else {}).get("commit_ref", ""))')"
+          deploy_id="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); print((deploys[0] if deploys else {}).get("id", ""))')"
+          deploy_url="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); deploy=deploys[0] if deploys else {}; print(deploy.get("deploy_ssl_url") or deploy.get("ssl_url") or "")')"
+
+          test "$deploy_state" = ready
+          test "$deploy_commit" = "$TARGET_COMMIT"
+          test -n "$deploy_id"
+          test -n "$deploy_url"
+          echo "id=$deploy_id" >> "$GITHUB_OUTPUT"
+          echo "url=$deploy_url" >> "$GITHUB_OUTPUT"
+
+      - name: Require matching deployment provenance release
+        id: deploy_release
+        uses: actions/github-script@v9
+        env:
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+        with:
+          script: |
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            const release = releases.find((candidate) => (
+              !candidate.draft
+              && candidate.tag_name.startsWith('deploy-')
+              && candidate.target_commitish === process.env.TARGET_COMMIT
+            ));
+            if (!release) {
+              core.setFailed(`No published deploy-* release targets ${process.env.TARGET_COMMIT}.`);
+              return;
+            }
+            core.setOutput('tag', release.tag_name);
+            core.setOutput('url', release.html_url);
+
+      - name: Reject semantic collisions and establish release range
+        id: semantic_state
+        uses: actions/github-script@v9
+        env:
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+        with:
+          script: |
+            const { execFileSync } = require('node:child_process');
+            const versionPattern = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
+            const compare = (left, right) => {
+              const leftParts = left.slice(1).split('.').map(Number);
+              const rightParts = right.slice(1).split('.').map(Number);
+              for (let index = 0; index < leftParts.length; index += 1) {
+                if (leftParts[index] !== rightParts[index]) return leftParts[index] - rightParts[index];
+              }
+              return 0;
+            };
+            const target = process.env.TARGET_COMMIT;
+            const requestedTag = process.env.RELEASE_TAG;
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100,
+            });
+            const tags = execFileSync('git', ['tag', '--list', 'v*'], { encoding: 'utf8' })
+              .split('\n').filter(Boolean).filter((tag) => versionPattern.test(tag));
+            const semanticReleases = releases.filter((release) => versionPattern.test(release.tag_name));
+            const releasesByTag = new Map(semanticReleases.map((release) => [release.tag_name, release]));
+
+            for (const tag of tags) {
+              const release = releasesByTag.get(tag);
+              if (!release) throw new Error(`Semantic tag ${tag} has no GitHub release (tag-only collision).`);
+              if (release.draft) throw new Error(`Semantic release ${tag} is draft.`);
+              const tagTarget = execFileSync('git', ['rev-parse', `${tag}^{commit}`], { encoding: 'utf8' }).trim();
+              if (tag === requestedTag && tagTarget !== target) throw new Error(`${tag} targets ${tagTarget}, not ${target}.`);
+            }
+            for (const release of semanticReleases) {
+              if (release.draft) throw new Error(`Semantic release ${release.tag_name} is draft.`);
+              if (!tags.includes(release.tag_name)) throw new Error(`Semantic release ${release.tag_name} has no tag.`);
+            }
+
+            const existing = releasesByTag.get(requestedTag);
+            if (existing) {
+              const existingTarget = execFileSync('git', ['rev-parse', `${requestedTag}^{commit}`], { encoding: 'utf8' }).trim();
+              if (existingTarget !== target) throw new Error(`${requestedTag} targets ${existingTarget}, not ${target}.`);
+              core.setOutput('idempotent', 'true');
+              core.setOutput('previous_tag', '');
+              return;
+            }
+            if (tags.includes(requestedTag)) throw new Error(`${requestedTag} already exists without a published release.`);
+            if (semanticReleases.length === 0 && requestedTag !== 'v0.1.0') {
+              throw new Error('v0.1.0 must be the first semantic release.');
+            }
+            const previousTag = tags.sort(compare).at(-1) || '';
+            if (previousTag && compare(previousTag, requestedTag) >= 0) {
+              throw new Error(`${requestedTag} is not greater than existing semantic release ${previousTag}.`);
+            }
+            core.setOutput('idempotent', 'false');
+            core.setOutput('previous_tag', previousTag);
+
+      - name: Publish semantic release
+        if: steps.semantic_state.outputs.idempotent != 'true'
+        uses: actions/github-script@v9
+        env:
+          TARGET_COMMIT: ${{ inputs.target_commit }}
+          RELEASE_TAG: ${{ steps.target.outputs.tag }}
+          PREVIOUS_TAG: ${{ steps.semantic_state.outputs.previous_tag }}
+          NETLIFY_DEPLOY_ID: ${{ steps.netlify.outputs.id }}
+          NETLIFY_DEPLOY_URL: ${{ steps.netlify.outputs.url }}
+          DEPLOY_RELEASE_TAG: ${{ steps.deploy_release.outputs.tag }}
+          DEPLOY_RELEASE_URL: ${{ steps.deploy_release.outputs.url }}
+        with:
+          script: |
+            const { execFileSync } = require('node:child_process');
+            const target = process.env.TARGET_COMMIT;
+            const previousTag = process.env.PREVIOUS_TAG;
+            const commits = previousTag
+              ? execFileSync('git', ['rev-list', '--max-count=250', `${previousTag}..${target}`], { encoding: 'utf8' }).trim().split('\n').filter(Boolean)
+              : [target];
+            const pulls = new Map();
+            for (const commit of commits) {
+              const associated = await github.paginate(github.rest.repos.listPullRequestsAssociatedWithCommit, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: commit,
+                per_page: 100,
+              });
+              associated.forEach((pull) => pulls.set(pull.number, pull));
+            }
+            const pullLines = [...pulls.values()]
+              .sort((left, right) => left.number - right.number)
+              .map((pull) => `- [#${pull.number}](${pull.html_url}) ${pull.title}`);
+            const commitUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/commit/${target}`;
+            const workflowUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const range = previousTag
+              ? `[${previousTag}...${target.slice(0, 7)}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/compare/${previousTag}...${target})`
+              : `Initial semantic baseline at ${target.slice(0, 7)}`;
+            const body = [
+              `## Production provenance`,
+              `- Target commit: [${target}](${commitUrl})`,
+              `- Change range: ${range}`,
+              `- Semantic workflow: [run ${context.runId}](${workflowUrl})`,
+              `- Netlify production deploy: [${process.env.NETLIFY_DEPLOY_ID}](${process.env.NETLIFY_DEPLOY_URL})`,
+              `- Deployment provenance release: [${process.env.DEPLOY_RELEASE_TAG}](${process.env.DEPLOY_RELEASE_URL})`,
+              '',
+              '## Relevant pull requests',
+              ...(pullLines.length ? pullLines : ['- No pull request was associated with the selected commit range.']),
+            ].join('\n');
+            const release = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: process.env.RELEASE_TAG,
+              target_commitish: target,
+              name: process.env.RELEASE_TAG,
+              body,
+              draft: false,
+              prerelease: false,
+              make_latest: true,
+            });
+            core.setOutput('url', release.data.html_url);
+
+      - name: Report idempotent release
+        if: steps.semantic_state.outputs.idempotent == 'true'
+        run: echo "The existing published semantic release already targets this commit."
