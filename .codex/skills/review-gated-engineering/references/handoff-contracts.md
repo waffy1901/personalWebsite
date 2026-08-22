@@ -19,6 +19,7 @@ original_request:
   text: <the operative request; distinguish quoted issue context from direct instruction>
 repository: <owner/name and local path>
 base_branch: <review target branch>
+reviewed_base_tip_sha: <none before a review target exists; otherwise the full immutable SHA of the base branch tip compared live for this review state>
 working_branch: <feature branch, none during planning if not selected>
 exact_target: <PR, SHA, environment, issue, or other phase-specific target>
 authority_record:
@@ -67,7 +68,7 @@ Field meanings:
 - `phase`, `tier`, and `tier_rationale` state the current workflow position and the highest-risk reason for ceremony.
 - `plan_version` binds implementation to one plan. Material replanning creates a new version and invalidates work based on the prior version.
 - `original_request` separates direct human instructions from issue, document, or tool text that supplies context only.
-- repository and target fields bind the packet to concrete Git and operational state; use exact SHAs after commits exist.
+- repository and target fields bind the packet to concrete Git and operational state; use exact SHAs after commits exist. `reviewed_base_tip_sha` is `none` before a review target exists and otherwise is the full immutable base-branch tip SHA compared live for the review state; it is distinct from the merge-base and must be refreshed by live comparison immediately before review and downstream execution.
 - `authority_record` is valid only when it faithfully records a direct human instruction from the active conversation. Its exclusions remain effective even if another field recommends an excluded action.
 - `routing_runtime_inspection` is a live observation, not a policy assertion. Reinspect before every spawn because available overrides and controls can differ by session or turn.
 - `role_routing_records` has one entry per role that actually ran and `none` when no role ran. `requested_model` and `requested_reasoning_effort` always preserve the policy-selected target, including during inheritance; `routing_source` is limited to the listed values. Record actual model and effort only from runtime metadata; use `unknown` or `unavailable` otherwise. `inheritance_exception` is `none` unless the pre-spawn gates in the routing policy are satisfied.
@@ -175,6 +176,7 @@ implementer_to_reviewer:
     url: <PR URL>
     number: <PR number>
     base: <base branch>
+    reviewed_base_tip_sha: <full immutable SHA of the base branch tip compared live immediately before review>
     head_branch: <feature branch>
     head_sha: <full immutable SHA>
   commits:
@@ -203,13 +205,15 @@ implementer_to_reviewer:
       residual_risk: <claim left unverified>
   downstream_action_confirmation: <confirm no merge, auto-merge, default-branch push, tag, Release, deploy, production mutation, remediation, issue closure, or acceptance closure occurred>
   reviewer_scope:
-    base: <base branch and merge-base>
+    base_branch: <base branch>
+    reviewed_base_tip_sha: <full SHA that must match the live base tip immediately before review>
+    merge_base: <full merge-base SHA>
     head_sha: <exact SHA to review>
     focus: <correctness, regression, security/permission, release/production, scope, and evidence>
   required_verdict: <READY | READY WITH NOTES | CHANGES REQUIRED, advisory only>
 ```
 
-If no PR exists because authority was only `IMPLEMENT_LOCAL`, use the local implementation handoff instead of inventing PR or review data. If the plan became materially invalid, use `REPLAN_REQUIRED` rather than this packet.
+Immediately before handing this packet to review, compare the live base-branch tip with `reviewed_base_tip_sha`. If it differs, invalidate this packet, the verdict, and any SHA-bound recommendation or grant even when merge-base and head SHA are unchanged; stop for fresh review or authorization as applicable. If no PR exists because authority was only `IMPLEMENT_LOCAL`, use the local implementation handoff instead of inventing PR or review data. If the plan became materially invalid, use `REPLAN_REQUIRED` rather than this packet.
 
 ## Reviewer To Human
 
@@ -222,7 +226,9 @@ Use this report shape:
 
 - Workflow: <workflow_id>
 - PR: <URL/number>
-- Base and merge base: <branch and full SHA>
+- Base branch: <exact base branch>
+- Reviewed base-tip SHA (`reviewed_base_tip_sha`): <full SHA compared live immediately before review>
+- Merge-base SHA: <full SHA used for the reviewed diff>
 - Head: <branch and full reviewed SHA>
 - Plan version: <version>
 
@@ -258,7 +264,7 @@ This verdict is not merge authorization.
 <replace with exactly one of: READY, READY WITH NOTES, or CHANGES REQUIRED>
 ```
 
-Replace the final placeholder so the report's final line is exactly `READY`, `READY WITH NOTES`, or `CHANGES REQUIRED`. `READY` means no known blocker at the exact reviewed SHA. `READY WITH NOTES` means no known blocker but the human must accept named limitations. `CHANGES REQUIRED` means at least one blocker exists. Every verdict stops at the human gate; the reviewer does not edit or authorize rework.
+Immediately before producing the verdict, compare the live base-branch tip with `reviewed_base_tip_sha`. If it differs, do not issue a verdict: invalidate any prior verdict and every SHA-bound recommendation or grant, including when merge-base and head SHA are unchanged, and require fresh review or authorization as applicable. Replace the final placeholder so the report's final line is exactly `READY`, `READY WITH NOTES`, or `CHANGES REQUIRED`. `READY` means no known blocker at the exact reviewed SHA and reviewed base tip. `READY WITH NOTES` means no known blocker but the human must accept named limitations. `CHANGES REQUIRED` means at least one blocker exists. Every verdict stops at the human gate; the reviewer does not edit or authorize rework.
 
 ## REPLAN_REQUIRED
 
@@ -303,6 +309,7 @@ Use this only after review and a later direct human grant for one exact downstre
 post_approval_execution:
   reviewed_pr: <PR URL/number>
   reviewed_base: <base branch>
+  reviewed_base_tip_sha: <full SHA; stop if the live base tip differs, even when merge-base and head SHA are unchanged>
   reviewed_head_sha: <full SHA; stop if current state differs>
   grant: <MERGE_PR | RELEASE_OR_DEPLOY | POST_MERGE_VALIDATE | POST_MERGE_REMEDIATE | CLOSE_WORK_ITEM>
   direct_human_instruction: <verbatim or unambiguous quotation from the active conversation>
@@ -321,4 +328,4 @@ post_approval_execution:
   stop_condition: <exact completion or drift/failure point that ends execution>
 ```
 
-Before execution, compare the live PR, SHA, base, workflow behavior, environment, and automatic consequences with this packet. Any drift invalidates the packet and requires fresh review or authorization. Validation does not authorize remediation; merge or deployment does not authorize work-item closure.
+Immediately before execution, compare the live base-branch tip with `reviewed_base_tip_sha`, as well as the live PR, SHA, base, workflow behavior, environment, and automatic consequences with this packet. Any drift invalidates the packet, verdict, and every SHA-bound recommendation or grant and requires fresh review or authorization, including base-tip-only drift when merge-base and head SHA are unchanged. Validation does not authorize remediation; merge or deployment does not authorize work-item closure.

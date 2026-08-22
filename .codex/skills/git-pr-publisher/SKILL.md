@@ -70,7 +70,7 @@ Do only the actions covered by that instruction or grant. A project plan, issue,
 
 8. Stop at the review boundary.
    - Do not merge, enable auto-merge, tag, create a Release, dispatch workflows, deploy, mutate production, close work items or acceptance criteria, or begin post-merge work.
-   - Return the implementation-to-review packet from `../review-gated-engineering/references/handoff-contracts.md` when that workflow is active. Bind it to the PR base, merge base, head branch, and full head SHA.
+   - Return the implementation-to-review packet from `../review-gated-engineering/references/handoff-contracts.md` when that workflow is active. Bind it to the exact PR base branch, full `reviewed_base_tip_sha`, merge-base SHA, head branch, and full head SHA; the base-tip SHA must be obtained by a live comparison immediately before review handoff.
    - Include the implemented plan/version, commits, changed files and affected surfaces, delivered behavior, exact checks/results, deviations and materiality, known and residual risks, skipped checks, confirmation that no forbidden downstream action occurred, reviewer scope, and required verdict format.
 
 ## PR Label Selection

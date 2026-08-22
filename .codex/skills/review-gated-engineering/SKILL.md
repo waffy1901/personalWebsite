@@ -68,7 +68,7 @@ REVIEW -> HUMAN_GATE: READY | READY_WITH_NOTES | CHANGES_REQUIRED
 HUMAN_GATE -> STOP | authorized IMPLEMENT | authorized downstream phase
 ```
 
-Give every plan a version. A material replan creates a new version and invalidates implementation based on the old one. Bind review to the exact base and PR head SHA. A new commit, rebase, force-push, base change, or material target change invalidates the verdict and any SHA-bound merge recommendation or grant.
+Give every plan a version. A material replan creates a new version and invalidates implementation based on the old one. Bind review to the exact base branch, `reviewed_base_tip_sha`, merge-base SHA, and PR head SHA. Immediately before review, resolve the live tip of the base branch and compare its full SHA with `reviewed_base_tip_sha`. Immediately before any downstream execution, repeat that live comparison. A mismatch invalidates the verdict and any SHA-bound recommendation or grant, even when the merge-base and head SHA are unchanged; stop for fresh review or authorization as applicable. A new commit, rebase, force-push, base-tip change, or material target change has the same invalidating effect.
 
 If no direct implementation grant exists, stop after planning at `WAIT_FOR_IMPLEMENT_AUTHORITY`. For unresolved material `T2` or `T3` choices, stop at `WAIT_FOR_PLAN_DECISION`. A clear `T1` request that directly grants implementation through a PR may proceed without a second plan approval when scope remains stable.
 
@@ -107,7 +107,7 @@ Preserve safe work unless reversal is explicitly authorized. Return the invalida
 
 ## Require Independent Review
 
-After a reviewable PR exists, give a fresh reviewer the original request and acceptance criteria, approved plan/version, repository conventions and applicable skills, actual base-to-head diff at the exact SHA, verification evidence, and implementer handoff. The reviewer must inspect those sources independently and look for omissions, regressions, security/permission issues, release/production consequences, scope creep, weak evidence, and insufficient tests rather than merely summarize the PR.
+After a reviewable PR exists, give a fresh reviewer the original request and acceptance criteria, approved plan/version, repository conventions and applicable skills, actual base-to-head diff at the exact SHA, verification evidence, and implementer handoff. Immediately before starting that review, the reviewer must resolve the live base tip and compare it to the packet's `reviewed_base_tip_sha`; on mismatch, stop because the prior review target and any SHA-bound recommendation or grant are invalid, even if merge-base and head SHA are unchanged. The reviewer must inspect those sources independently and look for omissions, regressions, security/permission issues, release/production consequences, scope creep, weak evidence, and insufficient tests rather than merely summarize the PR.
 
 The reviewer reports prioritized actionable findings, residual risks, automatic merge consequences, and a recommendation, and must state `This verdict is not merge authorization.` The final line must be exactly one of:
 
