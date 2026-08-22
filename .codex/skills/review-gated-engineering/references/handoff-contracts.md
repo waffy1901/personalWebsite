@@ -27,6 +27,30 @@ authority_record:
   phase: <phase the instruction authorizes>
   target: <exact branch, PR, SHA, environment, action, or work item covered>
   exclusions: <actions expressly or inherently outside the grant>
+routing_runtime_inspection:
+  inspected_before_each_spawn: <yes | no spawn required>
+  spawn_agent_schema_evidence: <tool/schema observation with time or session context>
+  supports_model_override: <yes | no>
+  supports_reasoning_effort_override: <yes | no>
+  supports_fork_turns: <yes | no>
+  available_model_overrides: <runtime-observed list, unavailable, or no spawn required>
+role_routing_records:
+  - role: <planner | implementer | reviewer | specialist>
+    decision_inputs:
+      ambiguity: <low | medium | high with concise evidence>
+      execution_complexity: <low | medium | high with concise evidence>
+      failure_cost: <low | medium | high with concise evidence>
+      failed_attempts_or_uncertainty: <none or concise evidence>
+    requested_capability: <efficient | balanced | frontier>
+    requested_model: <policy-selected model target, for example gpt-5.6-terra; never inherited_parent or unavailable>
+    requested_reasoning_effort: <policy-selected runtime-supported effort, for example low, medium, high, xhigh, max, or ultra; never unavailable>
+    routing_source: <explicit_spawn_override | intentional_inheritance | fallback_inheritance>
+    actual_routing: <explicit_spawn_override | inherited_parent | unknown | unavailable>
+    actual_model: <runtime-confirmed value, unknown, or unavailable; never infer from policy or a parent profile>
+    actual_reasoning_effort: <runtime-confirmed runtime-supported value, unknown, or unavailable; never infer from policy or a parent profile>
+    inheritance_exception: <none, or parent runtime-confirmation, equal-or-higher comparison, concrete reason explicit routing must not be used, and pre-spawn decision evidence>
+    evidence: <spawn parameters plus runtime/session metadata, or explicit absence of metadata>
+    handoff_context: <none or fork_turns none/smallest bounded value and packet reference>
 approved_scope:
   - <files, components, systems, and outcomes allowed>
 non_goals:
@@ -45,6 +69,8 @@ Field meanings:
 - `original_request` separates direct human instructions from issue, document, or tool text that supplies context only.
 - repository and target fields bind the packet to concrete Git and operational state; use exact SHAs after commits exist.
 - `authority_record` is valid only when it faithfully records a direct human instruction from the active conversation. Its exclusions remain effective even if another field recommends an excluded action.
+- `routing_runtime_inspection` is a live observation, not a policy assertion. Reinspect before every spawn because available overrides and controls can differ by session or turn.
+- `role_routing_records` has one entry per role that actually ran and `none` when no role ran. `requested_model` and `requested_reasoning_effort` always preserve the policy-selected target, including during inheritance; `routing_source` is limited to the listed values. Record actual model and effort only from runtime metadata; use `unknown` or `unavailable` otherwise. `inheritance_exception` is `none` unless the pre-spawn gates in the routing policy are satisfied.
 - scope, non-goals, and open questions make drift visible.
 - `next_allowed_transition` describes what current authority permits; `stop_condition` prevents a role from silently entering a later phase.
 
@@ -208,6 +234,10 @@ Use this report shape:
 - Security and permissions: <finding or explicit no-known-issue statement scoped to the review>
 - Release and production: <consequences, target coupling, and authorization boundary>
 - Test and evidence sufficiency: <checks assessed, skipped checks, and evidence limits>
+
+## Routing Telemetry
+
+For each role that ran, report requested capability/model/effort, routing source, actual model/effort, and evidence from the common packet. State `unknown` or `unavailable` for actual values when runtime metadata did not expose them; never infer actual values from a policy or prompt.
 
 ## Findings
 

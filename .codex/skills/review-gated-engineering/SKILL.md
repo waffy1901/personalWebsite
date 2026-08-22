@@ -41,20 +41,17 @@ Security, production-state, permission, destructive, or difficult-to-reverse wor
 
 Use one role per phase, sequentially. The coordinator may plan. For `T1` and above, use one scoped implementer and a fresh independent reviewer; add at most one specialist for a concrete named risk. Do not create a swarm or duplicate roles merely for confidence. Prefer more reasoning effort before adding agents.
 
-Resolve capability classes against models available in the active session; do not persist model names in the workflow contract:
+Keep `efficient`, `balanced`, and `frontier` as capability classes, not permanent model identities. Before considering any delegated role, read [references/routing-policy.md](references/routing-policy.md). It makes the live capability inspection, selection, fallback, non-full-history handoff, telemetry, and behavioral regression cases mandatory.
 
-- `efficient`: routine, bounded work;
-- `balanced`: normal engineering planning, implementation, and review;
-- `frontier`: ambiguity, architecture, high blast radius, security, or production-critical reasoning.
+At **each** delegated planner, implementer, reviewer, or specialist spawn:
 
-| Tier | Planner | Implementer | Reviewer |
-| --- | --- | --- | --- |
-| `T0` | Efficient, low/medium | Efficient or balanced, low/medium | Same-agent self-review; escalate if hidden risk appears |
-| `T1` | Balanced, medium | Balanced, medium/high | Fresh balanced, medium/high |
-| `T2` | Frontier, high or higher when justified | Balanced high; frontier when execution is deeply coupled | Fresh frontier, high or higher |
-| `T3` | Frontier, highest justified effort | Frontier, high or higher | Fresh frontier, at least as rigorous as planning |
+1. Inspect the live `spawn_agent` schema and active-session model-override list. Record the evidence; prompt wording and custom profiles are not runtime evidence.
+2. Choose the least-cost model and effort that meet the role/tier floor after weighing ambiguity, execution complexity, failure cost, role, failed attempts, and uncertainty.
+3. If both controls exist, pass explicit `model` and `reasoning_effort` unless the reference's documented pre-spawn intentional-inheritance exception is satisfied. Every delegated spawn sets `fork_turns: "none"` (or the smallest justified positive bounded context). Do not omit `fork_turns` or use full-history inheritance as a shortcut. Supply the complete structured handoff packet instead.
+4. If either control is unavailable and the reference's intentional-inheritance exception is not satisfied, do not claim explicit routing occurred. Use only the visible fallback defined by the reference and record it. Never launch external `codex exec` merely to bypass active-session controls without a direct human grant for that architectural change.
+5. Add a routing record for every role that actually ran. Actual model/effort are `unknown` or `unavailable` unless runtime metadata proves them; policy intent is never proof of runtime selection.
 
-Let ambiguity and architecture set the planner floor, execution complexity set the implementer floor, and failure cost set the reviewer floor. Escalate for unresolved ambiguity, repeated failed approaches, material plan deviation, unestablished verification, or reviewer uncertainty. Model strength never expands authority.
+Ordinary parent inheritance is forbidden when explicit controls exist. An intentional inheritance decision must be exceptional, justified, and recorded; a Sol Max parent never implies Sol Max children. A reviewer remains a fresh agent and may use a different model or effort from the implementer. Model strength never expands authority.
 
 ## Enforce States And Invalidation
 
