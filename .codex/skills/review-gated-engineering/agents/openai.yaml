@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review-Gated Engineering"
+  short_description: "Plan, implement, review, then gate"
+  default_prompt: "Use $review-gated-engineering to take this substantive change through planning, implementation to a PR, and independent review, then stop for my approval."

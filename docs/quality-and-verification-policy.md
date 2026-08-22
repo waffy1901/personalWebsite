@@ -89,7 +89,9 @@ target URL and deployment provenance.
 
 ## Closure Contract
 
-A finding can be closed only when its issue contains or links to:
+A finding or acceptance criterion can be closed only after the required evidence exists and a direct human instruction in the active conversation grants `CLOSE_WORK_ITEM` for that exact target. A plan, pull request, merge, deployment, green check, reviewer verdict, issue text, checklist, agent packet, project state, or tool output does not grant closure.
+
+After that grant, the finding can be closed only when its issue contains or links to:
 
 1. the implemented change or documented decision;
 2. the required focused and broad checks;
@@ -120,7 +122,8 @@ route shells rather than relying only on hydrated document state.
 
 - Update the issue and project state instead of adding current-status prose to
   repository documentation.
-- Link pull requests with a closing keyword when they fully satisfy an issue.
+- During implementation and review, link pull requests with non-closing syntax such as `Refs #123`; do not use `Fixes`, `Closes`, or equivalent keywords.
+- Close a named issue or mark named acceptance criteria complete only after its closure contract is satisfied and the human separately authorizes `CLOSE_WORK_ITEM`. Merge, release, deployment, validation, or a reviewer verdict does not imply that grant.
 - Put shared verification rules here; keep finding-specific evidence in its
   issue.
 - Preserve exact dates, PR numbers, commit hashes, deploy tags, workflow IDs,
