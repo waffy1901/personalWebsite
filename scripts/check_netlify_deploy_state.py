@@ -5,6 +5,10 @@ import sys
 
 
 TERMINAL_FAILURE_STATES = {"error", "rejected"}
+NO_CONTENT_CHANGE_ERROR_MESSAGE = (
+    "Failed during stage 'checking build content for changes': "
+    "Canceled build due to no content change"
+)
 
 
 def _optional_string(deploy, field):
@@ -41,14 +45,19 @@ def classify_deploys(deploys, expected_commit):
     deploy_ssl_url = _optional_string(deploy, "deploy_ssl_url")
     ssl_url = _optional_string(deploy, "ssl_url")
     deploy_url = deploy_ssl_url or ssl_url
+    error_message = _optional_string(deploy, "error_message")
 
-    skipped = deploy.get("skipped", False)
-    if not isinstance(skipped, bool):
-        raise ValueError("latest deploy field 'skipped' must be a boolean")
+    skipped = deploy.get("skipped")
+    if skipped is not None and not isinstance(skipped, bool):
+        raise ValueError(
+            "latest deploy field 'skipped' must be a boolean or null"
+        )
 
     decision = "wait"
     if commit_ref == expected_commit:
         if skipped is True:
+            decision = "skipped"
+        elif state == "error" and error_message == NO_CONTENT_CHANGE_ERROR_MESSAGE:
             decision = "skipped"
         elif state == "ready":
             decision = "ready"
