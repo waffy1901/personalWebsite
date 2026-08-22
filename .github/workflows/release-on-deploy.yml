@@ -43,16 +43,20 @@ jobs:
         working-directory: main
         run: npm test
 
+      - name: Test Netlify deploy-state classifier
+        run: python3 scripts/test_netlify_deploy_state.py
+
       - name: Build
         working-directory: main
         run: npm run build
 
-  release:
-    name: Create release
+  resolve_deploy:
+    name: Resolve Netlify production deploy
     runs-on: ubuntu-latest
     needs: verify
-    permissions:
-      contents: write
+    outputs:
+      deployed: ${{ steps.resolve.outputs.deployed }}
+      deploy_url: ${{ steps.resolve.outputs.deploy_url }}
 
     steps:
       - name: Check out repository
@@ -60,12 +64,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 22.22.3
-
-      - name: Wait for Netlify production deploy
+      - name: Resolve Netlify production deploy
+        id: resolve
         env:
           EXPECTED_COMMIT: ${{ github.sha }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
@@ -82,23 +82,67 @@ jobs:
             deploy_json="$(curl -fsS \
               -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
               "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/deploys?production=true&per_page=1")"
-            deploy_state="$(printf '%s' "$deploy_json" | python3 -c 'import json, sys; deploys = json.load(sys.stdin); deploy = deploys[0] if deploys else {}; print(deploy.get("state", ""))')"
-            deploy_commit="$(printf '%s' "$deploy_json" | python3 -c 'import json, sys; deploys = json.load(sys.stdin); deploy = deploys[0] if deploys else {}; print(deploy.get("commit_ref", ""))')"
-            deploy_url="$(printf '%s' "$deploy_json" | python3 -c 'import json, sys; deploys = json.load(sys.stdin); deploy = deploys[0] if deploys else {}; print(deploy.get("deploy_ssl_url") or deploy.get("ssl_url") or "")')"
-
-            if [ "$deploy_state" = "ready" ] && [ "$deploy_commit" = "$EXPECTED_COMMIT" ]; then
-              echo "Netlify production deploy is ready for ${EXPECTED_COMMIT}: ${deploy_url}"
-              break
-            fi
-
-            if [ "$attempt" = "45" ]; then
-              echo "Timed out waiting for Netlify production deploy ${EXPECTED_COMMIT}. Last state=${deploy_state}, commit=${deploy_commit}, url=${deploy_url}"
+            if ! classification="$(printf '%s' "$deploy_json" | python3 scripts/check_netlify_deploy_state.py --expected-commit "$EXPECTED_COMMIT")"; then
+              echo "::error::Could not classify the latest Netlify production deploy."
               exit 1
             fi
 
-            echo "Waiting for Netlify production deploy ${EXPECTED_COMMIT}; attempt ${attempt}/45 saw state=${deploy_state}, commit=${deploy_commit}"
-            sleep 20
+            decision="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["decision"])')"
+            deploy_state="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["state"])')"
+            deploy_commit="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["commit_ref"])')"
+            deploy_url="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["deploy_url"])')"
+
+            case "$decision" in
+              ready)
+                echo "Netlify production deploy is ready for ${EXPECTED_COMMIT}: ${deploy_url}"
+                echo "deployed=true" >> "$GITHUB_OUTPUT"
+                echo "deploy_url=${deploy_url}" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              skipped)
+                echo "Netlify skipped the production deploy for ${EXPECTED_COMMIT}; no deployment release will be created."
+                echo "deployed=false" >> "$GITHUB_OUTPUT"
+                echo "deploy_url=" >> "$GITHUB_OUTPUT"
+                exit 0
+                ;;
+              failed)
+                echo "::error::Netlify production deploy ${EXPECTED_COMMIT} reached terminal state ${deploy_state}."
+                exit 1
+                ;;
+              wait)
+                if [ "$attempt" = "45" ]; then
+                  echo "::error::Timed out waiting for Netlify production deploy ${EXPECTED_COMMIT}. Last state=${deploy_state}, commit=${deploy_commit}, url=${deploy_url}"
+                  exit 1
+                fi
+
+                echo "Waiting for Netlify production deploy ${EXPECTED_COMMIT}; attempt ${attempt}/45 saw state=${deploy_state}, commit=${deploy_commit}"
+                sleep 20
+                ;;
+              *)
+                echo "::error::Deploy-state classifier returned unexpected decision ${decision}."
+                exit 1
+                ;;
+            esac
           done
+
+  release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: resolve_deploy
+    if: needs.resolve_deploy.outputs.deployed == 'true'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.3
 
       - name: Test deployed route checker
         run: python3 scripts/test_deployed_routes.py
@@ -138,6 +182,8 @@ jobs:
 
       - name: Create GitHub release
         uses: actions/github-script@v9
+        env:
+          NETLIFY_DEPLOY_URL: ${{ needs.resolve_deploy.outputs.deploy_url }}
         with:
           script: |
             const shortSha = context.sha.slice(0, 7);
@@ -154,6 +200,7 @@ jobs:
               `- Branch: ${context.ref.replace("refs/heads/", "")}`,
               `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               "- Site: https://waffy.dev",
+              `- Netlify deploy: ${process.env.NETLIFY_DEPLOY_URL}`,
             ].join("\n");
 
             await github.rest.repos.createRelease({

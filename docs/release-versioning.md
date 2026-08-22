@@ -2,8 +2,10 @@
 
 This repository keeps two independent release records:
 
-- `deploy-YYYYMMDDTHHMMSSZ-<short-sha>` releases are immutable production-deployment provenance. Every successful production merge continues to create one, and they are never retagged, deleted, or made Latest.
+- `deploy-YYYYMMDDTHHMMSSZ-<short-sha>` releases are immutable production-deployment provenance. A successful `main` commit creates one only when Netlify reports a ready production deploy for that exact commit, and they are never retagged, deleted, or made Latest.
 - `vMAJOR.MINOR.PATCH` releases are deliberately curated milestones. They point to an already-ready Netlify production commit and are marked Latest.
+
+The deployment-release workflow exits successfully without creating a GitHub release when Netlify explicitly marks the exact commit's production deploy as skipped. This covers non-deployable commits without weakening the exact-commit gate: terminal deploy failures, malformed responses, and polling timeouts still fail closed.
 
 `main/package.json` is the authoritative semantic version. `main/package-lock.json` repeats the same value in its top-level `version` and root-package `packages[""]` fields. A release request must use the package version without a `v`; the published tag receives the `v` prefix.
 

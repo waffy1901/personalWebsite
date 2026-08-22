@@ -51,6 +51,9 @@ jobs:
       - name: Test deployed route checker
         run: python3 scripts/test_deployed_routes.py
 
+      - name: Test Netlify deploy-state classifier
+        run: python3 scripts/test_netlify_deploy_state.py
+
       - name: Check AI discovery artifacts
         run: node .codex/skills/ai-discovery-maintainer/scripts/check_ai_discovery.mjs "$GITHUB_WORKSPACE"
 
