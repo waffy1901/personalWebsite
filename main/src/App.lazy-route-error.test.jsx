@@ -13,11 +13,13 @@ import App from "./App.jsx"
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
 
 it("preserves the shell and recovers from a rejected lazy route", async () => {
   const user = userEvent.setup()
 
+  vi.stubGlobal("scrollTo", vi.fn())
   vi.spyOn(console, "error").mockImplementation(() => {})
 
   render(

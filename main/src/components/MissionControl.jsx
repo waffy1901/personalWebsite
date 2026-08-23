@@ -77,7 +77,11 @@ const diagramPositions = [
 ]
 
 export function PageShell({ children, className = "" }) {
-  return <main className={`mc-page ${className}`}>{children}</main>
+  return (
+    <main id="main-content" tabIndex={-1} className={`mc-page ${className}`}>
+      {children}
+    </main>
+  )
 }
 
 export function PageContainer({ children, className = "" }) {

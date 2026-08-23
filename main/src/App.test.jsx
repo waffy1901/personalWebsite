@@ -159,10 +159,12 @@ beforeEach(() => {
       disconnect() {}
     }
   )
+  vi.stubGlobal("scrollTo", vi.fn())
 })
 
 afterEach(() => {
   cleanup()
+  vi.restoreAllMocks()
   document.getElementById("google-analytics-script")?.remove()
   delete window.__portfolioGaInitialized
   delete window.dataLayer
@@ -455,6 +457,61 @@ describe("App routes", () => {
       "/",
       "/projects/",
     ])
+  })
+
+  it("resets scroll and focuses the route main for forward navigation", async () => {
+    const user = userEvent.setup()
+    const scrollToMock = vi.fn()
+    const focusSpy = vi.spyOn(HTMLElement.prototype, "focus")
+    vi.stubGlobal("scrollTo", scrollToMock)
+    renderBrowserRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    const projectsLink = within(
+      screen.getByRole("navigation", { name: /primary navigation/i })
+    ).getByRole("link", { name: /projects/i })
+
+    await user.click(projectsLink)
+    await screen.findByRole("heading", {
+      name: /practical builds for real workflows/i,
+    })
+
+    const main = screen.getByRole("main")
+    expect(main).toHaveAttribute("id", "main-content")
+    expect(main).toHaveAttribute("tabindex", "-1")
+    await waitFor(() =>
+      expect(scrollToMock).toHaveBeenCalledWith({
+        top: 0,
+        left: 0,
+        behavior: "instant",
+      })
+    )
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true })
+    expect(main).toHaveFocus()
+  })
+
+  it("does not override scroll or focus during history navigation", async () => {
+    const scrollToMock = vi.fn()
+    const focusSpy = vi.spyOn(HTMLElement.prototype, "focus")
+    vi.stubGlobal("scrollTo", scrollToMock)
+    renderBrowserRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    scrollToMock.mockClear()
+    focusSpy.mockClear()
+    window.history.pushState(
+      { key: "history-navigation", idx: 1 },
+      "",
+      "/projects/"
+    )
+    fireEvent.popState(window)
+
+    await screen.findByRole("heading", {
+      name: /practical builds for real workflows/i,
+    })
+
+    expect(scrollToMock).not.toHaveBeenCalled()
+    expect(focusSpy).not.toHaveBeenCalled()
   })
 
   it("excludes query strings and fragments from analytics page views", async () => {

@@ -13,6 +13,7 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigationType,
 } from "react-router"
 import Home from "./pages/Home.jsx"
 import Navbar from "./components/Navbar.jsx"
@@ -146,7 +147,12 @@ class RouteErrorBoundary extends Component {
 
 function App() {
   const location = useLocation()
-  const [displayedLocation, setDisplayedLocation] = useState(location)
+  const navigationType = useNavigationType()
+  const [displayedRoute, setDisplayedRoute] = useState(() => ({
+    location,
+    navigationType,
+  }))
+  const displayedLocation = displayedRoute.location
   const routePending = location.key !== displayedLocation.key
 
   useEffect(() => {
@@ -155,9 +161,22 @@ function App() {
     // Keep the router's URL and page-view semantics immediate, but update the
     // lazy route tree in a transition so its existing content stays visible.
     startTransition(() => {
-      setDisplayedLocation(location)
+      setDisplayedRoute({ location, navigationType })
     })
-  }, [displayedLocation.key, location])
+  }, [displayedLocation.key, location, navigationType])
+
+  useEffect(() => {
+    if (
+      displayedRoute.navigationType !== "PUSH" &&
+      displayedRoute.navigationType !== "REPLACE"
+    ) {
+      return
+    }
+
+    const scrollToTop = { top: 0, left: 0, behavior: "instant" }
+    window.scrollTo(scrollToTop)
+    document.getElementById("main-content")?.focus({ preventScroll: true })
+  }, [displayedRoute])
 
   usePageTracking()
   return (
