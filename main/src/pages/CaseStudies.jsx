@@ -11,6 +11,7 @@ import {
 } from "../components/MissionControl.jsx";
 import { caseStudies, caseStudiesPage } from "../data/caseStudies";
 import { trackEvent } from "../utils/analytics";
+import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 
 const logoFrameClassByTheme = {
   "home-depot": "border-[#F96302] bg-[#F96302]",
@@ -62,14 +63,17 @@ function CaseStudyCard({ caseStudy, featured = false }) {
           <span
             className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-md border p-1 ${logoFrameClassByTheme[caseStudy.logoTheme]}`}
           >
-            <img
-              src={caseStudy.logo}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className="max-h-full max-w-full object-contain"
-            />
+            <picture>
+              <source srcSet={caseStudy.logoWebp} type="image/webp" />
+              <img
+                src={caseStudy.logo}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                className="max-h-full max-w-full object-contain"
+              />
+            </picture>
           </span>
         </div>
 
@@ -82,6 +86,7 @@ function CaseStudyCard({ caseStudy, featured = false }) {
 
         <Link
           to={`/case-studies/${caseStudy.slug}/`}
+          {...createRouteIntentHandlers(`/case-studies/${caseStudy.slug}/`)}
           onClick={() =>
             trackEvent("case_study_card_click", {
               case_study_slug: caseStudy.slug,

@@ -1,5 +1,7 @@
 import cdcLogo from "../images/cdcLogo.png"
+import cdcLogoWebp from "../images/cdcLogo.webp"
 import hdLogo from "../images/hdLogo.png"
+import hdLogoWebp from "../images/hdLogo.webp"
 import {
   cdcDataReconciliationSeo,
   kubernetesAutoscalingSeo,
@@ -36,6 +38,7 @@ export const caseStudies = [
     timeframe: "2025",
     category: "Platform Reliability",
     logo: hdLogo,
+    logoWebp: hdLogoWebp,
     logoTheme: "home-depot",
     metrics: [
       {
@@ -120,6 +123,7 @@ export const caseStudies = [
     timeframe: "2026",
     category: "Deployment Automation",
     logo: hdLogo,
+    logoWebp: hdLogoWebp,
     logoTheme: "home-depot",
     metrics: [
       {
@@ -204,6 +208,7 @@ export const caseStudies = [
     timeframe: "2023-2024",
     category: "Full-Stack Data Systems",
     logo: cdcLogo,
+    logoWebp: cdcLogoWebp,
     logoTheme: "cdc",
     metrics: [
       {

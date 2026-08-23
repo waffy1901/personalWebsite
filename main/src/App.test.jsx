@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  act,
   waitFor,
   within,
 } from "@testing-library/react"
@@ -12,7 +13,7 @@ import { BrowserRouter, MemoryRouter } from "react-router"
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import App from "./App.jsx"
+import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
@@ -49,6 +50,11 @@ vi.mock("@formspree/react", () => ({
 
 vi.mock("./utils/routePrefetch.js", () => ({
   preloadRoute: routePreloadMock,
+  createRouteIntentHandlers: (pathname) => ({
+    onPointerEnter: () => routePreloadMock(pathname),
+    onPointerDown: () => routePreloadMock(pathname),
+    onFocus: () => routePreloadMock(pathname),
+  }),
 }))
 
 const renderRoute = (route) =>
@@ -223,6 +229,50 @@ describe("App routes", () => {
     expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
   })
 
+  it("preloads internal case-study links only after pointer, press, or focus intent", async () => {
+    const caseStudiesRender = renderRoute("/case-studies")
+
+    const [caseStudyLink] = await screen.findAllByRole("link", { name: /read case study/i })
+    fireEvent.pointerEnter(caseStudyLink)
+    expect(routePreloadMock).toHaveBeenLastCalledWith(
+      "/case-studies/kubernetes-autoscaling/"
+    )
+
+    routePreloadMock.mockClear()
+    caseStudiesRender.unmount()
+    renderRoute("/case-studies/kubernetes-autoscaling")
+    const backLink = (await screen.findAllByRole("link", { name: /^case studies$/i }))
+      .find((link) => link.className.includes("mb-5"))
+    const relatedLink = screen.getByRole("link", { name: /view related experience/i })
+
+    expect(backLink).toBeDefined()
+    fireEvent.pointerDown(backLink)
+    fireEvent.focus(relatedLink)
+    expect(routePreloadMock).toHaveBeenNthCalledWith(1, "/case-studies/")
+    expect(routePreloadMock).toHaveBeenNthCalledWith(2, "/experience/")
+  })
+
+  it("announces a pending route only after the transition remains pending", async () => {
+    vi.useFakeTimers()
+    const { rerender } = render(<DelayedRoutePendingIndicator pending />)
+
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(249)
+    })
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1)
+    })
+    expect(screen.getAllByRole("status")).toHaveLength(1)
+    expect(screen.getByRole("status")).toHaveTextContent(/loading next page/i)
+
+    rerender(<DelayedRoutePendingIndicator pending={false} />)
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
+    vi.useRealTimers()
+  })
+
   it("uses accessible shared contrast treatments on the home route", async () => {
     renderRoute("/")
 
@@ -252,9 +302,14 @@ describe("App routes", () => {
     expect(
       screen.getAllByRole("heading", { name: /cdc data reconciliation/i })
     ).not.toHaveLength(0)
-    expectImagePolicy(document.querySelector(`img[src="${projects[0].logo}"]`), {
+    const projectLogo = document.querySelector(`img[src="${projects[0].logo}"]`)
+    expectImagePolicy(projectLogo, {
       loading: "lazy",
     })
+    expect(projectLogo.closest("picture")?.querySelector('source[type="image/webp"]')).toHaveAttribute(
+      "srcset",
+      projects[0].logoWebp
+    )
   })
 
   it("renders the experience route", async () => {
@@ -378,6 +433,28 @@ describe("App routes", () => {
         ])
       )
     )
+  })
+
+  it("sends exactly one page view for an in-app navigation", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderBrowserRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    await waitFor(() => expect(getAnalyticsEvents("page_view")).toHaveLength(1))
+    const projectsLink = within(
+      screen.getByRole("navigation", { name: /primary navigation/i })
+    ).getByRole("link", { name: /projects/i })
+
+    await user.click(projectsLink)
+    await screen.findByRole("heading", {
+      name: /practical builds for real workflows/i,
+    })
+    await waitFor(() => expect(getAnalyticsEvents("page_view")).toHaveLength(2))
+    expect(getAnalyticsEvents("page_view").map(([, , params]) => params.page_path)).toEqual([
+      "/",
+      "/projects/",
+    ])
   })
 
   it("excludes query strings and fragments from analytics page views", async () => {

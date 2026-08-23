@@ -34,6 +34,7 @@ const ExperienceCard = ({
   date,
   bullets,
   logo,
+  logoWebp,
   featured = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -207,14 +208,17 @@ const ExperienceCard = ({
           </div>
 
           <div className={`${logoBayClass} ${logoTileClass}`}>
-            <img
-              src={logo}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className={logoImageClass}
-            />
+            <picture>
+              <source srcSet={logoWebp} type="image/webp" />
+              <img
+                src={logo}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                className={logoImageClass}
+              />
+            </picture>
           </div>
 
           <div className="mt-auto flex justify-end">

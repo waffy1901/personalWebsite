@@ -1,6 +1,9 @@
 import cdcLogo from "../images/cdcLogo.png"
+import cdcLogoWebp from "../images/cdcLogo.webp"
 import campusDiscoveryServiceLogo from "../images/discoveryServiceLogo.png"
+import campusDiscoveryServiceLogoWebp from "../images/discoveryServiceLogo.webp"
 import jobSearchLogo from "../images/jobSearchLogo.png"
+import jobSearchLogoWebp from "../images/jobSearchLogo.webp"
 
 export const projectsPage = {
   title: "Practical builds for real workflows",
@@ -44,6 +47,7 @@ export const projects = [
     ],
     github: "https://github.com/waffy1901/CDC-Data-Reconciliation",
     logo: cdcLogo,
+    logoWebp: cdcLogoWebp,
   },
   {
     id: "job-search-aid",
@@ -58,6 +62,7 @@ export const projects = [
     ],
     github: "https://github.com/waffy1901/jobSearchAid",
     logo: jobSearchLogo,
+    logoWebp: jobSearchLogoWebp,
   },
   {
     id: "campus-discovery-service",
@@ -72,5 +77,6 @@ export const projects = [
     ],
     github: "https://github.com/waffy1901/campusDiscoveryService",
     logo: campusDiscoveryServiceLogo,
+    logoWebp: campusDiscoveryServiceLogoWebp,
   },
 ]

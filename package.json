@@ -12,6 +12,8 @@
     "test:e2e:production": "npm --prefix main run test:e2e:production --",
     "performance:baseline": "npm --prefix main run performance:baseline --",
     "test:performance:baseline": "npm --prefix main run test:performance:baseline --",
+    "performance:first-navigation": "npm --prefix main run performance:first-navigation --",
+    "test:performance:first-navigation": "npm --prefix main run test:performance:first-navigation --",
     "preview": "npm --prefix main run preview --"
   }
 }

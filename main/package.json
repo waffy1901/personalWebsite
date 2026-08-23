@@ -24,7 +24,9 @@
     "test:release": "vitest run scripts/release-version.test.mjs",
     "test:e2e:production": "playwright test --config=playwright.production.config.js",
     "performance:baseline": "node scripts/measure-route-performance.mjs --build --serve",
-    "test:performance:baseline": "node --test scripts/measure-route-performance.node-test.mjs"
+    "test:performance:baseline": "node --test scripts/measure-route-performance.node-test.mjs",
+    "performance:first-navigation": "node scripts/measure-first-navigation.mjs --build --serve",
+    "test:performance:first-navigation": "node --test scripts/measure-first-navigation.node-test.mjs"
   },
   "browserslist": {
     "production": [

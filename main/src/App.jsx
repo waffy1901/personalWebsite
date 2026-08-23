@@ -4,6 +4,8 @@ import React, {
   lazy,
   useEffect,
   useRef,
+  useState,
+  startTransition,
 } from "react"
 import {
   Link,
@@ -27,7 +29,10 @@ const NotFound = lazy(() => import("./pages/NotFound.jsx"))
 
 function RouteLoadingFallback() {
   return (
-    <div className="flex min-h-[18rem] items-center justify-center px-4 py-16">
+    <div
+      data-route-loading-fallback
+      className="flex min-h-[18rem] items-center justify-center px-4 py-16"
+    >
       <p
         role="status"
         aria-live="polite"
@@ -36,6 +41,31 @@ function RouteLoadingFallback() {
         Loading page...
       </p>
     </div>
+  )
+}
+
+export function DelayedRoutePendingIndicator({ pending }) {
+  const [visible, setVisible] = React.useState(false)
+
+  useEffect(() => {
+    if (!pending) return undefined
+
+    const timeoutId = window.setTimeout(() => setVisible(true), 250)
+    return () => window.clearTimeout(timeoutId)
+  }, [pending])
+
+  if (!pending || !visible) return null
+
+  return (
+    <p
+      data-route-transition-pending
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      className="sr-only"
+    >
+      Loading next page...
+    </p>
   )
 }
 
@@ -99,6 +129,12 @@ class RouteErrorBoundary extends Component {
     return { hasError: true }
   }
 
+  componentDidUpdate(previousProps) {
+    if (this.state.hasError && previousProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false })
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       return this.props.fallback
@@ -110,6 +146,18 @@ class RouteErrorBoundary extends Component {
 
 function App() {
   const location = useLocation()
+  const [displayedLocation, setDisplayedLocation] = useState(location)
+  const routePending = location.key !== displayedLocation.key
+
+  useEffect(() => {
+    if (location.key === displayedLocation.key) return
+
+    // Keep the router's URL and page-view semantics immediate, but update the
+    // lazy route tree in a transition so its existing content stays visible.
+    startTransition(() => {
+      setDisplayedLocation(location)
+    })
+  }, [displayedLocation.key, location])
 
   usePageTracking()
   return (
@@ -117,12 +165,14 @@ function App() {
       <Seo />
       <Navbar />
       <div className="flex-1 overflow-auto">
+        <DelayedRoutePendingIndicator key={location.key} pending={routePending} />
         <RouteErrorBoundary
-          key={location.pathname}
-          fallback={<RouteErrorFallback currentPath={location.pathname} />}
+          resetKey={displayedLocation.pathname}
+          fallback={<RouteErrorFallback currentPath={displayedLocation.pathname} />}
         >
           <Suspense fallback={<RouteLoadingFallback />}>
-            <Routes>
+            <div data-route-ready={displayedLocation.pathname}>
+              <Routes location={displayedLocation}>
               <Route caseSensitive path="/" element={<Home />} />
               <Route caseSensitive path="/resume" element={<Resume />} />
               <Route caseSensitive path="/contact" element={<Contact />} />
@@ -137,7 +187,8 @@ function App() {
               <Route caseSensitive path="/Experience" element={<Navigate to="/experience/" replace />} />
               <Route caseSensitive path="/Projects" element={<Navigate to="/projects/" replace />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
+              </Routes>
+            </div>
           </Suspense>
         </RouteErrorBoundary>
       </div>
