@@ -1,6 +1,7 @@
 const { test: base, expect } = require("@playwright/test")
 
 const telemetryGuardMarker = "__playwrightTelemetryGuardActive"
+const useLocalPreview = process.env.PLAYWRIGHT_LOCAL_PREVIEW === "1"
 
 const canonicalRouteExpectations = [
   { path: "/", heading: "Waffy Ahmed" },
@@ -47,6 +48,27 @@ function isExpectedAnalyticsCspError(message) {
       'violates the following Content Security Policy directive: "connect-src'
     ) &&
     message.endsWith("The action has been blocked.")
+  )
+}
+
+function isExpectedProductionNotFoundResponse(response, siteOrigin) {
+  return (
+    !useLocalPreview &&
+    response.request().resourceType() === "document" &&
+    response.status() === 404 &&
+    response.url() === new URL("/not-a-real-route/", siteOrigin).href
+  )
+}
+
+function isExpectedProductionNotFoundConsoleError(message, page, siteOrigin) {
+  const expectedNotFoundUrl = new URL("/not-a-real-route/", siteOrigin).href
+
+  return (
+    !useLocalPreview &&
+    message.text() ===
+      "Failed to load resource: the server responded with a status of 404 ()" &&
+    page.url() === expectedNotFoundUrl &&
+    message.location().url === expectedNotFoundUrl
   )
 }
 
@@ -109,7 +131,11 @@ function monitorPage(page, baseURL) {
   page.on("console", (message) => {
     const text = message.text()
 
-    if (message.type() === "error" && !isExpectedAnalyticsCspError(text)) {
+    if (
+      message.type() === "error" &&
+      !isExpectedAnalyticsCspError(text) &&
+      !isExpectedProductionNotFoundConsoleError(message, page, siteOrigin)
+    ) {
       consoleErrors.push(text)
     }
   })
@@ -123,7 +149,8 @@ function monitorPage(page, baseURL) {
   page.on("response", (response) => {
     if (
       new URL(response.url()).origin === siteOrigin &&
-      response.status() >= 400
+      response.status() >= 400 &&
+      !isExpectedProductionNotFoundResponse(response, siteOrigin)
     ) {
       badFirstPartyResponses.push(`${response.status()} ${response.url()}`)
     }
@@ -189,17 +216,31 @@ for (const route of canonicalRouteExpectations) {
   })
 }
 
-test("unknown route renders the hydrated 404 and returns home", async ({
+test("unknown route renders the target-aware 404 and returns home", async ({
   page,
   baseURL,
 }) => {
   const monitor = monitorPage(page, baseURL)
 
-  await page.goto("/not-a-real-route/", { waitUntil: "domcontentloaded" })
-  await expectHydratedRoute(page, {
-    path: "/not-a-real-route/",
-    heading: "Page not found",
+  const response = await page.goto("/not-a-real-route/", {
+    waitUntil: "domcontentloaded",
   })
+
+  expect(response?.status(), "unknown-route document response").toBe(
+    useLocalPreview ? 200 : 404
+  )
+
+  if (useLocalPreview) {
+    await expectHydratedRoute(page, {
+      path: "/not-a-real-route/",
+      heading: "Page not found",
+    })
+  } else {
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Page not found" })
+    ).toBeVisible()
+  }
+
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     "content",
     "noindex, nofollow"
@@ -208,9 +249,7 @@ test("unknown route renders the hydrated 404 and returns home", async ({
 
   await page.getByRole("link", { name: "Go home" }).click()
   await expect(page).toHaveURL(/\/$/)
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Waffy Ahmed" })
-  ).toBeVisible()
+  await expectHydratedRoute(page, canonicalRouteExpectations[0])
   monitor.assertClean()
 })
 
