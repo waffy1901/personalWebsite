@@ -1,11 +1,24 @@
 const { test: base, expect } = require("@playwright/test")
 
+const telemetryGuardMarker = "__playwrightTelemetryGuardActive"
 
-const routeExpectations = [
+const canonicalRouteExpectations = [
   { path: "/", heading: "Waffy Ahmed" },
   { path: "/projects/", heading: "Practical builds for real workflows" },
   { path: "/experience/", heading: "Work Experience" },
   { path: "/case-studies/", heading: "Selected engineering case studies" },
+  {
+    path: "/case-studies/kubernetes-autoscaling/",
+    heading: "Kubernetes Autoscaling for Transaction-Critical Services",
+  },
+  {
+    path: "/case-studies/legacy-deployment-recovery/",
+    heading: "Legacy Deployment Recovery and Credential Rotation",
+  },
+  {
+    path: "/case-studies/cdc-data-reconciliation/",
+    heading: "CDC Data Reconciliation Platform",
+  },
   { path: "/resume/", heading: "Resume" },
   { path: "/contact/", heading: "Let's connect" },
 ]
@@ -38,45 +51,49 @@ function isExpectedAnalyticsCspError(message) {
 }
 
 const test = base.extend({
-  externalRequests: async ({ context }, use) => {
-    const externalRequests = {
-      analytics: [],
-      formspree: [],
-    }
-
-    await context.addInitScript(() => {
-      globalThis.dataLayer = []
-      globalThis.gtag = () => undefined
-    })
-
-    await context.route("**/*", async (route) => {
-      const request = route.request()
-      const { hostname } = new URL(request.url())
-
-      if (isAnalyticsHost(hostname)) {
-        externalRequests.analytics.push(request.url())
-        await route.fulfill({
-          status: 200,
-          contentType:
-            request.resourceType() === "script"
-              ? "application/javascript"
-              : "text/plain",
-          body: "",
-        })
-        return
+  externalRequests: [
+    async ({ context }, use) => {
+      const externalRequests = {
+        analytics: [],
+        formspree: [],
       }
 
-      if (isFormspreeHost(hostname)) {
-        externalRequests.formspree.push(request.url())
-        await route.abort("blockedbyclient")
-        return
-      }
+      await context.addInitScript((guardMarker) => {
+        globalThis[guardMarker] = true
+        globalThis.dataLayer = []
+        globalThis.gtag = () => undefined
+      }, telemetryGuardMarker)
 
-      await route.continue()
-    })
+      await context.route("**/*", async (route) => {
+        const request = route.request()
+        const { hostname } = new URL(request.url())
 
-    await use(externalRequests)
-  },
+        if (isAnalyticsHost(hostname)) {
+          externalRequests.analytics.push(request.url())
+          await route.fulfill({
+            status: 200,
+            contentType:
+              request.resourceType() === "script"
+                ? "application/javascript"
+                : "text/plain",
+            body: "",
+          })
+          return
+        }
+
+        if (isFormspreeHost(hostname)) {
+          externalRequests.formspree.push(request.url())
+          await route.abort("blockedbyclient")
+          return
+        }
+
+        await route.continue()
+      })
+
+      await use(externalRequests)
+    },
+    { auto: true },
+  ],
 })
 
 function monitorPage(page, baseURL) {
@@ -127,7 +144,36 @@ function monitorPage(page, baseURL) {
   }
 }
 
-for (const route of routeExpectations) {
+async function expectHydratedRoute(page, route) {
+  expect(
+    await page.evaluate(
+      (guardMarker) => globalThis[guardMarker] === true,
+      telemetryGuardMarker
+    ),
+    "automatic telemetry interception fixture should initialize before app code"
+  ).toBe(true)
+  await expect(
+    page.getByRole("heading", { level: 1, name: route.heading })
+  ).toBeVisible()
+  await expect(
+    page.locator("[data-route-ready]")
+  ).toHaveAttribute("data-route-ready", route.path)
+  await expect(
+    page.getByRole("navigation", { name: "Primary navigation" })
+  ).toBeVisible()
+}
+
+async function expectNoHorizontalOverflow(page) {
+  const documentWidth = await page.evaluate(() => ({
+    clientWidth: globalThis.document.documentElement.clientWidth,
+    scrollWidth: globalThis.document.documentElement.scrollWidth,
+  }))
+  expect(documentWidth.scrollWidth).toBeLessThanOrEqual(
+    documentWidth.clientWidth + 1
+  )
+}
+
+for (const route of canonicalRouteExpectations) {
   test(`${route.path} hydrates without horizontal overflow`, async ({
     page,
     baseURL,
@@ -135,24 +181,38 @@ for (const route of routeExpectations) {
     const monitor = monitorPage(page, baseURL)
 
     await page.goto(route.path, { waitUntil: "domcontentloaded" })
-    await expect(
-      page.getByRole("heading", { level: 1, name: route.heading })
-    ).toBeVisible()
-    await expect(
-      page.getByRole("navigation", { name: "Primary navigation" })
-    ).toBeVisible()
+    await expectHydratedRoute(page, route)
     await page.waitForLoadState("load")
 
-    const documentWidth = await page.evaluate(() => ({
-      clientWidth: globalThis.document.documentElement.clientWidth,
-      scrollWidth: globalThis.document.documentElement.scrollWidth,
-    }))
-    expect(documentWidth.scrollWidth).toBeLessThanOrEqual(
-      documentWidth.clientWidth + 1
-    )
+    await expectNoHorizontalOverflow(page)
     monitor.assertClean()
   })
 }
+
+test("unknown route renders the hydrated 404 and returns home", async ({
+  page,
+  baseURL,
+}) => {
+  const monitor = monitorPage(page, baseURL)
+
+  await page.goto("/not-a-real-route/", { waitUntil: "domcontentloaded" })
+  await expectHydratedRoute(page, {
+    path: "/not-a-real-route/",
+    heading: "Page not found",
+  })
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    "noindex, nofollow"
+  )
+  await expectNoHorizontalOverflow(page)
+
+  await page.getByRole("link", { name: "Go home" }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Waffy Ahmed" })
+  ).toBeVisible()
+  monitor.assertClean()
+})
 
 test("client navigation loads a lazy route and restores Home from history", async ({
   page,

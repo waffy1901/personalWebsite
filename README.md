@@ -131,6 +131,7 @@ Run these commands from the repository root:
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the Vitest test suite |
 | `npm run test:release` | Run semantic-release version validator tests |
+| `npm run test:e2e:premerge` | Build and smoke-test a local production-equivalent Vite preview |
 | `npm run test:e2e:production` | Run telemetry-safe Chromium smoke tests against production |
 | `npm run build` | Create the production build |
 | `npm run preview` | Preview the production build locally |
@@ -206,12 +207,15 @@ CSP, and byte-for-byte public-artifact contracts against `https://waffy.dev/`.
 Run it manually after intentional production-policy or public-artifact changes
 have deployed.
 
-`npm run test:e2e:production` opens the live production site in fresh desktop
-and mobile Chromium contexts. The suite blocks GA4, Google Tag Manager,
-DoubleClick, and Formspree requests, and it never submits the contact form. It
-therefore validates hydration, navigation, responsive overflow, lazy chunks,
-resume rendering, and browser errors without validating analytics delivery or
-form submission.
+`npm run test:e2e:premerge` builds the app with a synthetic, non-secret
+Formspree key and opens only a local Vite preview. `npm run
+test:e2e:production` defaults to the live production site; callers can set
+`PLAYWRIGHT_PRODUCTION_BASE_URL` to an explicit deployed target. Both commands
+use fresh desktop and mobile Chromium contexts. The suite blocks GA4, Google
+Tag Manager, DoubleClick, and Formspree requests, and it never submits the
+contact form. It therefore validates hydration, navigation, responsive
+overflow, lazy chunks, resume rendering, and browser errors without validating
+analytics delivery or form submission.
 
 ## Deployment
 
