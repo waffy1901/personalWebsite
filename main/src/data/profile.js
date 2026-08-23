@@ -25,6 +25,7 @@ export const profile = {
 export const resume = {
   pdf: "/waffyAhmedResume.pdf",
   preview: "/resume-preview.png",
+  optimizedPreview: "/resume-preview.webp",
 }
 
 export const contact = {

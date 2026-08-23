@@ -64,14 +64,19 @@ function Resume() {
             }
             className="mx-auto block w-full max-w-[900px] rounded-lg border border-slate-200 bg-[#E8EDF2] p-2 shadow-inner transition hover:border-[#2563EB]/50 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
           >
-            <img
-              src={resume.preview}
-              alt="Preview of Waffy Ahmed's resume"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
-              className="h-auto w-full rounded-md"
-            />
+            <picture>
+              <source srcSet={resume.optimizedPreview} type="image/webp" />
+              <img
+                src={resume.preview}
+                alt="Preview of Waffy Ahmed's resume"
+                width="960"
+                height="1244"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="h-auto w-full rounded-md"
+              />
+            </picture>
           </a>
         </section>
       </PageContainer>

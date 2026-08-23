@@ -786,8 +786,14 @@ describe("App routes", () => {
     const resumePreview = screen.getByRole("img", {
       name: /preview of waffy ahmed's resume/i,
     })
+    const resumePreviewSource = resumePreview
+      .closest("picture")
+      ?.querySelector('source[type="image/webp"]')
 
     expect(resumePreview).toHaveAttribute("src", "/resume-preview.png")
+    expect(resumePreviewSource).toHaveAttribute("srcset", "/resume-preview.webp")
+    expect(resumePreview).toHaveAttribute("width", "960")
+    expect(resumePreview).toHaveAttribute("height", "1244")
     expectImagePolicy(resumePreview, {
       loading: "eager",
       fetchPriority: "high",

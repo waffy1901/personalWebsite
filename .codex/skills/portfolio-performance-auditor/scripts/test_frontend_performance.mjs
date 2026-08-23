@@ -85,14 +85,26 @@ function createFixture(decoding) {
   )
   writeFixture(
     root,
-    "main/src/pages/Resume.jsx",
+    "main/src/data/profile.js",
     [
-      "export default function Resume() {",
-      '  return <img src="/resume-preview.png" loading="eager" fetchPriority="high" decoding="async" alt="Resume preview" />',
+      "export const resume = {",
+      '  preview: "/resume-preview.png",',
+      '  optimizedPreview: "/resume-preview.webp",',
       "}",
       "",
     ].join("\n"),
   )
+  writeFixture(
+    root,
+    "main/src/pages/Resume.jsx",
+    [
+      "export default function Resume() {",
+      '  return <picture><source srcSet={resume.optimizedPreview} type="image/webp" /><img src={resume.preview} loading="eager" fetchPriority="high" decoding="async" alt="Resume preview" /></picture>',
+      "}",
+      "",
+    ].join("\n"),
+  )
+  writeFixture(root, "main/public/resume-preview.webp", "webp")
   writeFixture(
     root,
     "main/src/components/ProjectCard.jsx",
@@ -129,6 +141,54 @@ test('rejects image decoding values other than "async"', () => {
 
     assert.equal(result.status, 1)
     assert.match(result.stderr, /ProjectCard\.jsx has an <img> without decoding="async"/)
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true })
+  }
+})
+
+test("rejects a missing optimized resume preview", () => {
+  const fixtureRoot = createFixture("async")
+
+  try {
+    rmSync(join(fixtureRoot, "main/public/resume-preview.webp"))
+    const result = runChecker(fixtureRoot)
+
+    assert.equal(result.status, 1)
+    assert.match(result.stderr, /resume-preview\.webp is required/)
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true })
+  }
+})
+
+test("rejects an optimized resume preview above the byte ceiling", () => {
+  const fixtureRoot = createFixture("async")
+
+  try {
+    writeFixture(
+      fixtureRoot,
+      "main/public/resume-preview.webp",
+      "x".repeat(150_001),
+    )
+    const result = runChecker(fixtureRoot)
+
+    assert.equal(result.status, 1)
+    assert.match(result.stderr, /must not exceed 150000 bytes/)
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true })
+  }
+})
+
+test("rejects a resume page that does not wire the WebP source", () => {
+  const fixtureRoot = createFixture("async")
+
+  try {
+    replaceFixture(fixtureRoot, "main/src/pages/Resume.jsx", [
+      ['srcSet={resume.optimizedPreview}', 'srcSet="/resume-preview.webp"'],
+    ])
+    const result = runChecker(fixtureRoot)
+
+    assert.equal(result.status, 1)
+    assert.match(result.stderr, /should use resume\.optimizedPreview/)
   } finally {
     rmSync(fixtureRoot, { recursive: true, force: true })
   }
