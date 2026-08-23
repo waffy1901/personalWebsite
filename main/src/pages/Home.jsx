@@ -24,6 +24,7 @@ import SocialLinks from "../components/SocialLinks";
 import { deployInfo, profile, resume } from "../data/profile";
 import { currentEmployment } from "../data/siteIdentity.js";
 import { trackEvent } from "../utils/analytics";
+import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 
 const impactMetrics = [
   {
@@ -234,7 +235,11 @@ function Home() {
               scaling, improving latency, errors, throughput, and CPU efficiency
               under production traffic.
             </p>
-            <Link to="/case-studies/kubernetes-autoscaling/" className="mc-button-primary mt-7">
+            <Link
+              to="/case-studies/kubernetes-autoscaling/"
+              {...createRouteIntentHandlers("/case-studies/kubernetes-autoscaling/")}
+              className="mc-button-primary mt-7"
+            >
               Read the case study
               <FaArrowRight className="ml-2" aria-hidden="true" />
             </Link>

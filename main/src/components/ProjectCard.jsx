@@ -28,7 +28,7 @@ function usePrefersReducedMotion() {
   return prefersReducedMotion;
 }
 
-function ProjectCard({ id, title, techStack, bullets, github, logo }) {
+function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const detailsButtonRef = useRef(null);
   const backButtonRef = useRef(null);
@@ -160,14 +160,17 @@ function ProjectCard({ id, title, techStack, bullets, github, logo }) {
           <StackChips items={stackItems} className="relative z-10 mt-4" />
 
           <div className="relative z-10 my-5 flex flex-1 items-center justify-center rounded-2xl border border-white/10 bg-[#E8EDF2] p-5">
-            <img
-              src={logo}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className="max-h-36 max-w-[78%] object-contain"
-            />
+            <picture>
+              <source srcSet={logoWebp} type="image/webp" />
+              <img
+                src={logo}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                className="max-h-36 max-w-[78%] object-contain"
+              />
+            </picture>
           </div>
 
           <div className="relative z-10 mt-auto flex justify-end">

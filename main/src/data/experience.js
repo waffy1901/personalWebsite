@@ -1,8 +1,13 @@
 import cdcLogo from "../images/cdcLogo.png"
+import cdcLogoWebp from "../images/cdcLogo.webp"
 import fintechGTLogo from "../images/fintechGTLogo.png"
+import fintechGTLogoWebp from "../images/fintechGTLogo.webp"
 import gtComputingLogo from "../images/gtComputingLogo.png"
+import gtComputingLogoWebp from "../images/gtComputingLogo.webp"
 import hdLogo from "../images/hdLogo.png"
+import hdLogoWebp from "../images/hdLogo.webp"
 import landisGyrLogo from "../images/landisGyrLogo.png"
+import landisGyrLogoWebp from "../images/landisGyrLogo.webp"
 import { currentEmployment } from "./siteIdentity.js"
 
 export const experiencePage = {
@@ -26,6 +31,7 @@ export const workExperiences = [
       "Diagnosed and resolved post\u2013cluster-rebuild service timeouts (1s failures) by identifying stale node-level routing caused by NodePort usage; migrated internal services to ClusterIP, eliminating node dependency and restoring reliable service-to-service communication.",
     ],
     logo: hdLogo,
+    logoWebp: hdLogoWebp,
   },
   {
     id: "home-depot-software-engineer-i",
@@ -50,6 +56,7 @@ export const workExperiences = [
       "Improved operational responsiveness by decreasing alert acknowledgement times 30% via optimizing tiered alerting and Grafana dashboards across 20+ microservices, automating escalation via Slack and PagerDuty integrations.",
     ],
     logo: hdLogo,
+    logoWebp: hdLogoWebp,
   },
   {
     id: "home-depot-intern-2024",
@@ -62,6 +69,7 @@ export const workExperiences = [
       "Used Java, React, and TypeScript to retrieve and display validated product information across self-checkout registers, supporting loss-prevention and checkout-efficiency efforts tied to approximately $10 million in annual shrink exposure.",
     ],
     logo: hdLogo,
+    logoWebp: hdLogoWebp,
   },
   {
     id: "home-depot-intern-2023",
@@ -75,6 +83,7 @@ export const workExperiences = [
       "Collaborated with cross-functional teams, including the UI/UX team, designing and constructing user interface components for a new configuration process - utilizing React, Next.js, and TypeScript.",
     ],
     logo: hdLogo,
+    logoWebp: hdLogoWebp,
   },
   {
     id: "landis-gyr-firmware-intern",
@@ -87,6 +96,7 @@ export const workExperiences = [
       "Bolstered data transmission efficiency by \u223c25%, collaborating with a software architect to conduct comprehensive testing of collectors and debugging of various Python scripts employing MySQL.",
     ],
     logo: landisGyrLogo,
+    logoWebp: landisGyrLogoWebp,
   },
 ]
 
@@ -154,6 +164,7 @@ export const extracurricularExperiences = [
       "Leveraged an inbuilt API for image recognition, identifying and ranking the top 3 product matches for shopping carts.",
     ],
     logo: fintechGTLogo,
+    logoWebp: fintechGTLogoWebp,
   },
   {
     id: "cdc-project-manager-full-stack-developer",
@@ -171,6 +182,7 @@ export const extracurricularExperiences = [
       "Constructed technical diagrams/documentation (Lo-Fi & Hi-Fi Prototypes, User Research, Minimum Marketable Features, Story Mapping, UX Report, and Detailed Design) to aid the development process.",
     ],
     logo: cdcLogo,
+    logoWebp: cdcLogoWebp,
   },
   {
     id: "gt-undergraduate-teaching-assistant",
@@ -184,5 +196,6 @@ export const extracurricularExperiences = [
       "Fostered engagement by answering 105+ questions on Piazza, the student discussion forum.",
     ],
     logo: gtComputingLogo,
+    logoWebp: gtComputingLogoWebp,
   },
 ]

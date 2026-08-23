@@ -19,6 +19,7 @@ import {
 } from "../components/MissionControl.jsx";
 import { getCaseStudyBySlug } from "../data/caseStudies";
 import { trackLinkClick } from "../utils/analytics";
+import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 import NotFound from "./NotFound";
 
 const logoFrameClassByTheme = {
@@ -58,6 +59,7 @@ function CaseStudy() {
       <PageContainer>
         <Link
           to="/case-studies/"
+          {...createRouteIntentHandlers("/case-studies/")}
           className="mb-5 inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-black text-[#0B1220] transition hover:border-[#2563EB]/50 hover:bg-[#E8EDF2] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
         >
           <FaArrowLeft className="mr-2" aria-hidden="true" />
@@ -88,14 +90,17 @@ function CaseStudy() {
               <span
                 className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border p-2 ${logoFrameClassByTheme[caseStudy.logoTheme]}`}
               >
-                <img
-                  src={caseStudy.logo}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  className="max-h-full max-w-full object-contain"
-                />
+                <picture>
+                  <source srcSet={caseStudy.logoWebp} type="image/webp" />
+                  <img
+                    src={caseStudy.logo}
+                    alt=""
+                    aria-hidden="true"
+                    loading="lazy"
+                    decoding="async"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </picture>
               </span>
               <SystemDiagram
                 centerLabel={caseStudy.category}
@@ -170,6 +175,7 @@ function CaseStudy() {
                   <Link
                     key={link.label}
                     to={link.to}
+                    {...createRouteIntentHandlers(link.to)}
                     onClick={() =>
                       trackLinkClick("case_study_link_click", {
                         href: link.to,

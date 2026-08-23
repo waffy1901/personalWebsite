@@ -46,3 +46,15 @@ export function preloadRoute(pathname) {
   const importer = importerForPath(pathname)
   return importer ? loadRoute(importer) : null
 }
+
+// Keep preloading tied to a concrete navigation signal. This deliberately has
+// no idle, viewport, or mount-time invocation path.
+export function createRouteIntentHandlers(pathname) {
+  const preload = () => void preloadRoute(pathname)
+
+  return {
+    onPointerEnter: preload,
+    onPointerDown: preload,
+    onFocus: preload,
+  }
+}
