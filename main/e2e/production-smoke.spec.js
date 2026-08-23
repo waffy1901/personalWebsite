@@ -200,6 +200,13 @@ async function expectNoHorizontalOverflow(page) {
   )
 }
 
+const getViewportScrollY = (page) => page.evaluate(() => globalThis.scrollY)
+
+const setViewportScrollY = (page, scrollY) =>
+  page.evaluate((top) => {
+    globalThis.scrollTo({ top, left: 0, behavior: "instant" })
+  }, scrollY)
+
 for (const route of canonicalRouteExpectations) {
   test(`${route.path} hydrates without horizontal overflow`, async ({
     page,
@@ -253,7 +260,7 @@ test("unknown route renders the target-aware 404 and returns home", async ({
   monitor.assertClean()
 })
 
-test("client navigation loads a lazy route and restores Home from history", async ({
+test("client navigation resets forward scroll and preserves history scroll restoration", async ({
   page,
   baseURL,
 }) => {
@@ -277,12 +284,20 @@ test("client navigation loads a lazy route and restores Home from history", asyn
   await expect(
     page.getByRole("heading", { level: 1, name: "Waffy Ahmed" })
   ).toBeVisible()
+  await setViewportScrollY(page, 600)
+  await expect
+    .poll(() => getViewportScrollY(page), {
+      message: "Home route should be scrollable for history restoration",
+    })
+    .toBeGreaterThan(0)
+  const sourceScrollY = await getViewportScrollY(page)
   lazyScriptRequests.length = 0
 
-  await page
+  const projectsLink = page
     .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("link", { name: "Projects" })
-    .click()
+  await projectsLink.focus()
+  await page.keyboard.press("Enter")
   await expect(page).toHaveURL(/\/projects\/$/)
   await expect(
     page.getByRole("heading", {
@@ -290,16 +305,39 @@ test("client navigation loads a lazy route and restores Home from history", asyn
       name: "Practical builds for real workflows",
     })
   ).toBeVisible()
+  await expect.poll(() => getViewportScrollY(page)).toBe(0)
+  await expect(page.locator("#main-content")).toBeFocused()
+  await expect(page.locator("#main-content")).toHaveAttribute("tabindex", "-1")
   expect(
     lazyScriptRequests.some((url) => /\/assets\/.*\.js(?:\?|$)/.test(url)),
     "Projects navigation should load a first-party lazy JavaScript chunk"
   ).toBe(true)
+
+  await setViewportScrollY(page, 300)
+  await expect
+    .poll(() => getViewportScrollY(page), {
+      message: "Projects route should be scrollable for history restoration",
+    })
+    .toBeGreaterThan(0)
+  const destinationScrollY = await getViewportScrollY(page)
+  expect(destinationScrollY).not.toBe(sourceScrollY)
 
   await page.goBack()
   await expect(page).toHaveURL(/\/$/)
   await expect(
     page.getByRole("heading", { level: 1, name: "Waffy Ahmed" })
   ).toBeVisible()
+  await expect.poll(() => getViewportScrollY(page)).toBe(sourceScrollY)
+
+  await page.goForward()
+  await expect(page).toHaveURL(/\/projects\/$/)
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Practical builds for real workflows",
+    })
+  ).toBeVisible()
+  await expect.poll(() => getViewportScrollY(page)).toBe(destinationScrollY)
   expect(documentRequests).toHaveLength(1)
   monitor.assertClean()
 })
