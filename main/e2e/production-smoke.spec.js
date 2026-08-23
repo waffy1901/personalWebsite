@@ -118,6 +118,13 @@ const test = base.extend({
   ],
 })
 
+test("ruleset canary intentionally fails pre-merge browser smoke", async () => {
+  expect(
+    false,
+    "INTENTIONAL CANARY FAILURE: restore this test before review"
+  ).toBe(true)
+})
+
 function monitorPage(page, baseURL) {
   const siteOrigin = new URL(baseURL).origin
   const pageErrors = []
