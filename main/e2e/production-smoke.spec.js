@@ -1,11 +1,23 @@
 const { test: base, expect } = require("@playwright/test")
 
 
-const routeExpectations = [
+const canonicalRouteExpectations = [
   { path: "/", heading: "Waffy Ahmed" },
   { path: "/projects/", heading: "Practical builds for real workflows" },
   { path: "/experience/", heading: "Work Experience" },
   { path: "/case-studies/", heading: "Selected engineering case studies" },
+  {
+    path: "/case-studies/kubernetes-autoscaling/",
+    heading: "Kubernetes Autoscaling for Transaction-Critical Services",
+  },
+  {
+    path: "/case-studies/legacy-deployment-recovery/",
+    heading: "Legacy Deployment Recovery and Credential Rotation",
+  },
+  {
+    path: "/case-studies/cdc-data-reconciliation/",
+    heading: "CDC Data Reconciliation Platform",
+  },
   { path: "/resume/", heading: "Resume" },
   { path: "/contact/", heading: "Let's connect" },
 ]
@@ -127,7 +139,29 @@ function monitorPage(page, baseURL) {
   }
 }
 
-for (const route of routeExpectations) {
+async function expectHydratedRoute(page, route) {
+  await expect(
+    page.getByRole("heading", { level: 1, name: route.heading })
+  ).toBeVisible()
+  await expect(
+    page.locator("[data-route-ready]")
+  ).toHaveAttribute("data-route-ready", route.path)
+  await expect(
+    page.getByRole("navigation", { name: "Primary navigation" })
+  ).toBeVisible()
+}
+
+async function expectNoHorizontalOverflow(page) {
+  const documentWidth = await page.evaluate(() => ({
+    clientWidth: globalThis.document.documentElement.clientWidth,
+    scrollWidth: globalThis.document.documentElement.scrollWidth,
+  }))
+  expect(documentWidth.scrollWidth).toBeLessThanOrEqual(
+    documentWidth.clientWidth + 1
+  )
+}
+
+for (const route of canonicalRouteExpectations) {
   test(`${route.path} hydrates without horizontal overflow`, async ({
     page,
     baseURL,
@@ -135,24 +169,38 @@ for (const route of routeExpectations) {
     const monitor = monitorPage(page, baseURL)
 
     await page.goto(route.path, { waitUntil: "domcontentloaded" })
-    await expect(
-      page.getByRole("heading", { level: 1, name: route.heading })
-    ).toBeVisible()
-    await expect(
-      page.getByRole("navigation", { name: "Primary navigation" })
-    ).toBeVisible()
+    await expectHydratedRoute(page, route)
     await page.waitForLoadState("load")
 
-    const documentWidth = await page.evaluate(() => ({
-      clientWidth: globalThis.document.documentElement.clientWidth,
-      scrollWidth: globalThis.document.documentElement.scrollWidth,
-    }))
-    expect(documentWidth.scrollWidth).toBeLessThanOrEqual(
-      documentWidth.clientWidth + 1
-    )
+    await expectNoHorizontalOverflow(page)
     monitor.assertClean()
   })
 }
+
+test("unknown route renders the hydrated 404 and returns home", async ({
+  page,
+  baseURL,
+}) => {
+  const monitor = monitorPage(page, baseURL)
+
+  await page.goto("/not-a-real-route/", { waitUntil: "domcontentloaded" })
+  await expectHydratedRoute(page, {
+    path: "/not-a-real-route/",
+    heading: "Page not found",
+  })
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
+    "content",
+    "noindex, nofollow"
+  )
+  await expectNoHorizontalOverflow(page)
+
+  await page.getByRole("link", { name: "Go home" }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Waffy Ahmed" })
+  ).toBeVisible()
+  monitor.assertClean()
+})
 
 test("client navigation loads a lazy route and restores Home from history", async ({
   page,

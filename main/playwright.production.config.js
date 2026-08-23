@@ -1,7 +1,8 @@
 const { defineConfig } = require("@playwright/test")
 
-const baseURL =
-  process.env.PLAYWRIGHT_PRODUCTION_BASE_URL || "https://waffy.dev"
+const productionBaseURL =
+  process.env.PLAYWRIGHT_PRODUCTION_BASE_URL?.trim()
+const baseURL = productionBaseURL || "http://127.0.0.1:4173"
 
 module.exports = defineConfig({
   testDir: "./e2e",
@@ -18,6 +19,15 @@ module.exports = defineConfig({
     ["line"],
     ["html", { open: "never", outputFolder: "playwright-report" }],
   ],
+  webServer: productionBaseURL
+    ? undefined
+    : {
+        command:
+          "npm run preview -- --host 127.0.0.1 --port 4173 --strictPort",
+        url: baseURL,
+        reuseExistingServer: false,
+        timeout: 120_000,
+      },
   use: {
     baseURL,
     browserName: "chromium",

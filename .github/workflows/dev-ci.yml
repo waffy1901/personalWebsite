@@ -45,3 +45,43 @@ jobs:
       - name: Build
         working-directory: main
         run: npm run build
+
+  premerge-browser-smoke:
+    name: Pre-merge browser smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.22.3
+          cache: npm
+          cache-dependency-path: main/package-lock.json
+
+      - name: Install dependencies
+        working-directory: main
+        run: npm ci
+
+      - name: Install Chromium
+        working-directory: main
+        run: npx playwright install --with-deps chromium
+
+      - name: Run local pre-merge browser smoke tests
+        run: npm run test:e2e:premerge
+
+      - name: Upload browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: premerge-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            main/playwright-report/
+            main/test-results/
+          if-no-files-found: warn
+          retention-days: 7

@@ -4,13 +4,6 @@ name: npm audit
   pull_request:
     branches:
       - main
-    paths:
-      - ".npmrc"
-      - "main/.npmrc"
-      - "main/package.json"
-      - "main/package-lock.json"
-      - "main/scripts/check-npm-audit.mjs"
-      - ".github/workflows/npm-audit.yml"
   schedule:
     - cron: "18 14 * * 1"
   workflow_dispatch:
