@@ -9,8 +9,11 @@ and closing Issue #164 each require their own direct authorization.
 
 On 2026-08-23, authenticated read-only API requests returned no repository
 rulesets and reported that `main` had no branch-protection rule. Issue #164
-tracks applying and proving the design below. Because provider state can drift,
-operators must refresh this evidence before any settings change or closure.
+tracks applying and proving the design below. Authenticated check-run readback
+also showed that all four proposed required checks came from the GitHub Actions
+app (`github-actions`), with app/integration ID `15368`. Because provider state
+can drift, operators must refresh this evidence before any settings change or
+closure.
 
 ## Proposed Active Ruleset
 
@@ -23,11 +26,15 @@ Configure these rules:
 - Require branches to be up to date before merging.
 - Require these four GitHub Actions status checks by exact job name:
 
-  1. `Verify app` from `.github/workflows/dev-ci.yml`
-  2. `Pre-merge browser smoke` from `.github/workflows/dev-ci.yml`
+  1. `Verify app` from `.github/workflows/dev-ci.yml`, source
+     `github-actions`, `integration_id: 15368`
+  2. `Pre-merge browser smoke` from `.github/workflows/dev-ci.yml`, source
+     `github-actions`, `integration_id: 15368`
   3. `Validate portfolio surfaces` from
-     `.github/workflows/portfolio-integrity.yml`
-  4. `Audit npm dependencies` from `.github/workflows/npm-audit.yml`
+     `.github/workflows/portfolio-integrity.yml`, source `github-actions`,
+     `integration_id: 15368`
+  4. `Audit npm dependencies` from `.github/workflows/npm-audit.yml`, source
+     `github-actions`, `integration_id: 15368`
 
 - Require native code-scanning results from `CodeQL` with security alerts set
   to `high_or_higher` and non-security alerts set to `errors`.
@@ -38,9 +45,13 @@ browser, or other third-party status check. The production browser smoke in
 `.github/workflows/release-on-deploy.yml` remains an additional advisory lane
 after the production deployment and release are created.
 
-GitHub rulesets identify ordinary workflow checks by job name, not by workflow
-name. The workflow paths above disambiguate ownership for operators and
-reviewers; the backticked job names are the exact required-check contexts.
+Configure each required status check with both its exact context and the
+refreshed GitHub Actions integration ID. Job names and workflow paths alone do
+not pin the source app: the workflow paths above disambiguate ownership for
+operators and reviewers, while `integration_id` prevents another integration
+from satisfying a same-named context. The IDs above record the 2026-08-23
+readback; stop and revise the reviewed proposal if authenticated readback shows
+that the provider identity has drifted before mutation.
 
 ## Emergency Bypass Policy
 
@@ -79,14 +90,17 @@ Perform these phases in order, stopping for the named human gate between them:
    names its exact reviewed SHA and acknowledges the automatic Netlify deploy,
    verification, deploy tag, GitHub Release, and advisory production-browser
    consequences.
-2. Confirm a representative pull request has reported all four exact job names
-   and CodeQL has produced results. Do not configure a context that has not
-   appeared in GitHub's authenticated check-run readback.
+2. Confirm a representative pull request has reported all four exact job names,
+   verify each check run's app slug is `github-actions`, refresh its
+   app/integration ID, and confirm CodeQL has produced results. Do not configure
+   a context or integration ID that has not appeared together in GitHub's
+   authenticated check-run readback.
 3. With a separate settings-mutation grant, create the ruleset exactly as
    proposed. Immediately read back the ruleset by authenticated API and verify
    its target, active enforcement, bypass actors/modes, pull-request settings,
-   strict required checks, CodeQL thresholds, deletion rule, and force-push
-   rule. Also inspect all rules applying to `main` for unexpected layering.
+   strict required checks and their integration IDs, CodeQL thresholds,
+   deletion rule, and force-push rule. Also inspect all rules applying to
+   `main` for unexpected layering.
 4. With separate authorization, open a non-production canary pull request.
    Introduce an intentionally failing browser assertion, prove that
    `Pre-merge browser smoke` fails and merge is blocked, then restore the
@@ -110,7 +124,8 @@ settings through a new reviewed change before activating or retaining the gate.
 Retain the following immutable or dated evidence:
 
 - the reviewed PR URL, base-tip SHA, merge-base SHA, and exact head SHA;
-- successful check-run IDs and conclusions for the four named jobs and CodeQL;
+- successful check-run IDs, conclusions, app slugs, and app/integration IDs for
+  the four named jobs, plus CodeQL results;
 - the authenticated ruleset JSON and the effective rules applying to `main`;
 - canary PR URL and failing/restored head SHAs with mergeability readback;
 - documentation-only and Dependabot reporting evidence;

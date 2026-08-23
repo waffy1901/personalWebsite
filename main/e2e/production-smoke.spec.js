@@ -1,5 +1,6 @@
 const { test: base, expect } = require("@playwright/test")
 
+const telemetryGuardMarker = "__playwrightTelemetryGuardActive"
 
 const canonicalRouteExpectations = [
   { path: "/", heading: "Waffy Ahmed" },
@@ -50,45 +51,49 @@ function isExpectedAnalyticsCspError(message) {
 }
 
 const test = base.extend({
-  externalRequests: async ({ context }, use) => {
-    const externalRequests = {
-      analytics: [],
-      formspree: [],
-    }
-
-    await context.addInitScript(() => {
-      globalThis.dataLayer = []
-      globalThis.gtag = () => undefined
-    })
-
-    await context.route("**/*", async (route) => {
-      const request = route.request()
-      const { hostname } = new URL(request.url())
-
-      if (isAnalyticsHost(hostname)) {
-        externalRequests.analytics.push(request.url())
-        await route.fulfill({
-          status: 200,
-          contentType:
-            request.resourceType() === "script"
-              ? "application/javascript"
-              : "text/plain",
-          body: "",
-        })
-        return
+  externalRequests: [
+    async ({ context }, use) => {
+      const externalRequests = {
+        analytics: [],
+        formspree: [],
       }
 
-      if (isFormspreeHost(hostname)) {
-        externalRequests.formspree.push(request.url())
-        await route.abort("blockedbyclient")
-        return
-      }
+      await context.addInitScript((guardMarker) => {
+        globalThis[guardMarker] = true
+        globalThis.dataLayer = []
+        globalThis.gtag = () => undefined
+      }, telemetryGuardMarker)
 
-      await route.continue()
-    })
+      await context.route("**/*", async (route) => {
+        const request = route.request()
+        const { hostname } = new URL(request.url())
 
-    await use(externalRequests)
-  },
+        if (isAnalyticsHost(hostname)) {
+          externalRequests.analytics.push(request.url())
+          await route.fulfill({
+            status: 200,
+            contentType:
+              request.resourceType() === "script"
+                ? "application/javascript"
+                : "text/plain",
+            body: "",
+          })
+          return
+        }
+
+        if (isFormspreeHost(hostname)) {
+          externalRequests.formspree.push(request.url())
+          await route.abort("blockedbyclient")
+          return
+        }
+
+        await route.continue()
+      })
+
+      await use(externalRequests)
+    },
+    { auto: true },
+  ],
 })
 
 function monitorPage(page, baseURL) {
@@ -140,6 +145,13 @@ function monitorPage(page, baseURL) {
 }
 
 async function expectHydratedRoute(page, route) {
+  expect(
+    await page.evaluate(
+      (guardMarker) => globalThis[guardMarker] === true,
+      telemetryGuardMarker
+    ),
+    "automatic telemetry interception fixture should initialize before app code"
+  ).toBe(true)
   await expect(
     page.getByRole("heading", { level: 1, name: route.heading })
   ).toBeVisible()
