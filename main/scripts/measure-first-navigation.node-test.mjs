@@ -6,6 +6,7 @@ import {
   NAVIGATION_PROFILES,
   RUNS_PER_TARGET_PROFILE,
   aggregateNavigationRuns,
+  installNavigationObservation,
   navigationRecordValidationErrors,
   validateNavigationPlan,
 } from "./measure-first-navigation.mjs"
@@ -38,6 +39,46 @@ test("first-navigation records require zero full-page fallback and analytics blo
   assert.match(navigationRecordValidationErrors(completeRecord({ fullPageFallbackExposureMs: 1 })).join(" "), /full-page route fallback/)
   assert.match(navigationRecordValidationErrors(completeRecord({ analyticsBlocking: { enabled: false, measurementId: "", observedRequests: [] } })).join(" "), /analytics-disabled/)
   assert.match(navigationRecordValidationErrors(completeRecord({ pendingAnnouncementCount: 2 })).join(" "), /pending announcement/)
+})
+
+test("first-navigation observations retain distinct pending announcements after removal", () => {
+  const originalDocument = globalThis.document
+  const originalMutationObserver = globalThis.MutationObserver
+  const originalWindow = globalThis.window
+  const observers = []
+  const pendingAnnouncement = { matches: (selector) => selector === "[data-route-transition-pending]", querySelectorAll: () => [] }
+  const secondPendingAnnouncement = { matches: (selector) => selector === "[data-route-transition-pending]", querySelectorAll: () => [] }
+  const body = { matches: () => false, querySelectorAll: () => [] }
+  try {
+    globalThis.document = { body, querySelector: () => null }
+    globalThis.window = globalThis
+    globalThis.MutationObserver = class {
+      constructor(callback) {
+        this.callback = callback
+        observers.push(this)
+      }
+
+      observe() {}
+      disconnect() {}
+    }
+    installNavigationObservation()
+    const observation = globalThis.__issue174NavigationObservation
+    observers[0].callback([{ type: "childList", addedNodes: [pendingAnnouncement] }])
+    assert.equal(observation.state.pendingAnnouncementCount, 1)
+    observers[0].callback([{ type: "childList", addedNodes: [] }])
+    observation.sample()
+    assert.equal(observation.state.pendingAnnouncementCount, 1)
+    observers[0].callback([{ type: "childList", addedNodes: [pendingAnnouncement] }])
+    assert.equal(observation.state.pendingAnnouncementCount, 1)
+    observers[0].callback([{ type: "childList", addedNodes: [secondPendingAnnouncement] }])
+    assert.equal(observation.state.pendingAnnouncementCount, 2)
+    assert.match(navigationRecordValidationErrors(completeRecord({ pendingAnnouncementCount: observation.state.pendingAnnouncementCount })).join(" "), /pending announcement/)
+  } finally {
+    globalThis.document = originalDocument
+    globalThis.MutationObserver = originalMutationObserver
+    globalThis.window = originalWindow
+    delete globalThis.__issue174NavigationObservation
+  }
 })
 
 test("first-navigation aggregation reports median route readiness and route chunk bytes", () => {

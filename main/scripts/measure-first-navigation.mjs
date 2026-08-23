@@ -198,6 +198,41 @@ function analyticsUrl(url) {
   }
 }
 
+export function installNavigationObservation() {
+  const pendingAnnouncementSelector = "[data-route-transition-pending]"
+  const state = { fallbackExposureMs: 0, fallbackStartedAt: null, pendingAnnouncementCount: 0, activationAt: performance.now() }
+  const observedPendingAnnouncements = new WeakSet()
+  const recordPendingAnnouncement = (node) => {
+    if (typeof node?.matches !== "function" || !node.matches(pendingAnnouncementSelector) || observedPendingAnnouncements.has(node)) return
+    observedPendingAnnouncements.add(node)
+    state.pendingAnnouncementCount += 1
+  }
+  const observePendingAnnouncements = (node) => {
+    recordPendingAnnouncement(node)
+    node?.querySelectorAll?.(pendingAnnouncementSelector).forEach(recordPendingAnnouncement)
+  }
+  const sample = () => {
+    const now = performance.now()
+    const fallbackVisible = Boolean(document.querySelector("[data-route-loading-fallback]"))
+    if (fallbackVisible && state.fallbackStartedAt === null) state.fallbackStartedAt = now
+    if (!fallbackVisible && state.fallbackStartedAt !== null) {
+      state.fallbackExposureMs += now - state.fallbackStartedAt
+      state.fallbackStartedAt = null
+    }
+    observePendingAnnouncements(document.body)
+  }
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type === "attributes") recordPendingAnnouncement(mutation.target)
+      for (const node of mutation.addedNodes) observePendingAnnouncements(node)
+    }
+    sample()
+  })
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-route-transition-pending"] })
+  sample()
+  window.__issue174NavigationObservation = { state, observer, sample }
+}
+
 async function runNavigation({ browser, baseUrl, profile, target }) {
   const context = await browser.newContext({
     viewport: { width: profile.width, height: profile.height },
@@ -228,24 +263,8 @@ async function runNavigation({ browser, baseUrl, profile, target }) {
     await page.goto(new URL(target.initialPath, baseUrl).href, { waitUntil: "networkidle" })
     await page.waitForSelector(`[data-route-ready="${target.initialPath}"]`)
     await page.locator(target.selector).waitFor()
-    await page.evaluate(() => {
-      performance.clearResourceTimings()
-      const state = { fallbackExposureMs: 0, fallbackStartedAt: null, pendingAnnouncementCount: 0, activationAt: performance.now() }
-      const sample = () => {
-        const now = performance.now()
-        const fallbackVisible = Boolean(document.querySelector("[data-route-loading-fallback]"))
-        if (fallbackVisible && state.fallbackStartedAt === null) state.fallbackStartedAt = now
-        if (!fallbackVisible && state.fallbackStartedAt !== null) {
-          state.fallbackExposureMs += now - state.fallbackStartedAt
-          state.fallbackStartedAt = null
-        }
-        state.pendingAnnouncementCount = document.querySelectorAll("[data-route-transition-pending]").length
-      }
-      const observer = new MutationObserver(sample)
-      observer.observe(document.body, { childList: true, subtree: true })
-      sample()
-      window.__issue174NavigationObservation = { state, observer, sample }
-    })
+    await page.evaluate(() => performance.clearResourceTimings())
+    await page.evaluate(installNavigationObservation)
     await page.locator(target.selector).evaluate((element) => element.click())
     await page.waitForFunction((targetPath) => {
       const ready = document.querySelector("[data-route-ready]")
