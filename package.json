@@ -10,6 +10,8 @@
     "test": "npm --prefix main run test --",
     "test:release": "npm --prefix main run test:release --",
     "test:e2e:production": "npm --prefix main run test:e2e:production --",
+    "performance:baseline": "npm --prefix main run performance:baseline --",
+    "test:performance:baseline": "npm --prefix main run test:performance:baseline --",
     "preview": "npm --prefix main run preview --"
   }
 }
