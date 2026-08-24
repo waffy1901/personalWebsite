@@ -225,6 +225,7 @@ def summarize_selected(
     warnings: list[str] = []
     latest_observation: datetime | None = None
     ignored_compaction_baselines: dict[str, int] = defaultdict(int)
+    ignored_relay_snapshots: dict[str, int] = defaultdict(int)
     for path, metadata in selected:
         session_id = session_identity(metadata, path.stem)
         label = labels.get(session_id)
@@ -235,6 +236,22 @@ def summarize_selected(
         effort = "unavailable"
         telemetry_seen = False
         compaction_pending = False
+        last_counted_fingerprint: tuple[int | None, ...] | None = None
+        pending_observation: tuple[
+            tuple[str, str, str, str, str], dict[str, int | None], tuple[int | None, ...], datetime
+        ] | None = None
+
+        def commit_pending() -> None:
+            nonlocal pending_observation, telemetry_seen, latest_observation, last_counted_fingerprint
+            if pending_observation is None:
+                return
+            key, observation, fingerprint, observed_at = pending_observation
+            groups[key].append(observation)
+            telemetry_seen = True
+            last_counted_fingerprint = fingerprint
+            latest_observation = max(latest_observation, observed_at) if latest_observation else observed_at
+            pending_observation = None
+
         try:
             handle = path.open(encoding="utf-8")
         except OSError as error:
@@ -245,10 +262,23 @@ def summarize_selected(
                 try:
                     record = json.loads(line)
                 except json.JSONDecodeError:
+                    commit_pending()
                     warnings.append(f"ignored malformed JSONL record in {path.name}")
                     continue
                 record_type = record.get("type")
                 payload = record.get("payload")
+                if pending_observation is not None:
+                    if (
+                        record_type == "inter_agent_communication_metadata"
+                        and isinstance(payload, dict)
+                        and payload.get("trigger_turn") is False
+                        and all(value is not None for value in pending_observation[2])
+                        and pending_observation[2] == last_counted_fingerprint
+                    ):
+                        ignored_relay_snapshots[session_id] += 1
+                        pending_observation = None
+                    else:
+                        commit_pending()
                 if not isinstance(payload, dict):
                     continue
                 if record_type == "turn_context":
@@ -271,7 +301,6 @@ def summarize_selected(
                     continue
                 if observed_at < since:
                     continue
-                latest_observation = max(latest_observation, observed_at) if latest_observation else observed_at
                 usage = payload.get("info", {}).get("last_token_usage")
                 if not isinstance(usage, dict):
                     warnings.append(f"missing last_token_usage in {path.name}")
@@ -302,15 +331,17 @@ def summarize_selected(
                 if not reasoning_consistent:
                     warnings.append(f"reasoning output exceeds output telemetry in {path.name}")
                 key = (session_phase, role, session_id, model, effort)
-                groups[key].append({
+                fingerprint = tuple(values[token_key] for token_key in TOKEN_KEYS) + (reported_total,)
+                pending_observation = (key, {
                     "input": values["input_tokens"],
                     "cached_input": values["cached_input_tokens"],
                     "cache_write_input": values["cache_write_input_tokens"],
                     "output": values["output_tokens"],
                     "reasoning_output": values["reasoning_output_tokens"] if reasoning_consistent else None,
                     "total_consistent": int(total_consistent),
-                })
-                telemetry_seen = True
+                }, fingerprint, observed_at)
+
+        commit_pending()
 
         if not telemetry_seen:
             groups.setdefault((session_phase, role, session_id, model, effort), [])
@@ -347,6 +378,8 @@ def summarize_selected(
         warnings.append("selected session has no usable token telemetry after the time boundary")
     for session_id, count in sorted(ignored_compaction_baselines.items()):
         warnings.append(f"ignored {count} post-compaction zero-component token baseline(s) for session {session_id}")
+    for session_id, count in sorted(ignored_relay_snapshots.items()):
+        warnings.append(f"ignored {count} inter-agent relay token snapshot(s) for session {session_id}")
     return rows, warnings, latest_observation
 
 

@@ -148,6 +148,120 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             self.assertTrue(any("ignored 2 post-compaction" in warning for warning in report["warnings"]))
             self.assertFalse(any("inconsistent total_tokens" in warning for warning in report["warnings"]))
 
+    def test_ignores_only_identical_snapshots_at_inter_agent_relay_boundary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                token("2026-08-24T00:31:00Z", 100, 20, 0, 10, 2),
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+                token("2026-08-24T00:31:01Z", 100, 20, 0, 10, 2),
+                {"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}},
+                {"type": "response_item", "payload": {"type": "agent_message"}},
+                token("2026-08-24T00:31:02Z", 100, 20, 0, 10, 2),
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 2)
+            self.assertEqual(row["input"], 200)
+            self.assertEqual(row["output"], 20)
+            self.assertEqual(row["total"], 220)
+            self.assertTrue(any("ignored 1 inter-agent relay" in warning for warning in report["warnings"]))
+
+    def test_keeps_identical_snapshot_before_non_delivery_inter_agent_metadata(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                token("2026-08-24T00:31:00Z", 100, 20, 0, 10, 2),
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+                token("2026-08-24T00:31:01Z", 100, 20, 0, 10, 2),
+                {"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": True}},
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 2)
+            self.assertEqual(row["total"], 220)
+            self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
+
+    def test_keeps_incomplete_snapshot_at_delivery_boundary(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            incomplete = {
+                "type": "event_msg", "timestamp": "2026-08-24T00:31:00Z",
+                "payload": {"type": "token_count", "info": {"last_token_usage": {"input_tokens": 10}}},
+            }
+            replayed_incomplete = {**incomplete, "timestamp": "2026-08-24T00:31:01Z"}
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                incomplete,
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+                replayed_incomplete,
+                {"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}},
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 2)
+            self.assertEqual(row["input"], 20)
+            self.assertIsNone(row["total"])
+            self.assertTrue(any("incomplete token telemetry" in warning for warning in report["warnings"]))
+            self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
+
+    def test_malformed_record_breaks_relay_adjacency(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            path = write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                token("2026-08-24T00:31:00Z", 100, 20, 0, 10, 2),
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+                token("2026-08-24T00:31:01Z", 100, 20, 0, 10, 2),
+            ])
+            path.write_text(
+                path.read_text(encoding="utf-8")
+                + "not-json\\n"
+                + json.dumps({"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}})
+                + "\\n",
+                encoding="utf-8",
+            )
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 2)
+            self.assertTrue(any("ignored malformed JSONL" in warning for warning in report["warnings"]))
+            self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
+
+    def test_non_dict_record_breaks_relay_adjacency_without_crashing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                token("2026-08-24T00:31:00Z", 100, 20, 0, 10, 2),
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+                token("2026-08-24T00:31:01Z", 100, 20, 0, 10, 2),
+                {"type": "inter_agent_communication_metadata", "payload": None},
+                {"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}},
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 2)
+            self.assertEqual(row["total"], 220)
+            self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
+
 
 if __name__ == "__main__":
     unittest.main()
