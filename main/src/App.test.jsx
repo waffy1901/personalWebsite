@@ -313,7 +313,7 @@ describe("App routes", () => {
     const footer = screen.getByRole("contentinfo")
 
     expect(main).toHaveAttribute("id", "main-content")
-    expect(main).toHaveFocus()
+    await waitFor(() => expect(main).toHaveFocus())
     expect(footer).toContainElement(screen.getByText(/created:/i))
     expect(main).not.toContainElement(footer)
   })
