@@ -10,6 +10,8 @@ When both `model` and `reasoning_effort` are exposed, every delegated planner, i
 
 The spawn result or another runtime/session metadata source is the only evidence for an actual selected model or effort. If it does not expose those fields, record `actual_model: unknown` and `actual_reasoning_effort: unknown`; do not infer them from the requested override.
 
+At a human gate or terminal state, retain the requested spawn values and collect actual per-segment model/effort from session `turn_context` when locally available. Use the token-usage reference and collector; requested routing is not evidence of actual routing.
+
 ## Capability Mapping And Safe Fallback
 
 Resolve classes from the live override list in this order:
@@ -62,5 +64,6 @@ Use these cases when changing or forward-testing this policy. Evaluate the routi
 | Post-review change | Reviewer delivered verdict for exact SHA; new commit/rebase/base change follows | Invalidate the verdict and any SHA-bound recommendation/grant; require fresh independent review before the human gate. |
 | Base-tip-only drift | Reviewer packet and verdict name a full `reviewed_base_tip_sha`; the base branch advances while merge-base and head SHA remain unchanged | Immediately before review and downstream execution, compare the live base tip with `reviewed_base_tip_sha`; on mismatch, invalidate the verdict and every SHA-bound recommendation/grant and require fresh review or authorization. |
 | Routing and authority | Any model/effort/fallback decision under limited grant | The routing record does not expand `IMPLEMENT_LOCAL`, `IMPLEMENT_TO_PR`, merge, deployment, production, remediation, or closure authority; stop at the existing phase boundary. |
+| Usage telemetry unavailable | Selected linked session has no complete `token_count` fields or no `turn_context` | Report the affected metrics or actual route as unavailable with warnings; do not substitute zeroes, estimates, or requested routing. |
 
 For this skill update, independently inspect the live session tool definition before reporting that overrides are supported. The policy can prove requested spawn arguments and fallback behavior; it cannot prove an actual child model/effort without runtime metadata.
