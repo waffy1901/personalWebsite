@@ -16,8 +16,10 @@ import {
   useNavigationType,
 } from "react-router"
 import Home from "./pages/Home.jsx"
+import DeployDates from "./components/DeployDates.jsx"
 import Navbar from "./components/Navbar.jsx"
 import Seo from "./components/Seo.jsx"
+import { deployInfo } from "./data/profile.js"
 import usePageTracking from "./hooks/usePageTracking.jsx"
 
 const Resume = lazy(() => import("./pages/Resume.jsx"))
@@ -179,9 +181,22 @@ function App() {
   }, [displayedRoute])
 
   usePageTracking()
+
+  const handleSkipToMain = (event) => {
+    event.preventDefault()
+    document.getElementById("main-content")?.focus()
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-[#F4F1EA]">
       <Seo />
+      <a
+        href="#main-content"
+        onClick={handleSkipToMain}
+        className="sr-only z-[60] rounded-md bg-[#0B1220] px-4 py-2 text-sm font-black text-white shadow-lg focus:fixed focus:left-4 focus:top-4 focus:not-sr-only focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#F4F1EA]"
+      >
+        Skip to main content
+      </a>
       <Navbar />
       <div className="flex-1 overflow-auto">
         <DelayedRoutePendingIndicator key={location.key} pending={routePending} />
@@ -210,6 +225,11 @@ function App() {
             </div>
           </Suspense>
         </RouteErrorBoundary>
+      </div>
+      <div className="bg-[#E8EDF2] px-3 py-4 sm:px-5">
+        <div className="mx-auto w-full max-w-6xl">
+          <DeployDates first={deployInfo.firstPublishedAt} />
+        </div>
       </div>
     </div>
   )

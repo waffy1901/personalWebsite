@@ -10,7 +10,6 @@ import {
   FaRegClock,
   FaServer,
 } from "react-icons/fa";
-import DeployDates from "../components/DeployDates";
 import {
   ImpactBand,
   PageContainer,
@@ -21,7 +20,7 @@ import {
   SystemDiagram,
 } from "../components/MissionControl.jsx";
 import SocialLinks from "../components/SocialLinks";
-import { deployInfo, profile, resume } from "../data/profile";
+import { profile, resume } from "../data/profile";
 import { currentEmployment } from "../data/siteIdentity.js";
 import { trackEvent } from "../utils/analytics";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
@@ -300,8 +299,6 @@ function Home() {
             <p className="text-sm font-black uppercase text-slate-500">Connect</p>
             <SocialLinks placement="home" className="mt-4 flex flex-wrap gap-2" />
           </div>
-
-          <DeployDates first={deployInfo.firstPublishedAt} />
         </PageContainer>
       </section>
     </PageShell>
