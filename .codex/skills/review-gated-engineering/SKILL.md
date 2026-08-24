@@ -15,6 +15,7 @@ At the start of a workflow:
 2. Classify the work by its highest-risk dimension and record the tier and rationale.
 3. Establish the active authority from a direct human instruction in the current conversation.
 4. Version the plan and use the applicable packet from [references/handoff-contracts.md](references/handoff-contracts.md). Read that reference before producing or consuming a packet.
+5. Make a provisional semantic-version assessment during planning. Read [references/semantic-versioning.md](references/semantic-versioning.md) when the work could affect a release, version, PR, or deployment.
 
 ## Select The Workflow
 
@@ -96,6 +97,14 @@ A direct request that clearly asks for implementation through a reviewable PR ca
 Under `IMPLEMENT_LOCAL`, stop after local checks and return the local implementation handoff. This is not a review verdict or merge-ready state. Resume publication only after a direct `IMPLEMENT_TO_PR` grant, then create the reviewable PR and obtain independent review.
 
 Never push directly to `main`. Never infer permission to merge, enable auto-merge, tag, create a GitHub Release, dispatch a release/deploy workflow, mutate production, close work, validate after merge, or remediate from implementation authority or a reviewer verdict.
+
+## Version And Usage Evidence
+
+Use [references/semantic-versioning.md](references/semantic-versioning.md) for the required semantic assessment vocabulary and lifecycle. Record a provisional assessment in planning, then refresh a binding assessment at PR creation from the exact base-to-head diff and current published/version state. The primary implementation PR must not edit `main/package.json` or `main/package-lock.json` merely to carry its proposed bump.
+
+If an implementation needs a version bump, it becomes eligible only after its exact merge and deployment are verified. A new direct `IMPLEMENT_TO_PR` grant is then required for a dedicated version-only PR. That PR is `release-carrier`, never recursively creates another bump, and still follows independent review, exact merge authorization, post-merge verification, and a separate `RELEASE_OR_DEPLOY` grant before semantic publication. No future authority is transferred by an assessment, PR, merge, review, or deployment.
+
+At every workflow human gate and terminal handoff, capture the locally observable token-usage breakdown described in [references/token-usage.md](references/token-usage.md). Use the bundled collector when session JSONL is available. Report requested and actual model/effort separately, preserve unavailable values, state snapshot coverage, and state that the final report response and later turns are excluded because they cannot be observed before delivery.
 
 Before recommending or executing merge, reinspect `.github/workflows/release-on-deploy.yml`. While a push to `main` automatically verifies the app, waits for the exact Netlify production deploy, validates production, creates a deploy tag and GitHub Release, and runs advisory production browser checks, a valid `MERGE_PR` grant must name the PR, reviewed head SHA, and merge method and acknowledge that compound consequence. Issue closure remains separate.
 

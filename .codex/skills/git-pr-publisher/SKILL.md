@@ -66,6 +66,7 @@ Do only the actions covered by that instruction or grant. A project plan, issue,
    - When updating an existing PR, preserve its labels unless the user asks to revise them.
    - Create a draft PR only if the user asks for draft or the branch is intentionally not ready for review.
    - Write a PR body with a short summary, verification performed, and any known risks or skipped checks.
+   - When `$review-gated-engineering` is active, refresh its Semantic Version Assessment against the final exact base-to-head diff and current published/version state. Include the required section below; this refresh is binding for the PR and does not grant a version bump, merge, release, or deployment.
    - Link work items with non-closing syntax such as `Refs #123`. Do not use `Fixes`, `Closes`, or equivalent keywords during implementation or review.
 
 8. Stop at the review boundary.
@@ -108,6 +109,15 @@ Common mistakes: validate names against the current label list instead of guessi
 
 ## Verification
 - ...
+
+## Semantic Version Assessment
+- Current version: ...
+- Published version: ...
+- Decision: `none | patch | minor | major | release-carrier`
+- Proposed version: ...
+- Basis: exact `<base SHA>...<head SHA>` diff and current published/version state at `<UTC time>`
+- Rationale/evidence: ...
+- Deferred status: ...
 
 ## Notes
 - ...
