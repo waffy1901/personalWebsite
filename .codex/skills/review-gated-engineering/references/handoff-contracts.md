@@ -75,6 +75,59 @@ Field meanings:
 - scope, non-goals, and open questions make drift visible.
 - `next_allowed_transition` describes what current authority permits; `stop_condition` prevents a role from silently entering a later phase.
 
+## Semantic Version Assessment
+
+Include this block in every planning packet. Refresh it at PR creation using the exact base-to-head diff, then carry that binding record into review and human-gate packets. Read [semantic-versioning.md](semantic-versioning.md) before completing it.
+
+```yaml
+semantic_version_assessment:
+  current_version: <authoritative main/package.json version, unavailable, or none>
+  published_version: <latest published semantic version, unavailable, or none>
+  decision: <none | patch | minor | major | release-carrier>
+  proposed_version: <core version when decision is patch/minor/major; none otherwise>
+  rationale_and_evidence:
+    - <diff and published-state evidence supporting the decision>
+  assessment_basis: <provisional planning scope, or exact base-to-head diff at PR creation>
+  base_sha: <full SHA, or none before known>
+  head_sha: <full SHA, or none before known>
+  assessed_at: <UTC timestamp>
+  deferred_status: <not deferred, or exact later lifecycle and required grant>
+```
+
+## Token Usage Snapshot
+
+Every human-gate or terminal handoff must append a snapshot from the locally available telemetry. Read [token-usage.md](token-usage.md). Do not estimate unavailable fields or double-count cached/cache-write input or reasoning output.
+
+```yaml
+token_usage_snapshot:
+  source: <collector command and session root ID, or unavailable with reason>
+  snapshot_at: <UTC timestamp>
+  telemetry_through: <latest included telemetry timestamp, or unavailable>
+  coverage: <linked sessions and time boundary included; omissions and warnings>
+  requested_routing: <requested model/effort by phase or unavailable>
+  actual_routing: <actual model/effort from turn_context, or unavailable>
+  groups:
+    - phase: <phase or unavailable>
+      role: <role or unavailable>
+      session: <session ID>
+      requested_model: <value or unavailable>
+      requested_effort: <value or unavailable>
+      actual_model: <value or unavailable>
+      actual_effort: <value or unavailable>
+      response_count: <count or unavailable>
+      input: <count or unavailable>
+      cached_input: <count or unavailable>
+      cache_write_input: <count or unavailable>
+      uncached_input: <derived count or unavailable>
+      output: <count or unavailable>
+      reasoning_output: <count or unavailable>
+      total: <input plus output, or unavailable>
+  aggregate: <per-metric observed subtotal plus complete/partial unavailable-group coverage>
+  exclusions: <state that the final report response and later turns are excluded before delivery>
+```
+
+The required `groups` fields are an output contract, not permission to inspect arbitrary session contents. The collector reads only session metadata, turn context, and token-count telemetry.
+
 ## Planner To Implementer
 
 Append this block to the common metadata. Use it only after the plan is sufficiently resolved for the active tier and the authority record contains `IMPLEMENT_LOCAL` or `IMPLEMENT_TO_PR`.
@@ -144,6 +197,8 @@ local_implementation_handoff:
     - command_or_check: <exact command or inspection>
       result: <pass, fail, blocked, or not run with concise evidence>
       evidence_scope: <what this result proves>
+  semantic_version_assessment: <copy the binding Semantic Version Assessment block>
+  token_usage_snapshot: <copy the required Token Usage Snapshot block>
   plan_deviations:
     - deviation: <difference from the approved plan, or none>
       materiality: <non-material or material>
@@ -192,6 +247,8 @@ implementer_to_reviewer:
     - command_or_check: <exact command or inspection>
       result: <pass, fail, blocked, or not run with concise evidence>
       evidence_scope: <what this result proves>
+  semantic_version_assessment: <copy the binding Semantic Version Assessment block>
+  token_usage_snapshot: <copy the required Token Usage Snapshot block>
   plan_deviations:
     - deviation: <difference from the approved plan, or none>
       materiality: <non-material or material>
@@ -244,6 +301,19 @@ Use this report shape:
 ## Routing Telemetry
 
 For each role that ran, report requested capability/model/effort, routing source, actual model/effort, and evidence from the common packet. State `unknown` or `unavailable` for actual values when runtime metadata did not expose them; never infer actual values from a policy or prompt.
+
+## Binding Semantic Version Assessment
+
+- Current and published version: <values or unavailable>
+- Decision and proposed version: <one classifier value and proposed core version or none>
+- Exact basis: <base SHA, head SHA, current-state evidence, and UTC assessment time>
+- Deferred status: <later lifecycle and required grant, or not deferred>
+
+## Token Usage Snapshot
+
+- Source, snapshot time, and coverage: <collector command, selected linked sessions, time boundary, and warnings>
+- Breakdown: <phase/role/session/model/effort groups with response count, input, cached input, cache-write input, uncached input, output, reasoning output, and total; unavailable is explicit>
+- Exclusions: <state final report response and later turns are excluded before delivery>
 
 ## Findings
 
