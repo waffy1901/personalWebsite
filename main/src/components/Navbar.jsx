@@ -20,19 +20,37 @@ function Navbar() {
       return;
     }
 
-    const activeLink = navRef.current?.querySelector("[aria-current='page']");
+    const nav = navRef.current;
+    const activeLink = nav?.querySelector("[aria-current='page']");
 
     if (!activeLink || window.matchMedia("(min-width: 640px)").matches) {
       return;
     }
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const navRect = nav.getBoundingClientRect();
+    const activeLinkRect = activeLink.getBoundingClientRect();
+    const isActiveLinkVisible =
+      activeLinkRect.left >= navRect.left && activeLinkRect.right <= navRect.right;
 
-    activeLink.scrollIntoView({
-      behavior: prefersReducedMotion ? "auto" : "smooth",
-      block: "nearest",
-      inline: "nearest",
-    });
+    if (isActiveLinkVisible) {
+      return;
+    }
+
+    const scrollOffset =
+      activeLinkRect.left < navRect.left
+        ? activeLinkRect.left - navRect.left
+        : activeLinkRect.right - navRect.right;
+    const left = Math.max(0, nav.scrollLeft + scrollOffset);
+
+    if (typeof nav.scrollTo === "function") {
+      nav.scrollTo({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        left,
+      });
+    } else {
+      nav.scrollLeft = left;
+    }
   }, [location.pathname]);
 
   return (

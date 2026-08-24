@@ -210,6 +210,136 @@ describe("App routes", () => {
     )
   })
 
+  it("makes the skip link the first focusable control and moves focus to the route main", async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false })))
+    renderRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    await user.tab()
+
+    const skipLink = screen.getByRole("link", { name: /skip to main content/i })
+    const main = screen.getByRole("main")
+
+    expect(skipLink).toHaveFocus()
+    expect(skipLink).toHaveClass("z-[60]", "focus:not-sr-only")
+    expect(main).toHaveAttribute("id", "main-content")
+    expect(main).toHaveAttribute("tabindex", "-1")
+
+    await user.keyboard("{Enter}")
+
+    expect(main).toHaveFocus()
+  })
+
+  it("keeps a mobile active nav link visible without scrolling the link itself", async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView
+    const originalScrollTo = HTMLElement.prototype.scrollTo
+    const scrollIntoViewMock = vi.fn()
+    const navScrollToMock = vi.fn()
+
+    try {
+      Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+        configurable: true,
+        value: scrollIntoViewMock,
+      })
+      Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+        configurable: true,
+        value: navScrollToMock,
+      })
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn((query) => ({
+          matches: query === "(prefers-reduced-motion: reduce)",
+        }))
+      )
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+        function getBoundingClientRect() {
+          if (this.getAttribute("aria-label") === "Primary navigation") {
+            return { left: 0, right: 100 }
+          }
+
+          if (this.getAttribute("aria-current") === "page") {
+            return { left: 110, right: 160 }
+          }
+
+          return { left: 0, right: 0 }
+        }
+      )
+
+      renderRoute("/")
+      await screen.findByRole("heading", { name: /waffy ahmed/i })
+
+      expect(scrollIntoViewMock).not.toHaveBeenCalled()
+      expect(navScrollToMock).toHaveBeenCalledWith({
+        behavior: "auto",
+        left: 60,
+      })
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+          configurable: true,
+          value: originalScrollIntoView,
+        })
+      } else {
+        delete HTMLElement.prototype.scrollIntoView
+      }
+
+      if (originalScrollTo) {
+        Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+          configurable: true,
+          value: originalScrollTo,
+        })
+      } else {
+        delete HTMLElement.prototype.scrollTo
+      }
+    }
+  })
+
+  it("keeps the skip target and site footer available after in-app navigation", async () => {
+    const user = userEvent.setup()
+    renderBrowserRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    const projectsLink = within(
+      screen.getByRole("navigation", { name: /primary navigation/i })
+    ).getByRole("link", { name: /projects/i })
+
+    await user.click(projectsLink)
+    await screen.findByRole("heading", {
+      name: /practical builds for real workflows/i,
+    })
+
+    const main = screen.getByRole("main")
+    const footer = screen.getByRole("contentinfo")
+
+    expect(main).toHaveAttribute("id", "main-content")
+    await waitFor(() => expect(main).toHaveFocus())
+    expect(footer).toContainElement(screen.getByText(/created:/i))
+    expect(main).not.toContainElement(footer)
+  })
+
+  it("keeps one main landmark and one h1 on every primary route", async () => {
+    for (const route of [
+      "/",
+      "/resume",
+      "/contact",
+      "/case-studies",
+      "/experience",
+      "/projects",
+    ]) {
+      const view = renderRoute(route)
+
+      await screen.findByRole("main")
+      await waitFor(() =>
+        expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1)
+      )
+      expect(screen.getAllByRole("main")).toHaveLength(1)
+      expect(screen.getAllByRole("contentinfo")).toHaveLength(1)
+
+      view.unmount()
+    }
+  })
+
   it("preloads lazy routes when primary navigation shows intent", async () => {
     renderRoute("/")
 
