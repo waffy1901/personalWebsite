@@ -19,7 +19,7 @@ def write_session(directory, name, records):
     return path
 
 
-def token(timestamp, input_tokens, cached, cache_write, output, reasoning):
+def token(timestamp, input_tokens, cached, cache_write, output, reasoning, reported_total=None):
     return {
         "type": "event_msg",
         "timestamp": timestamp,
@@ -31,7 +31,7 @@ def token(timestamp, input_tokens, cached, cache_write, output, reasoning):
                 "cache_write_input_tokens": cache_write,
                 "output_tokens": output,
                 "reasoning_output_tokens": reasoning,
-                "total_tokens": input_tokens + output,
+                "total_tokens": input_tokens + output if reported_total is None else reported_total,
             }},
         },
     }
@@ -126,6 +126,27 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             self.assertTrue(any("inconsistent total_tokens" in warning for warning in report["warnings"]))
             self.assertTrue(any("reasoning output exceeds" in warning for warning in report["warnings"]))
             self.assertNotIn("base_instructions", MODULE.metadata_from(sessions / "root.jsonl"))
+
+    def test_ignores_repeated_post_compaction_zero_component_baselines(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                {"type": "compacted", "payload": {}},
+                token("2026-08-24T00:31:00Z", 0, 0, 0, 0, 0, reported_total=99),
+                {"type": "turn_context", "payload": {"model": "gpt-5.6-terra", "effort": "high"}},
+                token("2026-08-24T00:31:01Z", 0, 0, 0, 0, 0, reported_total=99),
+                token("2026-08-24T00:31:02Z", 10, 2, 0, 5, 1),
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 1)
+            self.assertEqual(row["total"], 15)
+            self.assertTrue(any("ignored 2 post-compaction" in warning for warning in report["warnings"]))
+            self.assertFalse(any("inconsistent total_tokens" in warning for warning in report["warnings"]))
 
 
 if __name__ == "__main__":

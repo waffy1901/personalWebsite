@@ -224,6 +224,7 @@ def summarize_selected(
     groups: dict[tuple[str, str, str, str, str], list[dict[str, int | None]]] = defaultdict(list)
     warnings: list[str] = []
     latest_observation: datetime | None = None
+    ignored_compaction_baselines: dict[str, int] = defaultdict(int)
     for path, metadata in selected:
         session_id = session_identity(metadata, path.stem)
         label = labels.get(session_id)
@@ -233,6 +234,7 @@ def summarize_selected(
         model = "unavailable"
         effort = "unavailable"
         telemetry_seen = False
+        compaction_pending = False
         try:
             handle = path.open(encoding="utf-8")
         except OSError as error:
@@ -252,6 +254,9 @@ def summarize_selected(
                 if record_type == "turn_context":
                     model = payload.get("model") if isinstance(payload.get("model"), str) else "unavailable"
                     effort = payload.get("effort") if isinstance(payload.get("effort"), str) else "unavailable"
+                    continue
+                if record_type == "compacted":
+                    compaction_pending = True
                     continue
                 if record_type != "event_msg" or payload.get("type") != "token_count":
                     continue
@@ -273,6 +278,12 @@ def summarize_selected(
                     continue
                 values = {key: number(usage.get(key)) for key in TOKEN_KEYS}
                 reported_total = number(usage.get("total_tokens"))
+                zero_components = all(value == 0 for value in values.values())
+                if compaction_pending and zero_components and reported_total not in (None, 0):
+                    ignored_compaction_baselines[session_id] += 1
+                    continue
+                # The next non-marker token record resumes ordinary validation.
+                compaction_pending = False
                 total_consistent = (
                     reported_total is None
                     or values["input_tokens"] is None
@@ -334,6 +345,8 @@ def summarize_selected(
         warnings.append("no usable token_count telemetry found in selected sessions")
     if any(row["response_count"] is None for row in rows):
         warnings.append("selected session has no usable token telemetry after the time boundary")
+    for session_id, count in sorted(ignored_compaction_baselines.items()):
+        warnings.append(f"ignored {count} post-compaction zero-component token baseline(s) for session {session_id}")
     return rows, warnings, latest_observation
 
 
