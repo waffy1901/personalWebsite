@@ -228,9 +228,9 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             ])
             path.write_text(
                 path.read_text(encoding="utf-8")
-                + "not-json\\n"
+                + "not-json\n"
                 + json.dumps({"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}})
-                + "\\n",
+                + "\n",
                 encoding="utf-8",
             )
             report = MODULE.collect(argparse.Namespace(
@@ -261,6 +261,72 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             self.assertEqual(row["response_count"], 2)
             self.assertEqual(row["total"], 220)
             self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
+
+    def test_non_object_json_record_breaks_relay_adjacency(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            path = write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                token("2026-08-24T00:31:00Z", 100, 20, 0, 10, 2),
+                {"type": "event_msg", "payload": {"type": "item_completed"}},
+                token("2026-08-24T00:31:01Z", 100, 20, 0, 10, 2),
+            ])
+            path.write_text(
+                path.read_text(encoding="utf-8")
+                + "[]\n"
+                + json.dumps({"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}})
+                + "\n",
+                encoding="utf-8",
+            )
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 2)
+            self.assertEqual(row["total"], 220)
+            self.assertTrue(any("ignored non-object JSONL" in warning for warning in report["warnings"]))
+            self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
+
+    def test_non_object_metadata_and_info_are_ignored_without_crashing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            non_object_metadata = sessions / "non-object.jsonl"
+            non_object_metadata.write_text("[]\n", encoding="utf-8")
+            self.assertIsNone(MODULE.metadata_from(non_object_metadata))
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                {"type": "event_msg", "timestamp": "2026-08-24T00:31:00Z", "payload": {"type": "token_count", "info": []}},
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertIsNone(row["response_count"])
+            self.assertIsNone(row["total"])
+            self.assertTrue(any("missing last_token_usage" in warning for warning in report["warnings"]))
+
+    def test_boolean_token_metrics_are_unavailable_not_numeric(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                {"type": "event_msg", "timestamp": "2026-08-24T00:31:00Z", "payload": {"type": "token_count", "info": {"last_token_usage": {
+                    "input_tokens": True, "cached_input_tokens": False, "cache_write_input_tokens": False,
+                    "output_tokens": True, "reasoning_output_tokens": False, "total_tokens": True,
+                }}}},
+            ])
+            report = MODULE.collect(argparse.Namespace(
+                root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+            ))
+            row = report["groups"][0]
+            self.assertEqual(row["response_count"], 1)
+            self.assertIsNone(row["input"])
+            self.assertIsNone(row["output"])
+            self.assertIsNone(row["total"])
+            self.assertTrue(any("invalid boolean token metric" in warning for warning in report["warnings"]))
 
 
 if __name__ == "__main__":

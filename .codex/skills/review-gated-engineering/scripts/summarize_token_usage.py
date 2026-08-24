@@ -36,6 +36,8 @@ def metadata_from(path: Path) -> dict[str, Any] | None:
             record = json.loads(handle.readline())
     except (OSError, json.JSONDecodeError):
         return None
+    if not isinstance(record, dict):
+        return None
     if record.get("type") != "session_meta" or not isinstance(record.get("payload"), dict):
         return None
     # Never retain arbitrary session metadata (which can include instructions).
@@ -191,7 +193,7 @@ def select_sessions(session_dir: Path, root_session_id: str, since: datetime) ->
 
 
 def number(value: Any) -> int | None:
-    return value if isinstance(value, int) and value >= 0 else None
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
 
 
 def empty_metrics() -> dict[str, int | None]:
@@ -265,6 +267,10 @@ def summarize_selected(
                     commit_pending()
                     warnings.append(f"ignored malformed JSONL record in {path.name}")
                     continue
+                if not isinstance(record, dict):
+                    commit_pending()
+                    warnings.append(f"ignored non-object JSONL record in {path.name}")
+                    continue
                 record_type = record.get("type")
                 payload = record.get("payload")
                 if pending_observation is not None:
@@ -301,12 +307,15 @@ def summarize_selected(
                     continue
                 if observed_at < since:
                     continue
-                usage = payload.get("info", {}).get("last_token_usage")
+                info = payload.get("info")
+                usage = info.get("last_token_usage") if isinstance(info, dict) else None
                 if not isinstance(usage, dict):
                     warnings.append(f"missing last_token_usage in {path.name}")
                     continue
                 values = {key: number(usage.get(key)) for key in TOKEN_KEYS}
                 reported_total = number(usage.get("total_tokens"))
+                if any(isinstance(usage.get(key), bool) for key in TOKEN_KEYS + ("total_tokens",)):
+                    warnings.append(f"invalid boolean token metric in {path.name}")
                 zero_components = all(value == 0 for value in values.values())
                 if compaction_pending and zero_components and reported_total not in (None, 0):
                     ignored_compaction_baselines[session_id] += 1
