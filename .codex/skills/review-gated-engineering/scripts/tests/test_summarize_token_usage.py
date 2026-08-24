@@ -1,6 +1,7 @@
 import argparse
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -35,6 +36,15 @@ def token(timestamp, input_tokens, cached, cache_write, output, reasoning, repor
             }},
         },
     }
+
+
+def over_limit_integer_record():
+    return '{"value":' + "9" * (sys.get_int_max_str_digits() + 1) + "}\n"
+
+
+def excessively_nested_record():
+    depth = sys.getrecursionlimit() + 10
+    return "[" * depth + "0" + "]" * depth + "\n"
 
 
 class SummarizeTokenUsageTests(unittest.TestCase):
@@ -306,6 +316,51 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             self.assertIsNone(row["response_count"])
             self.assertIsNone(row["total"])
             self.assertTrue(any("missing last_token_usage" in warning for warning in report["warnings"]))
+
+    def test_decoder_rejected_metadata_records_do_not_abort_indexing(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            sessions = Path(temporary)
+            integer_metadata = sessions / "integer-metadata.jsonl"
+            nested_metadata = sessions / "nested-metadata.jsonl"
+            integer_metadata.write_text(over_limit_integer_record(), encoding="utf-8")
+            nested_metadata.write_text(excessively_nested_record(), encoding="utf-8")
+            write_session(sessions, "root.jsonl", [
+                {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+            ])
+            self.assertIsNone(MODULE.metadata_from(integer_metadata))
+            self.assertIsNone(MODULE.metadata_from(nested_metadata))
+            self.assertEqual([path.name for path, _ in MODULE.session_index(sessions)], ["root.jsonl"])
+
+    def test_decoder_rejected_records_break_relay_adjacency_without_crashing(self):
+        for rejected_record_type, rejected_record in (
+            ("over-limit-integer", over_limit_integer_record()),
+            ("excessive-nesting", excessively_nested_record()),
+        ):
+            with self.subTest(rejected_record_type=rejected_record_type):
+                with tempfile.TemporaryDirectory() as temporary:
+                    sessions = Path(temporary)
+                    path = write_session(sessions, "root.jsonl", [
+                        {"type": "session_meta", "payload": {"id": "root", "session_id": "root", "timestamp": "2026-08-24T00:30:57Z"}},
+                        token("2026-08-24T00:31:00Z", 100, 20, 0, 10, 2),
+                        {"type": "event_msg", "payload": {"type": "item_completed"}},
+                        token("2026-08-24T00:31:01Z", 100, 20, 0, 10, 2),
+                    ])
+                    path.write_text(
+                        path.read_text(encoding="utf-8")
+                        + rejected_record
+                        + json.dumps({"type": "inter_agent_communication_metadata", "payload": {"trigger_turn": False}})
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                    report = MODULE.collect(argparse.Namespace(
+                        root_session_id="root", since="2026-08-24T00:30:57Z", sessions_dir=str(sessions),
+                        phase="handoff", requested_model="unavailable", requested_effort="unavailable", session_labels=[],
+                    ))
+                    row = report["groups"][0]
+                    self.assertEqual(row["response_count"], 2)
+                    self.assertEqual(row["total"], 220)
+                    self.assertTrue(any("ignored decoder-rejected JSONL" in warning for warning in report["warnings"]))
+                    self.assertFalse(any("inter-agent relay" in warning for warning in report["warnings"]))
 
     def test_boolean_token_metrics_are_unavailable_not_numeric(self):
         with tempfile.TemporaryDirectory() as temporary:

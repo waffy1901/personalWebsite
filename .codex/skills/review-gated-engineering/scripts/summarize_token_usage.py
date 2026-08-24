@@ -33,8 +33,12 @@ def parse_time(value: str) -> datetime:
 def metadata_from(path: Path) -> dict[str, Any] | None:
     try:
         with path.open(encoding="utf-8") as handle:
-            record = json.loads(handle.readline())
-    except (OSError, json.JSONDecodeError):
+            first_line = handle.readline()
+    except OSError:
+        return None
+    try:
+        record = json.loads(first_line)
+    except (json.JSONDecodeError, ValueError, RecursionError):
         return None
     if not isinstance(record, dict):
         return None
@@ -266,6 +270,10 @@ def summarize_selected(
                 except json.JSONDecodeError:
                     commit_pending()
                     warnings.append(f"ignored malformed JSONL record in {path.name}")
+                    continue
+                except (ValueError, RecursionError):
+                    commit_pending()
+                    warnings.append(f"ignored decoder-rejected JSONL record in {path.name}")
                     continue
                 if not isinstance(record, dict):
                     commit_pending()
