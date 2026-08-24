@@ -77,7 +77,7 @@ Field meanings:
 
 ## Semantic Version Assessment
 
-Include this block in every planning packet. Refresh it at PR creation using the exact base-to-head diff, then carry that binding record into review and human-gate packets. Read [semantic-versioning.md](semantic-versioning.md) before completing it.
+Include this block in every planning packet. Before a PR exists, carry the current provisional record into any local implementation human-gate packet. At PR creation, refresh it using the exact base-to-head diff, then carry that binding record into review and later human-gate packets. Read [semantic-versioning.md](semantic-versioning.md) before completing it.
 
 ```yaml
 semantic_version_assessment:
@@ -197,7 +197,7 @@ local_implementation_handoff:
     - command_or_check: <exact command or inspection>
       result: <pass, fail, blocked, or not run with concise evidence>
       evidence_scope: <what this result proves>
-  semantic_version_assessment: <copy the binding Semantic Version Assessment block>
+  semantic_version_assessment: <copy the current provisional Semantic Version Assessment block; it remains provisional until PR creation>
   token_usage_snapshot: <copy the required Token Usage Snapshot block>
   plan_deviations:
     - deviation: <difference from the approved plan, or none>
