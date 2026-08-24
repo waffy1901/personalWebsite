@@ -4,6 +4,7 @@ import json
 import sys
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 
 
@@ -36,6 +37,16 @@ def token(timestamp, input_tokens, cached, cache_write, output, reasoning, repor
             }},
         },
     }
+
+
+@contextmanager
+def fixed_integer_digit_limit():
+    original_limit = sys.get_int_max_str_digits()
+    sys.set_int_max_str_digits(sys.int_info.default_max_str_digits)
+    try:
+        yield
+    finally:
+        sys.set_int_max_str_digits(original_limit)
 
 
 def over_limit_integer_record():
@@ -317,6 +328,13 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             self.assertIsNone(row["total"])
             self.assertTrue(any("missing last_token_usage" in warning for warning in report["warnings"]))
 
+    def test_fixed_integer_digit_limit_restores_original_setting(self):
+        original_limit = sys.get_int_max_str_digits()
+        with fixed_integer_digit_limit():
+            self.assertEqual(sys.get_int_max_str_digits(), sys.int_info.default_max_str_digits)
+        self.assertEqual(sys.get_int_max_str_digits(), original_limit)
+
+    @fixed_integer_digit_limit()
     def test_decoder_rejected_metadata_records_do_not_abort_indexing(self):
         with tempfile.TemporaryDirectory() as temporary:
             sessions = Path(temporary)
@@ -331,6 +349,7 @@ class SummarizeTokenUsageTests(unittest.TestCase):
             self.assertIsNone(MODULE.metadata_from(nested_metadata))
             self.assertEqual([path.name for path, _ in MODULE.session_index(sessions)], ["root.jsonl"])
 
+    @fixed_integer_digit_limit()
     def test_decoder_rejected_records_break_relay_adjacency_without_crashing(self):
         for rejected_record_type, rejected_record in (
             ("over-limit-integer", over_limit_integer_record()),
