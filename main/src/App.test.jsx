@@ -272,7 +272,7 @@ describe("App routes", () => {
       expect(scrollIntoViewMock).not.toHaveBeenCalled()
       expect(navScrollToMock).toHaveBeenCalledWith({
         behavior: "auto",
-        left: 60,
+        left: 66,
       })
     } finally {
       if (originalScrollIntoView) {
@@ -284,6 +284,120 @@ describe("App routes", () => {
         delete HTMLElement.prototype.scrollIntoView
       }
 
+      if (originalScrollTo) {
+        Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+          configurable: true,
+          value: originalScrollTo,
+        })
+      } else {
+        delete HTMLElement.prototype.scrollTo
+      }
+    }
+  })
+
+  it("reveals focused mobile nav links with focus-ring clearance and keeps focus prefetch", async () => {
+    const originalScrollTo = HTMLElement.prototype.scrollTo
+    const navScrollToMock = vi.fn()
+
+    try {
+      Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+        configurable: true,
+        value: navScrollToMock,
+      })
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn(() => ({ matches: false }))
+      )
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+        function getBoundingClientRect() {
+          if (this.getAttribute("aria-label") === "Primary navigation") {
+            return { left: 0, right: 100 }
+          }
+
+          if (this.getAttribute("aria-current") === "page") {
+            return { left: 20, right: 70 }
+          }
+
+          if (this.textContent === "Projects") {
+            return { left: 112, right: 160 }
+          }
+
+          return { left: 20, right: 70 }
+        }
+      )
+
+      renderRoute("/")
+      const navigation = await screen.findByRole("navigation", {
+        name: /primary navigation/i,
+      })
+      const projectsLink = within(navigation).getByRole("link", {
+        name: /projects/i,
+      })
+
+      fireEvent.focus(projectsLink)
+
+      expect(navScrollToMock).toHaveBeenCalledWith({
+        behavior: "auto",
+        left: 66,
+      })
+      expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
+    } finally {
+      if (originalScrollTo) {
+        Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+          configurable: true,
+          value: originalScrollTo,
+        })
+      } else {
+        delete HTMLElement.prototype.scrollTo
+      }
+    }
+  })
+
+  it("does not scroll mobile links that already clear the focus ring or any desktop links", async () => {
+    const originalScrollTo = HTMLElement.prototype.scrollTo
+    const navScrollToMock = vi.fn()
+    let isDesktop = false
+
+    try {
+      Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+        configurable: true,
+        value: navScrollToMock,
+      })
+      vi.stubGlobal(
+        "matchMedia",
+        vi.fn((query) => ({
+          matches: query === "(min-width: 640px)" && isDesktop,
+        }))
+      )
+      vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(
+        function getBoundingClientRect() {
+          if (this.getAttribute("aria-label") === "Primary navigation") {
+            return { left: 0, right: 100 }
+          }
+
+          if (this.textContent === "Resume") {
+            return { left: 120, right: 180 }
+          }
+
+          return { left: 20, right: 80 }
+        }
+      )
+
+      renderRoute("/")
+      const navigation = await screen.findByRole("navigation", {
+        name: /primary navigation/i,
+      })
+      fireEvent.focus(
+        within(navigation).getByRole("link", { name: /projects/i })
+      )
+      expect(navScrollToMock).not.toHaveBeenCalled()
+
+      isDesktop = true
+      fireEvent.focus(
+        within(navigation).getByRole("link", { name: /resume/i })
+      )
+      expect(navScrollToMock).not.toHaveBeenCalled()
+    } finally {
       if (originalScrollTo) {
         Object.defineProperty(HTMLElement.prototype, "scrollTo", {
           configurable: true,
