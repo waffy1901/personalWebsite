@@ -223,6 +223,83 @@ for (const route of canonicalRouteExpectations) {
   })
 }
 
+test("mobile keyboard navigation keeps every primary-nav focus ring visible", async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "mobile-chromium",
+    "mobile viewport coverage only"
+  )
+
+  const monitor = monitorPage(page, baseURL)
+
+  await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expectHydratedRoute(page, canonicalRouteExpectations[0])
+
+  const navigation = page.getByRole("navigation", {
+    name: "Primary navigation",
+  })
+  const navLinks = navigation.getByRole("link")
+
+  await expect(page.getByText("More ->", { exact: true })).toBeVisible()
+  await expect(navLinks).toHaveCount(6)
+  await expect(navLinks.first()).toHaveAttribute("aria-current", "page")
+  await expect(navLinks.first()).toHaveClass(/active/)
+  await page.keyboard.press("Tab")
+  await expect(
+    page.getByRole("link", { name: "Skip to main content" })
+  ).toBeFocused()
+  await page.keyboard.press("Tab")
+  await expect(
+    page.getByRole("link", { name: "Waffy Ahmed home" })
+  ).toBeFocused()
+  await page.keyboard.press("Tab")
+
+  for (let index = 0; index < (await navLinks.count()); index += 1) {
+    if (index > 0) {
+      await page.keyboard.press("Tab")
+    }
+
+    const focusedLink = navLinks.nth(index)
+    await expect(focusedLink).toBeFocused()
+    const bounds = await navigation.evaluate((nav) => {
+      const link = nav.querySelector("a:focus")
+      const navRect = nav.getBoundingClientRect()
+      const linkRect = link?.getBoundingClientRect()
+
+      return linkRect
+        ? {
+            navLeft: navRect.left,
+            navRight: navRect.right,
+            navTop: navRect.top,
+            navBottom: navRect.bottom,
+            linkLeft: linkRect.left,
+            linkRight: linkRect.right,
+            linkTop: linkRect.top,
+            linkBottom: linkRect.bottom,
+          }
+        : null
+    })
+
+    expect(bounds, "a primary navigation link should retain focus").not.toBeNull()
+    expect(bounds.linkLeft).toBeGreaterThanOrEqual(bounds.navLeft + 5)
+    expect(bounds.linkRight).toBeLessThanOrEqual(bounds.navRight - 5)
+    expect(bounds.linkTop).toBeGreaterThanOrEqual(bounds.navTop + 5)
+    expect(bounds.linkBottom).toBeLessThanOrEqual(bounds.navBottom - 5)
+  }
+
+  await navLinks.nth(1).tap()
+  await expect(page).toHaveURL(/\/projects\/$/)
+  const projectsLink = page
+    .getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Projects" })
+  await expect(projectsLink).toHaveAttribute("aria-current", "page")
+  await expect(projectsLink).toHaveClass(/active/)
+  await expectNoHorizontalOverflow(page)
+  monitor.assertClean()
+})
+
 test("unknown route renders the target-aware 404 and returns home", async ({
   page,
   baseURL,
