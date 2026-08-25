@@ -97,7 +97,7 @@ function Navbar() {
             ref={navRef}
             aria-label="Primary navigation"
             onFocusCapture={handleFocusCapture}
-            className="-mx-1 flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto px-2 pb-1 text-xs font-bold whitespace-nowrap [scrollbar-width:none] sm:mx-0 sm:flex-none sm:flex-wrap sm:justify-end sm:gap-x-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:text-sm sm:[scrollbar-width:auto] [&::-webkit-scrollbar]:hidden sm:[&::-webkit-scrollbar]:block"
+            className="-mx-1 flex min-w-0 flex-1 flex-nowrap items-center gap-2 overflow-x-auto px-2 py-1.5 text-xs font-bold whitespace-nowrap [scrollbar-width:none] sm:mx-0 sm:flex-none sm:flex-wrap sm:justify-end sm:gap-x-4 sm:overflow-visible sm:px-0 sm:py-0 sm:text-sm sm:[scrollbar-width:auto] [&::-webkit-scrollbar]:hidden sm:[&::-webkit-scrollbar]:block"
           >
             {navItems.map((item) => (
               <NavLink

@@ -272,8 +272,12 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
         ? {
             navLeft: navRect.left,
             navRight: navRect.right,
+            navTop: navRect.top,
+            navBottom: navRect.bottom,
             linkLeft: linkRect.left,
             linkRight: linkRect.right,
+            linkTop: linkRect.top,
+            linkBottom: linkRect.bottom,
           }
         : null
     })
@@ -281,6 +285,8 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
     expect(bounds, "a primary navigation link should retain focus").not.toBeNull()
     expect(bounds.linkLeft).toBeGreaterThanOrEqual(bounds.navLeft + 5)
     expect(bounds.linkRight).toBeLessThanOrEqual(bounds.navRight - 5)
+    expect(bounds.linkTop).toBeGreaterThanOrEqual(bounds.navTop + 5)
+    expect(bounds.linkBottom).toBeLessThanOrEqual(bounds.navBottom - 5)
   }
 
   await navLinks.nth(1).tap()
