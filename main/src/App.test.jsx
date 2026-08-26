@@ -18,6 +18,7 @@ import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { resume, socialLinks } from "./data/profile.js"
+import { resumeDocument } from "./data/resume.mjs"
 import { currentEmployment } from "./data/siteIdentity.js"
 import {
   defaultRouteMetadata,
@@ -1171,7 +1172,7 @@ describe("App routes", () => {
     expect(resumePreview).toHaveAttribute("src", "/resume-preview.png")
     expect(resumePreviewSource).toHaveAttribute("srcset", "/resume-preview.webp")
     expect(resumePreview).toHaveAttribute("width", "960")
-    expect(resumePreview).toHaveAttribute("height", "1244")
+    expect(resumePreview).toHaveAttribute("height", "1243")
     expectImagePolicy(resumePreview, {
       loading: "eager",
       fetchPriority: "high",
@@ -1179,6 +1180,15 @@ describe("App routes", () => {
     expect(
       screen.queryByText(/your browser cannot display this pdf inline/i)
     ).not.toBeInTheDocument()
+    expect(screen.getByRole("article", { name: resumeDocument.name })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Education" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Experience" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Skills" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /email:\s*waffyahmed@gmail.com/i })).toHaveAttribute(
+      "href",
+      "mailto:waffyahmed@gmail.com"
+    )
   })
 
   it("renders the contact route", async () => {
