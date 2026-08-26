@@ -7,6 +7,7 @@ import {
 } from "../components/MissionControl.jsx";
 import { resume } from "../data/profile";
 import { trackEvent } from "../utils/analytics";
+import ResumeDocument from "../components/ResumeDocument.jsx";
 
 function Resume() {
   return (
@@ -70,7 +71,7 @@ function Resume() {
                 src={resume.preview}
                 alt="Preview of Waffy Ahmed's resume"
                 width="960"
-                height="1244"
+                height="1243"
                 loading="eager"
                 fetchPriority="high"
                 decoding="async"
@@ -78,6 +79,16 @@ function Resume() {
               />
             </picture>
           </a>
+
+          <div className="mt-8 border-t border-slate-200 pt-8">
+            <p className="mc-eyebrow">Accessible HTML alternative</p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-600">
+              The semantic resume below mirrors the PDF content for reading, copying, and assistive technology.
+            </p>
+            <div className="mt-5 rounded-lg border border-slate-200 bg-white p-5 sm:p-8">
+              <ResumeDocument />
+            </div>
+          </div>
         </section>
       </PageContainer>
     </PageShell>
