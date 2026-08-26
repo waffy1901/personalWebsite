@@ -18,7 +18,15 @@ const stat = (rel) => {
   }
 }
 
-const normalize = (value) => value.replace(/-\s+/g, "-").replace(/\s+/g, " ").trim()
+const normalize = (value) => value
+  .normalize("NFKC")
+  .replace(/[\u2010-\u2015\u2212]/g, "-")
+  .replace(/[\u223C\u2248]/g, "~")
+  .replace(/[\u2018\u2019]/g, "'")
+  .replace(/-\s+/g, "-")
+  .replace(/~\s+/g, "~")
+  .replace(/\s+/g, " ")
+  .trim()
 
 const readPdfObjects = (buffer) => {
   const source = buffer.toString("latin1")
