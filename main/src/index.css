@@ -185,7 +185,7 @@
   }
 
   .mc-field {
-    @apply w-full rounded-md border border-white/15 bg-[#0B1220]/80 px-3 py-2 text-white shadow-inner outline-hidden transition placeholder:text-slate-500 focus:border-[#F96302] focus:ring-2 focus:ring-[#F96302]/25;
+    @apply w-full rounded-md border border-white/15 bg-[#0B1220]/80 px-3 py-2 text-white shadow-inner outline-hidden transition placeholder:text-slate-400 focus:border-[#F96302] focus:ring-2 focus:ring-[#F96302]/25;
   }
 
   .mc-dark-field {

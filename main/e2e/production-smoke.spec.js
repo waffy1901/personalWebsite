@@ -460,6 +460,26 @@ test("contact form renders without submitting to Formspree", async ({
   await page.goto("/contact/", { waitUntil: "domcontentloaded" })
   await expect(page.getByRole("heading", { name: "Contact Form" })).toBeVisible()
   await expect(page.locator("form")).toBeVisible()
+  const contactFields = page.locator(".mc-field")
+  await expect(contactFields).toHaveCount(4)
+  expect(
+    await contactFields.evaluateAll((fields) =>
+      fields.map((field) => {
+        const canvas = globalThis.document.createElement("canvas")
+        canvas.width = 1
+        canvas.height = 1
+        const context = canvas.getContext("2d")
+
+        context.fillStyle = globalThis.getComputedStyle(
+          field,
+          "::placeholder"
+        ).color
+        context.fillRect(0, 0, 1, 1)
+
+        return Array.from(context.getImageData(0, 0, 1, 1).data)
+      })
+    )
+  ).toEqual(Array.from({ length: 4 }, () => [144, 161, 185, 255]))
   expect(externalRequests.formspree).toEqual([])
   monitor.assertClean()
 })
