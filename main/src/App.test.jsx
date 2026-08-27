@@ -1235,6 +1235,7 @@ describe("App routes", () => {
     const primaryButtonRule = stylesheet.match(
       /\.mc-button-primary\s*\{[^}]+\}/
     )?.[0]
+    const fieldRule = stylesheet.match(/\.mc-field\s*\{[^}]+\}/)?.[0]
 
     expect(darkEyebrowRule).toContain("text-[#93B4FF]")
     expect(submitButton).toHaveClass("mc-button-primary")
@@ -1245,6 +1246,8 @@ describe("App routes", () => {
     expect(primaryButtonRule).toContain("disabled:text-[#334155]")
     expect(primaryButtonRule).toContain("focus:ring-[#F96302]")
     expect(primaryButtonRule).toContain("focus:ring-offset-[#0B1220]")
+    expect(fieldRule).toContain("placeholder:text-slate-400")
+    expect(fieldRule).not.toContain("placeholder:text-slate-500")
 
     expectNormalTextContrast("#93B4FF", "#0B1220")
     expectNormalTextContrast("#86EFAC", "#0B1220")
@@ -1252,6 +1255,7 @@ describe("App routes", () => {
     expectNormalTextContrast("#0B1220", "#FFB077")
     expectNormalTextContrast("#334155", "#CBD5E1")
     expectNormalTextContrast("#475569", "#F4F1EA")
+    expectNormalTextContrast("#90A1B9", "#0B1220")
   })
 
   it("redirects legacy uppercase routes to lowercase pages", async () => {
