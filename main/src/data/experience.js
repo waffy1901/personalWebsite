@@ -28,6 +28,7 @@ export const workExperiences = [
     bullets: [
       "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets, eliminating human production access.",
       "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation; automated 7 weekly runs via Kubernetes CronJob, eliminating ~120 engineer-hours of recurring toil annually.",
+      "Identified and drove adoption of GitHub Actions OIDC authentication for JFrog across two teams and 20+ repositories, migrating Maven and Docker CI from shared service-account credentials to short-lived tokens issued per job and eliminating ~300 plaintext-credential findings.",
       "Diagnosed and resolved post\u2013cluster-rebuild service timeouts (1s failures) by identifying stale node-level routing caused by NodePort usage; migrated internal services to ClusterIP, eliminating node dependency and restoring reliable service-to-service communication.",
     ],
     logo: hdLogo,

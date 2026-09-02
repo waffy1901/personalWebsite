@@ -1106,6 +1106,9 @@ describe("App routes", () => {
     expect(aiSummary).toContain(
       "Re-architected order reconciliation from Cloud SQL to Cloud Spanner"
     )
+    expect(aiSummary).toMatch(
+      /GitHub Actions OIDC authentication for\s+JFrog/
+    )
     expect(portfolioJson.skills).toContain("Cloud Spanner")
     expect(
       portfolioJson.technicalDomains.find(
@@ -1369,6 +1372,9 @@ describe("App routes", () => {
       )
     ).toBeInTheDocument()
     expect(screen.getByText(/7 weekly runs via kubernetes cronjob/i)).toBeInTheDocument()
+    expect(
+      screen.getByText(/github actions oidc authentication for jfrog/i)
+    ).toBeInTheDocument()
     expect(screen.getByText(/nodeport usage/i)).toBeInTheDocument()
     await waitFor(() => expect(backButton).toHaveFocus())
 
