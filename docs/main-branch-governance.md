@@ -1,29 +1,36 @@
 # Main Branch Governance
 
-This document defines the proposed protection contract for the default branch.
-It does not claim that GitHub settings have been applied. Creating or changing
-the ruleset, exercising a canary pull request, merging, deploying, releasing,
-and closing Issue #164 each require their own direct authorization.
+This document records the protection contract for the default branch. As with
+all provider-managed state, the dated readback below is evidence rather than a
+permanent guarantee; refresh it before changing settings or relying on it for
+closure. Creating or changing the ruleset, exercising a canary pull request,
+merging, deploying, releasing, and closing Issue #164 each require their own
+direct authorization.
 
 ## Dated Baseline
 
-On 2026-08-23, authenticated read-only API requests returned no repository
-rulesets and reported that `main` had no branch-protection rule. Issue #164
-tracks applying and proving the design below. Authenticated check-run readback
-also showed that all four proposed required checks came from the GitHub Actions
-app (`github-actions`), with app/integration ID `15368`. Because provider state
-can drift, operators must refresh this evidence before any settings change or
-closure.
+On 2026-08-28, authenticated read-only GitHub API readback showed active
+repository ruleset `21251257`, `Protect main quality gates`, targeting
+`~DEFAULT_BRANCH`. Issue #164 was closed on 2026-08-23 with its closure
+evidence. The ruleset requires pull requests with zero approvals, resolved
+threads, and strict required checks; it also blocks deletion and
+non-fast-forward updates. Its only bypass actor is the repository-admin role
+with `pull_request` mode. The readback also reported
+`require_extra_approval_for_unattributed_changes: true`.
 
-## Proposed Active Ruleset
+This supersedes the 2026-08-23 proposed/no-ruleset baseline, which remains
+historical context rather than current provider state. GitHub settings can
+drift, so operators must obtain a fresh authenticated readback before any
+settings mutation or closure decision.
 
-Create one repository branch ruleset named `Protect main quality gates` with
-`enforcement: active`, targeting only the default branch (`~DEFAULT_BRANCH`).
-Configure these rules:
+## Active Ruleset (Dated Readback)
+
+Ruleset `21251257` is actively enforced for the default branch
+(`~DEFAULT_BRANCH`) with these settings:
 
 - Require changes through a pull request, with zero required approving reviews.
 - Require all review conversations to be resolved before merge.
-- Require branches to be up to date before merging.
+- Require branches to be up to date before merging (strict status checks).
 - Require these four GitHub Actions status checks by exact job name:
 
   1. `Verify app` from `.github/workflows/dev-ci.yml`, source
@@ -45,17 +52,17 @@ browser, or other third-party status check. The production browser smoke in
 `.github/workflows/release-on-deploy.yml` remains an additional advisory lane
 after the production deployment and release are created.
 
-Configure each required status check with both its exact context and the
-refreshed GitHub Actions integration ID. Job names and workflow paths alone do
-not pin the source app: the workflow paths above disambiguate ownership for
-operators and reviewers, while `integration_id` prevents another integration
-from satisfying a same-named context. The IDs above record the 2026-08-23
-readback; stop and revise the reviewed proposal if authenticated readback shows
-that the provider identity has drifted before mutation.
+Each required status check uses its exact context and the GitHub Actions app
+with integration ID `15368`. Job names and workflow paths alone do not pin the
+source app: the workflow paths above disambiguate ownership for operators and
+reviewers, while `integration_id` prevents another integration from satisfying
+a same-named context. The ID and settings record the 2026-08-28 readback; stop
+and refresh the evidence if authenticated readback shows provider drift before
+mutation.
 
 ## Emergency Bypass Policy
 
-Grant bypass only to the repository-admin role, with bypass mode set to
+The active ruleset grants bypass only to the repository-admin role, with mode set to
 `pull_request`. This keeps an auditable pull-request trail while permitting the
 solo owner to handle a genuine repository emergency. Do not grant an
 always-allow bypass, direct-push bypass, GitHub App bypass, Dependabot bypass,
@@ -68,7 +75,7 @@ flake are not bypass reasons.
 
 ## No-Deadlock Design
 
-Every proposed required workflow reports on every pull request to `main`:
+Every required workflow reports on every pull request to `main`:
 
 - `dev-ci.yml` has no path filter and its two candidate required jobs use only
   repository contents and the local Vite preview.
@@ -95,12 +102,12 @@ Perform these phases in order, stopping for the named human gate between them:
    app/integration ID, and confirm CodeQL has produced results. Do not configure
    a context or integration ID that has not appeared together in GitHub's
    authenticated check-run readback.
-3. With a separate settings-mutation grant, create the ruleset exactly as
-   proposed. Immediately read back the ruleset by authenticated API and verify
-   its target, active enforcement, bypass actors/modes, pull-request settings,
-   strict required checks and their integration IDs, CodeQL thresholds,
-   deletion rule, and force-push rule. Also inspect all rules applying to
-   `main` for unexpected layering.
+3. With a separate settings-mutation grant, change the active ruleset only as
+   explicitly authorized. Immediately read it back by authenticated API and
+   verify its target, active enforcement, bypass actors/modes, pull-request
+   settings, strict required checks and their integration IDs, CodeQL
+   thresholds, deletion rule, and force-push rule. Also inspect all rules
+   applying to `main` for unexpected layering.
 4. With separate authorization, open a non-production canary pull request.
    Introduce an intentionally failing browser assertion, prove that
    `Pre-merge browser smoke` fails and merge is blocked, then restore the
@@ -116,8 +123,8 @@ Perform these phases in order, stopping for the named human gate between them:
 
 If any exact context is absent, CodeQL is not configured for the target, an
 unexpected rule layers onto `main`, or the canary cannot prove both blocked and
-restored states, stop and repair the repository workflow or revise the proposed
-settings through a new reviewed change before activating or retaining the gate.
+restored states, stop and repair the repository workflow or revise the active
+settings through a new reviewed change before retaining the gate.
 
 ## Evidence Checklist
 

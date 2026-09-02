@@ -7,6 +7,9 @@
 - `main/src/data/projects.js`: project cards and project stats.
 - `main/src/data/caseStudies.js`: case-study listing and detail pages.
 - `main/src/data/seo.js`: canonical route metadata and keywords.
+- `main/src/data/siteIdentity.js`: shared identity, employment, and canonical site URLs.
+- `main/src/data/publicPortfolio.js`: structured public portfolio, discovery, and AI-guidance fields.
+- `main/src/data/resume.mjs`: canonical data for generated resume assets and the semantic resume HTML alternative.
 
 ## Public Discovery Files
 

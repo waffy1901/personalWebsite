@@ -11,7 +11,7 @@
 - Google Tag Manager and Google Analytics are allowed for GA4.
 - Formspree is allowed for contact form submission.
 - `data:` is allowed for images and fonts.
-- `object-src 'self'`, `base-uri 'self'`, and `frame-ancestors 'none'` should remain restrictive.
+- `object-src 'none'`, `base-uri 'self'`, and `frame-ancestors 'none'` should remain restrictive.
 
 ## JSON-LD Hash
 
