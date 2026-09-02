@@ -8,8 +8,8 @@ description: Resume asset and portfolio-reference synchronization for Waffy Ahme
 ## Workflow
 
 1. Confirm the canonical PDF path is `main/public/waffyAhmedResume.pdf`.
-2. Confirm the preview image path is `main/public/resume-preview.png`.
-3. Keep `main/src/data/profile.js`, `main/src/pages/Resume.jsx`, `main/public/portfolio.json`, `main/public/llms.txt`, `main/public/ai-summary.txt`, and `main/public/_redirects` aligned with the canonical PDF.
+2. Confirm the PNG fallback preview is `main/public/resume-preview.png` and the optimized WebP preview is `main/public/resume-preview.webp`.
+3. Keep `main/src/data/profile.js`, `main/src/data/resume.mjs`, `main/src/components/ResumeDocument.jsx`, `main/src/pages/Resume.jsx`, `main/public/portfolio.json`, `main/public/llms.txt`, `main/public/ai-summary.txt`, and `main/public/_redirects` aligned with the canonical PDF and semantic HTML alternative.
 4. Use the existing `pdf:pdf` skill when resume visual rendering, text extraction, or PDF inspection matters.
 5. Run the resume asset check:
 

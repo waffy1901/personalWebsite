@@ -106,7 +106,7 @@ Before any merge, inspect `.github/workflows/release-on-deploy.yml`. While a pus
 
 ## Frontend Rules
 
-- Follow the existing React 18, React Router, Vite, Tailwind, and Testing Library patterns.
+- Follow the existing React 19, React Router, Vite, Tailwind, and Testing Library patterns.
 - Keep route pages focused and compose reusable UI through `main/src/components/`.
 - Preserve accessibility basics: semantic headings, reachable links/buttons, focus behavior, and useful labels.
 - Make responsive changes deliberately. Check mobile and desktop layouts for text overflow, overlapping elements, and broken navigation.

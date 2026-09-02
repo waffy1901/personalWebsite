@@ -10,7 +10,7 @@ description: SEO and single-page-app route auditing for Waffy Ahmed's personalWe
 1. Confirm canonical route metadata in `main/src/data/seo.js`.
 2. Confirm React routes and legacy uppercase redirects in `main/src/App.jsx`.
 3. Confirm sitemap and robots discovery in `main/public/sitemap.xml` and `main/public/robots.txt`.
-4. Confirm static fallback metadata and alternate discovery links in `main/index.html`.
+4. Confirm static fallback metadata and alternate discovery links in `main/index.html`, then confirm the production build runs `scripts/prerender-route-metadata.mjs` to emit route-specific metadata shells in `dist/`.
 5. Run the static SEO route check:
 
 ```bash
@@ -21,4 +21,4 @@ Read [references/seo-map.md](references/seo-map.md) when routes, domains, or lin
 
 ## Runtime Checks
 
-For user-facing SEO work, build and preview the site, then inspect titles, descriptions, canonical URLs, and OG/Twitter tags after route navigation. SPA metadata updates after React loads, so distinguish browser-visible metadata from crawler-visible static HTML.
+For user-facing SEO work, build and preview the site, then inspect titles, descriptions, canonical URLs, and OG/Twitter tags after route navigation. The production build emits static route-specific metadata shells, while the route body remains a client-rendered SPA and `Seo.jsx` still updates metadata after client-side navigation. Distinguish initial built HTML from browser-updated state.

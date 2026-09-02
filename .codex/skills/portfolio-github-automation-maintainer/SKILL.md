@@ -10,7 +10,9 @@ description: GitHub automation maintenance for Waffy Ahmed's personalWebsite. Us
 1. Check `git status --short` before editing and treat unrelated app changes as user-owned.
 2. Identify the automation surface:
    - `.github/workflows/dev-ci.yml`: PR lint/test/build gate.
+   - `.github/workflows/portfolio-integrity.yml`: PR validation of generated public artifacts and focused portfolio invariants.
    - `.github/workflows/release-on-deploy.yml`: production deploy wait and GitHub release creation.
+   - `.github/workflows/semantic-release.yml`: manually dispatched, SHA-bound semantic production release publication.
    - `.github/workflows/npm-audit.yml`: dependency vulnerability audit.
    - `.github/workflows/deployed-security-headers.yml`: live `waffy.dev` header drift check.
    - `.github/workflows/netlify-token-rotation-reminder.yml`: token-expiry issue automation.

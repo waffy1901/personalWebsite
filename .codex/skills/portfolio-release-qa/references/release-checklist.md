@@ -18,5 +18,5 @@
 - `netlify.toml` base: `main`.
 - Build command: `npm run build`.
 - Publish directory: `dist`.
-- Node version: `22`.
+- Node version: package minimum `22.22.2`; checked-in workflows and Netlify pin `22.22.3`.
 - Check CSP when JSON-LD, GA4, Formspree, or asset hosts change.
