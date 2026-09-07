@@ -60,7 +60,7 @@ function ResumeDocument() {
         <h3 id="resume-projects-heading" className="text-xl font-black">Projects</h3>
         {resumeDocument.projects.map((project) => (
           <section key={project.name} className="mt-4" aria-label={project.name}>
-            <h4 className="font-black">{project.name} <span className="font-medium italic text-slate-600">| {project.technologies}</span></h4>
+            <h4 className="font-black">{project.name} <span className="font-medium text-slate-600">| <span className="italic">{project.technologies}</span></span></h4>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm leading-relaxed text-slate-700">
               {project.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
             </ul>

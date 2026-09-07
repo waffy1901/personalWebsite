@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { join, relative } from "node:path"
+import { pathToFileURL } from "node:url"
+import { checkResumePreviews } from "../../../../main/scripts/resume-preview-assets.mjs"
 
 const repoRoot = process.argv[2] || process.cwd()
 const srcRoot = join(repoRoot, "main", "src")
-const resumePreviewWebpPath = join(repoRoot, "main", "public", "resume-preview.webp")
-const maxResumePreviewWebpBytes = 150_000
 const errors = []
 const warnings = []
 const lcpImagePolicies = [
@@ -245,31 +245,35 @@ function checkHeroImagePolicy() {
   }
 }
 
-function checkOptimizedResumePreview() {
+async function checkOptimizedResumePreview() {
   const profilePath = join(srcRoot, "data", "profile.js")
   const resumePath = join(srcRoot, "pages", "Resume.jsx")
   const profile = readText(profilePath)
   const resumePage = readText(resumePath)
 
-  if (!existsSync(resumePreviewWebpPath)) {
-    errors.push("main/public/resume-preview.webp is required for the optimized resume preview.")
-  } else if (readFileSync(resumePreviewWebpPath).byteLength > maxResumePreviewWebpBytes) {
-    errors.push(`main/public/resume-preview.webp must not exceed ${maxResumePreviewWebpBytes} bytes.`)
+  try {
+    const { resumePreviewVariants } = await import(pathToFileURL(join(repoRoot, "main/src/data/resume-preview.mjs")).href)
+    errors.push(...checkResumePreviews(join(repoRoot, "main/public"), resumePreviewVariants))
+  } catch (error) {
+    errors.push(`Unable to check responsive resume previews: ${error.message}`)
   }
 
   if (!/optimizedPreview:\s*["']\/resume-preview\.webp["']/.test(profile)) {
     errors.push("main/src/data/profile.js should define resume.optimizedPreview as /resume-preview.webp.")
   }
 
-  if (!/<source\b[^>]*\bsrcSet=\{resume\.optimizedPreview\}[^>]*\btype=["']image\/webp["']/.test(resumePage)) {
-    errors.push("Resume preview should use resume.optimizedPreview in an image/webp <source>.")
+  if (!/previewSrcSet:\s*resumePreviewSrcSet/.test(profile) || !/previewSizes:\s*resumePreviewSizes/.test(profile)) {
+    errors.push("profile.js should use the responsive resume manifest's srcset and sizes.")
+  }
+  if (!/<source\b[^>]*\bsrcSet=\{resume\.previewSrcSet\}[^>]*\bsizes=\{resume\.previewSizes\}[^>]*\btype=["']image\/webp["']/.test(resumePage)) {
+    errors.push("Resume preview should use resume.previewSrcSet and resume.previewSizes in an image/webp <source>.")
   }
 }
 
 checkAppLazyLoading()
 checkImageTags()
 checkHeroImagePolicy()
-checkOptimizedResumePreview()
+await checkOptimizedResumePreview()
 
 for (const warning of warnings) {
   console.warn(`[warn] ${warning}`)

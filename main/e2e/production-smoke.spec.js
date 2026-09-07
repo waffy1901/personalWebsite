@@ -118,6 +118,60 @@ const test = base.extend({
   ],
 })
 
+for (const profile of [
+  { name: "desktop 1x", width: 1440, height: 1000, dpr: 1, source: "/resume-preview.webp" },
+  { name: "desktop 2x", width: 1440, height: 1000, dpr: 2, source: "/resume-preview-1920.webp" },
+  { name: "mobile 1x", width: 390, height: 844, dpr: 1, source: "/resume-preview-640.webp" },
+  { name: "mobile 3x", width: 390, height: 844, dpr: 3, source: "/resume-preview.webp" },
+]) {
+  test.describe(`responsive resume ${profile.name}`, () => {
+    test.use({ viewport: { width: profile.width, height: profile.height }, deviceScaleFactor: profile.dpr, isMobile: profile.width === 390, hasTouch: profile.width === 390 })
+    test("selects a sharp source and preserves image space while it loads", async ({ page }, testInfo) => {
+      // Each profile sets its own viewport/DPR; don't duplicate across projects.
+      test.skip(testInfo.project.name !== "desktop-chromium", "Explicit resume profiles run once")
+      await page.addInitScript(() => {
+        globalThis.__resumeLayoutShift = 0
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) globalThis.__resumeLayoutShift += entry.value
+          }
+        }).observe({ type: "layout-shift", buffered: true })
+      })
+      let releaseImage
+      const imageGate = new Promise((resolve) => { releaseImage = resolve })
+      await page.route("**/resume-preview*.webp", async (route) => {
+        await imageGate
+        await route.continue()
+      })
+      await page.goto("/resume/", { waitUntil: "domcontentloaded" })
+      const preview = page.getByRole("img", { name: "Preview of Waffy Ahmed's resume" })
+      await expect(preview).toBeVisible()
+      await page.evaluate(() => globalThis.document.fonts.ready)
+      await page.evaluate(() => new Promise((resolve) => globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve))))
+      const before = await preview.boundingBox()
+      // Scope this guard to image arrival, after the existing lazy route mounts.
+      await page.evaluate(() => { globalThis.__resumeLayoutShift = 0 })
+      releaseImage()
+      await expect.poll(() => preview.evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true)
+      await page.evaluate(() => new Promise((resolve) => globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve))))
+      const metrics = await preview.evaluate((image) => ({
+        source: new URL(image.currentSrc).pathname,
+        width: image.getBoundingClientRect().width,
+        height: image.getBoundingClientRect().height,
+        top: image.getBoundingClientRect().top,
+        overflow: globalThis.document.documentElement.scrollWidth > globalThis.innerWidth,
+        cls: globalThis.__resumeLayoutShift,
+      }))
+      expect(metrics.source).toBe(profile.source)
+      expect(metrics.width).toBeCloseTo(profile.width === 390 ? 306 : 882, 0)
+      expect(metrics.overflow).toBe(false)
+      expect(Math.abs(metrics.height - before.height)).toBeLessThan(1)
+      expect(Math.abs(metrics.top - before.y)).toBeLessThan(1)
+      expect(metrics.cls).toBeLessThan(0.001)
+    })
+  })
+}
+
 function monitorPage(page, baseURL) {
   const siteOrigin = new URL(baseURL).origin
   const pageErrors = []
@@ -447,6 +501,25 @@ test("resume preview loads with real image dimensions", async ({ page, baseURL }
   }))
   expect(dimensions.naturalWidth).toBeGreaterThan(0)
   expect(dimensions.naturalHeight).toBeGreaterThan(0)
+  monitor.assertClean()
+})
+
+test("resume preview retains its PNG fallback when the source format is unsupported", async ({ page, baseURL }) => {
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/resume/", { waitUntil: "domcontentloaded" })
+  const preview = page.getByRole("img", { name: "Preview of Waffy Ahmed's resume" })
+  await expect(preview).toBeVisible()
+  // Exercise picture format selection; a failed WebP request does not trigger
+  // the browser's unsupported-format fallback behavior.
+  await preview.evaluate((image) => {
+    image.closest("picture").querySelector("source").type = "image/unsupported-test-format"
+  })
+  await expect.poll(() => preview.evaluate((image) => ({
+    source: image.currentSrc ? new URL(image.currentSrc).pathname : "",
+    // Browsers density-correct natural dimensions after picture reselection.
+    loaded: image.complete && image.naturalWidth > 0 && image.naturalHeight > 0,
+  }))).toEqual({ source: "/resume-preview.png", loaded: true })
+  await expectNoHorizontalOverflow(page)
   monitor.assertClean()
 })
 

@@ -1,0 +1,679 @@
+{
+  "sourceCommit": "2012935618518d2ddfb5d3fcd73d85bee5136dc4",
+  "sourceSha256": "89181023593df80e70898072bd09eb72f3ad40ee10e467deefba57270825f457",
+  "page": {
+    "width": 612,
+    "height": 792
+  },
+  "paragraphs": {
+    "experience.0.roles.0.bullets.0": [
+      {
+        "text": "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials",
+        "x": 70.8,
+        "top": 178.633,
+        "width": 495.069
+      },
+      {
+        "text": "with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege",
+        "x": 70.8,
+        "top": 190.588,
+        "width": 494.64
+      },
+      {
+        "text": "IAM, and Secret Manager/External Secrets, eliminating human production access.",
+        "x": 70.8,
+        "top": 202.543,
+        "width": 360.478
+      }
+    ],
+    "experience.0.roles.0.bullets.1": [
+      {
+        "text": "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container",
+        "x": 70.8,
+        "top": 213.811,
+        "width": 496.169
+      },
+      {
+        "text": "PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation;",
+        "x": 70.8,
+        "top": 225.767,
+        "width": 488.929
+      },
+      {
+        "text": "automated 7 weekly runs via Kubernetes CronJob, eliminating \u223c120 engineer-hours of recurring toil annually.",
+        "x": 70.8,
+        "top": 237.722,
+        "width": 480.675
+      }
+    ],
+    "experience.0.roles.1.bullets.0": [
+      {
+        "text": "Increased system resilience by implementing Kubernetes Horizontal Pod Autoscaling (HPA) for a core service",
+        "x": 70.8,
+        "top": 265.459,
+        "width": 478.506
+      },
+      {
+        "text": "previously capped at 20 static pods, reducing mean latency from 121 to 72 ms and error rates by 89% while",
+        "x": 70.8,
+        "top": 277.415,
+        "width": 471.762
+      },
+      {
+        "text": "increasing throughput from 24.9M to 34.8M requests/week and enabling dynamic scaling up to 100 pods.",
+        "x": 70.8,
+        "top": 289.37,
+        "width": 460.054
+      }
+    ],
+    "experience.0.roles.1.bullets.1": [
+      {
+        "text": "Reconstructed deployment workflows for legacy Java 1.8 Tomcat services lacking operational ownership by",
+        "x": 70.8,
+        "top": 300.638,
+        "width": 465.093
+      },
+      {
+        "text": "rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation, eliminating a platform",
+        "x": 70.8,
+        "top": 312.593,
+        "width": 480.61
+      },
+      {
+        "text": "outage risk capable of halting all transaction capture.",
+        "x": 70.8,
+        "top": 324.548,
+        "width": 233.762
+      }
+    ],
+    "experience.0.roles.1.bullets.2": [
+      {
+        "text": "Remediated \u223c330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a",
+        "x": 70.8,
+        "top": 335.816,
+        "width": 496.555
+      },
+      {
+        "text": "minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD",
+        "x": 70.8,
+        "top": 347.771,
+        "width": 494.399
+      },
+      {
+        "text": "401 authentication failures to enable secure, reproducible container builds.",
+        "x": 70.8,
+        "top": 359.727,
+        "width": 324.639
+      }
+    ],
+    "experience.0.roles.1.bullets.3": [
+      {
+        "text": "Led testing and validation to disable a legacy service component handling \u223c27% of transaction volume (14.5 million",
+        "x": 70.8,
+        "top": 370.995,
+        "width": 505.201
+      },
+      {
+        "text": "daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
+        "x": 70.8,
+        "top": 382.95,
+        "width": 491.922
+      }
+    ],
+    "experience.0.roles.1.bullets.4": [
+      {
+        "text": "Reduced mean time to recovery \u223c50% by implementing an automated Kubernetes rolling-restart job for 20+",
+        "x": 70.8,
+        "top": 394.218,
+        "width": 476.434
+      },
+      {
+        "text": "microservices, replacing slow Argo Rollouts and accelerating recovery from memory-leak/state-drift issues.",
+        "x": 70.8,
+        "top": 406.173,
+        "width": 464.395
+      }
+    ],
+    "experience.0.roles.2.bullets.0": [
+      {
+        "text": "Developed an internal product information page for cashiers, streamlining self-checkout processes and reducing",
+        "x": 70.8,
+        "top": 433.911,
+        "width": 483.934
+      },
+      {
+        "text": "customer wait times for associate interventions by \u223c25%.",
+        "x": 70.8,
+        "top": 445.866,
+        "width": 250.253
+      }
+    ],
+    "experience.0.roles.2.bullets.1": [
+      {
+        "text": "Leveraged Java, React, and TypeScript to retrieve and surface validated product data across all self-checkout",
+        "x": 70.8,
+        "top": 457.134,
+        "width": 477.649
+      },
+      {
+        "text": "registers, mitigating customer theft by \u223c$750,000 annually.",
+        "x": 70.8,
+        "top": 469.089,
+        "width": 258.725
+      }
+    ],
+    "experience.0.roles.2.bullets.2": [
+      {
+        "text": "Optimized the efficiency of configuring 40,000+ registers across 2,300 stores by 90%, in collaboration with 2 interns.",
+        "x": 70.8,
+        "top": 480.357,
+        "width": 505.198
+      }
+    ],
+    "experience.0.roles.2.bullets.3": [
+      {
+        "text": "Truncated maximum deployment time for register updates from 24+ hours to 30 minutes by using Java HttpClient",
+        "x": 70.8,
+        "top": 491.626,
+        "width": 503.137
+      },
+      {
+        "text": "and Flow APIs to streamline retrieval of polymorphic external configurations.",
+        "x": 70.8,
+        "top": 503.581,
+        "width": 339.615
+      }
+    ],
+    "projects.0.bullets.0": [
+      {
+        "text": "Reduced page load times by \u223c35% via transforming a multi-page credit card website into a React-based single-page",
+        "x": 70.8,
+        "top": 556.954,
+        "width": 505.199
+      },
+      {
+        "text": "application, streamlining card wallet management and adding a card removal feature for authenticated users.",
+        "x": 70.8,
+        "top": 568.909,
+        "width": 476.628
+      }
+    ],
+    "projects.0.bullets.1": [
+      {
+        "text": "Implemented a cart page for a React Native grocery application, allowing users to add/remove items, adjust",
+        "x": 70.8,
+        "top": 580.177,
+        "width": 472.923
+      },
+      {
+        "text": "quantities, view real-time total costs, and integrated the Stripe API for streamlined in-app credit card payments.",
+        "x": 70.8,
+        "top": 592.132,
+        "width": 492.051
+      }
+    ],
+    "projects.1.bullets.0": [
+      {
+        "text": "Led a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health",
+        "x": 70.8,
+        "top": 623.855,
+        "width": 471.596
+      },
+      {
+        "text": "departments and the CDC, alongside doubling as a full-stack software developer.",
+        "x": 70.8,
+        "top": 635.81,
+        "width": 352.789
+      }
+    ],
+    "projects.1.bullets.1": [
+      {
+        "text": "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the",
+        "x": 70.8,
+        "top": 647.078,
+        "width": 489.247
+      },
+      {
+        "text": "two datasets, saving 5000+ hours of manual reconciliation annually.",
+        "x": 70.8,
+        "top": 659.034,
+        "width": 296.111
+      }
+    ],
+    "skills.0": [
+      {
+        "text": "Programming Languages: Java, Python, JavaScript, TypeScript, SQL",
+        "x": 46.8,
+        "top": 693.763,
+        "width": 321.012
+      }
+    ],
+    "skills.1": [
+      {
+        "text": "Technologies/Frameworks: Kubernetes, Google Cloud Platform (GCP), Terraform, cdk8s, Docker, Cloud Spanner,",
+        "x": 46.8,
+        "top": 706.515,
+        "width": 516.593
+      },
+      {
+        "text": "Cassandra, Elasticsearch, BigQuery, Grafana, Prometheus, OpenTelemetry, React, FastAPI, Node.js, JUnit, Git",
+        "x": 46.8,
+        "top": 718.47,
+        "width": 489.557
+      }
+    ],
+    "skills.2": [
+      {
+        "text": "Concepts: Object-Oriented Programming & Design, Test-Driven Development, NoSQL, Data Structures & Algorithms,",
+        "x": 46.8,
+        "top": 731.222,
+        "width": 527.168
+      },
+      {
+        "text": "Full-Stack, CI/CD, Infrastructure, Distributed Systems, Cloud Computing, Microservices Architecture",
+        "x": 46.8,
+        "top": 743.178,
+        "width": 447.623
+      }
+    ]
+  },
+  "lines": [
+    {
+      "text": "Waffy Ahmed",
+      "top": 33.235,
+      "x": 224.165,
+      "baseline": 53.212999999999965,
+      "width": 163.67170001000002
+    },
+    {
+      "text": "404-740-7870 | waffyahmed@gmail.com | linkedin.com/in/wa24 | waffy.dev",
+      "top": 62.456,
+      "x": 144.38299999999998,
+      "baseline": 70.48599999999999,
+      "width": 323.23151262000005
+    },
+    {
+      "text": "Education",
+      "top": 80.788,
+      "x": 36.0,
+      "baseline": 90.42399999999998,
+      "width": 59.45081856
+    },
+    {
+      "text": "Georgia Institute of Technology | Atlanta, GA December 2024",
+      "top": 99.528,
+      "x": 46.8,
+      "baseline": 108.32100000000003,
+      "width": 523.80261832
+    },
+    {
+      "text": "Bachelor of Science in Computer Science Faculty Honors, Dean\u2019s List, Zell Miller Scholar",
+      "top": 113.84,
+      "x": 50.12,
+      "baseline": 121.87,
+      "width": 520.4791005799998
+    },
+    {
+      "text": "Experience",
+      "top": 131.702,
+      "x": 36.0,
+      "baseline": 141.33799999999997,
+      "width": 64.85696
+    },
+    {
+      "text": "The Home Depot Atlanta, GA",
+      "top": 150.442,
+      "x": 46.8,
+      "baseline": 159.235,
+      "width": 523.80314047
+    },
+    {
+      "text": "Software Engineer II July 2026 \u2013 Present",
+      "top": 165.561,
+      "x": 46.80000000000001,
+      "baseline": 173.591,
+      "width": 522.8534816199999
+    },
+    {
+      "text": "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials",
+      "top": 178.633,
+      "x": 70.80000000000001,
+      "baseline": 186.663,
+      "width": 495.06948928000025
+    },
+    {
+      "text": "with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege",
+      "top": 190.588,
+      "x": 70.80000000000001,
+      "baseline": 198.61800000000005,
+      "width": 494.64010121999996
+    },
+    {
+      "text": "IAM, and Secret Manager/External Secrets, eliminating human production access.",
+      "top": 202.543,
+      "x": 70.80000000000001,
+      "baseline": 210.5730000000001,
+      "width": 360.4777520600001
+    },
+    {
+      "text": "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container",
+      "top": 213.811,
+      "x": 70.80000000000001,
+      "baseline": 221.84100000000012,
+      "width": 496.16936032000007
+    },
+    {
+      "text": "PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation;",
+      "top": 225.767,
+      "x": 70.80000000000001,
+      "baseline": 233.79700000000014,
+      "width": 488.92854264
+    },
+    {
+      "text": "automated 7 weekly runs via Kubernetes CronJob, eliminating \u223c120 engineer-hours of recurring toil annually.",
+      "top": 237.722,
+      "x": 70.80000000000001,
+      "baseline": 245.75200000000018,
+      "width": 480.67452854000004
+    },
+    {
+      "text": "Software Engineer I January 2025 \u2013 July 2026",
+      "top": 252.388,
+      "x": 46.80000000000001,
+      "baseline": 260.41800000000023,
+      "width": 522.45269164
+    },
+    {
+      "text": "Increased system resilience by implementing Kubernetes Horizontal Pod Autoscaling (HPA) for a core service",
+      "top": 265.459,
+      "x": 70.80000000000001,
+      "baseline": 273.48900000000026,
+      "width": 478.5056705199998
+    },
+    {
+      "text": "previously capped at 20 static pods, reducing mean latency from 121 to 72 ms and error rates by 89% while",
+      "top": 277.415,
+      "x": 70.80000000000001,
+      "baseline": 285.4450000000003,
+      "width": 471.7619865799999
+    },
+    {
+      "text": "increasing throughput from 24.9M to 34.8M requests/week and enabling dynamic scaling up to 100 pods.",
+      "top": 289.37,
+      "x": 70.80000000000001,
+      "baseline": 297.40000000000026,
+      "width": 460.05393906
+    },
+    {
+      "text": "Reconstructed deployment workflows for legacy Java 1.8 Tomcat services lacking operational ownership by",
+      "top": 300.638,
+      "x": 70.80000000000001,
+      "baseline": 308.66800000000023,
+      "width": 465.09302213999973
+    },
+    {
+      "text": "rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation, eliminating a platform",
+      "top": 312.593,
+      "x": 70.80000000000001,
+      "baseline": 320.6230000000002,
+      "width": 480.6097716399998
+    },
+    {
+      "text": "outage risk capable of halting all transaction capture.",
+      "top": 324.548,
+      "x": 70.80000000000001,
+      "baseline": 332.5780000000002,
+      "width": 233.7624464000001
+    },
+    {
+      "text": "Remediated \u223c330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a",
+      "top": 335.816,
+      "x": 70.80000000000001,
+      "baseline": 343.8460000000002,
+      "width": 496.55491293999984
+    },
+    {
+      "text": "minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD",
+      "top": 347.771,
+      "x": 70.80000000000001,
+      "baseline": 355.80100000000016,
+      "width": 494.39900630000017
+    },
+    {
+      "text": "401 authentication failures to enable secure, reproducible container builds.",
+      "top": 359.727,
+      "x": 70.80000000000001,
+      "baseline": 367.7570000000002,
+      "width": 324.6392910800002
+    },
+    {
+      "text": "Led testing and validation to disable a legacy service component handling \u223c27% of transaction volume (14.5 million",
+      "top": 370.995,
+      "x": 70.80000000000001,
+      "baseline": 379.02500000000015,
+      "width": 505.20145347999977
+    },
+    {
+      "text": "daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
+      "top": 382.95,
+      "x": 70.80000000000001,
+      "baseline": 390.98000000000013,
+      "width": 491.92230393999995
+    },
+    {
+      "text": "Reduced mean time to recovery \u223c50% by implementing an automated Kubernetes rolling-restart job for 20+",
+      "top": 394.218,
+      "x": 70.80000000000001,
+      "baseline": 402.2480000000001,
+      "width": 476.43444598
+    },
+    {
+      "text": "microservices, replacing slow Argo Rollouts and accelerating recovery from memory-leak/state-drift issues.",
+      "top": 406.173,
+      "x": 70.80000000000001,
+      "baseline": 414.2030000000001,
+      "width": 464.39464387999993
+    },
+    {
+      "text": "Software Engineer Intern May 2023 \u2013 July 2023, May 2024 \u2013 July 2024",
+      "top": 420.839,
+      "x": 46.80000000000001,
+      "baseline": 428.8690000000001,
+      "width": 522.4506991199999
+    },
+    {
+      "text": "Developed an internal product information page for cashiers, streamlining self-checkout processes and reducing",
+      "top": 433.911,
+      "x": 70.80000000000001,
+      "baseline": 441.9410000000001,
+      "width": 483.93429125999995
+    },
+    {
+      "text": "customer wait times for associate interventions by \u223c25%.",
+      "top": 445.866,
+      "x": 70.80000000000001,
+      "baseline": 453.8960000000001,
+      "width": 250.2525419200001
+    },
+    {
+      "text": "Leveraged Java, React, and TypeScript to retrieve and surface validated product data across all self-checkout",
+      "top": 457.134,
+      "x": 70.80000000000001,
+      "baseline": 465.16400000000004,
+      "width": 477.6488869199998
+    },
+    {
+      "text": "registers, mitigating customer theft by \u223c$750,000 annually.",
+      "top": 467.156,
+      "x": 70.80000000000001,
+      "baseline": 477.119,
+      "width": 258.7247369600001
+    },
+    {
+      "text": "Optimized the efficiency of configuring 40,000+ registers across 2,300 stores by 90%, in collaboration with 2 interns.",
+      "top": 480.357,
+      "x": 70.80000000000001,
+      "baseline": 488.387,
+      "width": 505.19846469999976
+    },
+    {
+      "text": "Truncated maximum deployment time for register updates from 24+ hours to 30 minutes by using Java HttpClient",
+      "top": 491.626,
+      "x": 70.80000000000001,
+      "baseline": 499.65599999999995,
+      "width": 503.13720276
+    },
+    {
+      "text": "and Flow APIs to streamline retrieval of polymorphic external configurations.",
+      "top": 503.581,
+      "x": 70.80000000000001,
+      "baseline": 511.61099999999993,
+      "width": 339.61507140000015
+    },
+    {
+      "text": "Projects",
+      "top": 519.381,
+      "x": 36.000000000000014,
+      "baseline": 529.0169999999999,
+      "width": 48.91828736000001
+    },
+    {
+      "text": "Fintech @ Georgia Tech | React, React Native, TypeScript, Stripe API, Chakra UI",
+      "top": 540.876,
+      "x": 46.8,
+      "baseline": 548.906,
+      "width": 373.95714986
+    },
+    {
+      "text": "Reduced page load times by \u223c35% via transforming a multi-page credit card website into a React-based single-page",
+      "top": 556.954,
+      "x": 70.8,
+      "baseline": 564.984,
+      "width": 505.1994609599997
+    },
+    {
+      "text": "application, streamlining card wallet management and adding a card removal feature for authenticated users.",
+      "top": 568.909,
+      "x": 70.8,
+      "baseline": 576.9390000000001,
+      "width": 476.6277204199999
+    },
+    {
+      "text": "Implemented a cart page for a React Native grocery application, allowing users to add/remove items, adjust",
+      "top": 580.177,
+      "x": 70.8,
+      "baseline": 588.207,
+      "width": 472.9226294799999
+    },
+    {
+      "text": "quantities, view real-time total costs, and integrated the Stripe API for streamlined in-app credit card payments.",
+      "top": 592.132,
+      "x": 70.8,
+      "baseline": 600.162,
+      "width": 492.05082148000014
+    },
+    {
+      "text": "CDC Data Reconciliation | Python, FastAPI, SQLite, React, Tailwind CSS",
+      "top": 607.777,
+      "x": 46.8,
+      "baseline": 615.807,
+      "width": 344.6959974
+    },
+    {
+      "text": "Led a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health",
+      "top": 623.855,
+      "x": 70.8,
+      "baseline": 631.885,
+      "width": 471.5956111599999
+    },
+    {
+      "text": "departments and the CDC, alongside doubling as a full-stack software developer.",
+      "top": 635.81,
+      "x": 70.8,
+      "baseline": 643.84,
+      "width": 352.78861738
+    },
+    {
+      "text": "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the",
+      "top": 647.078,
+      "x": 70.8,
+      "baseline": 655.1080000000001,
+      "width": 489.24734584000004
+    },
+    {
+      "text": "two datasets, saving 5000+ hours of manual reconciliation annually.",
+      "top": 659.034,
+      "x": 70.8,
+      "baseline": 667.0640000000001,
+      "width": 296.11138598000014
+    },
+    {
+      "text": "Skills",
+      "top": 674.834,
+      "x": 36.0,
+      "baseline": 684.47,
+      "width": 31.083519999999993
+    },
+    {
+      "text": "Programming Languages: Java, Python, JavaScript, TypeScript, SQL",
+      "top": 693.763,
+      "x": 46.8,
+      "baseline": 701.793,
+      "width": 321.0119084200001
+    },
+    {
+      "text": "Technologies/Frameworks: Kubernetes, Google Cloud Platform (GCP), Terraform, cdk8s, Docker, Cloud Spanner,",
+      "top": 706.515,
+      "x": 46.8,
+      "baseline": 714.545,
+      "width": 516.5926903200001
+    },
+    {
+      "text": "Cassandra, Elasticsearch, BigQuery, Grafana, Prometheus, OpenTelemetry, React, FastAPI, Node.js, JUnit, Git",
+      "top": 718.47,
+      "x": 46.8,
+      "baseline": 726.5,
+      "width": 489.55718269999994
+    },
+    {
+      "text": "Concepts: Object-Oriented Programming & Design, Test-Driven Development, NoSQL, Data Structures & Algorithms,",
+      "top": 731.222,
+      "x": 46.8,
+      "baseline": 739.252,
+      "width": 527.16799022
+    },
+    {
+      "text": "Full-Stack, CI/CD, Infrastructure, Distributed Systems, Cloud Computing, Microservices Architecture",
+      "top": 743.178,
+      "x": 46.8,
+      "baseline": 751.208,
+      "width": 447.62260678000007
+    }
+  ],
+  "rules": [
+    {
+      "x": 36.0,
+      "top": 94.609,
+      "width": 540.0,
+      "height": 0.398
+    },
+    {
+      "x": 36.0,
+      "top": 145.52299999999997,
+      "width": 540.0,
+      "height": 0.398
+    },
+    {
+      "x": 36.0,
+      "top": 533.2020000000001,
+      "width": 540.0,
+      "height": 0.398
+    },
+    {
+      "x": 36.0,
+      "top": 688.654,
+      "width": 540.0,
+      "height": 0.398
+    }
+  ]
+}
