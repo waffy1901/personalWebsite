@@ -53,8 +53,10 @@ const CHECKS = [
     requiredSync: "Keep the canonical resume files and every public reference to them aligned.",
     skills: ["$resume-site-sync"],
     paths: [
-      /^main\/public\/(?:waffyAhmedResume\.pdf|resume-preview\.png|_redirects|portfolio\.json|llms\.txt)$/,
-      /^main\/src\/data\/profile\.js$/,
+      /^main\/public\/(?:waffyAhmedResume\.pdf|resume-preview(?:-\d+)?\.(?:png|webp)|_redirects|portfolio\.json|llms\.txt)$/,
+      /^main\/src\/data\/(?:profile\.js|resume(?:-preview)?\.mjs)$/,
+      /^main\/scripts\/(?:generate-resume-assets|resume-layout|resume-preview-assets|check-resume-layout)/,
+      /^\.codex\/skills\/resume-site-sync\/scripts\//,
       /^main\/src\/pages\/Resume\.jsx$/,
     ],
     command: [
@@ -143,6 +145,8 @@ const CHECKS = [
     paths: [
       /^main\/src\/(?:App\.jsx|pages\/.*\.jsx|components\/.*\.jsx|.*\.css)$/,
       /^main\/src\/images\//,
+      /^main\/src\/data\/resume-preview\.mjs$/,
+      /^main\/scripts\/(?:generate-resume-assets|resume-preview-assets)\.mjs$/,
       /^main\/public\/.*\.(?:avif|gif|jpe?g|png|svg|webp)$/i,
       /^main\/(?:vite\.config\.[cm]?[jt]s|package(?:-lock)?\.json)$/,
     ],
@@ -390,6 +394,9 @@ function runSelfTest() {
   const cases = [
     ["main/src/data/projects.js", ["generated-public", "content-sync", "ai-discovery"]],
     ["main/src/pages/Resume.jsx", ["resume-assets", "ga4-events", "frontend-performance"]],
+    ["main/public/resume-preview-1920.webp", ["resume-assets", "frontend-performance"]],
+    ["main/src/data/resume-preview.mjs", ["generated-public", "content-sync", "resume-assets", "ai-discovery", "frontend-performance"]],
+    ["main/scripts/resume-layout-reference.json", ["resume-assets"]],
     ["main/src/components/Seo.jsx", ["spa-seo", "frontend-performance"]],
     ["main/public/404.html", ["spa-seo"]],
     ["main/scripts/export-route-metadata.mjs", ["spa-seo"]],

@@ -6,6 +6,7 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import test from "node:test"
 import { fileURLToPath } from "node:url"
+import { resumePreviewVariants } from "../../../../main/src/data/resume-preview.mjs"
 
 const checkerPath = join(dirname(fileURLToPath(import.meta.url)), "check_frontend_performance.mjs")
 
@@ -29,6 +30,17 @@ function replaceFixture(root, relativePath, replacements) {
 
 function runChecker(fixtureRoot) {
   return spawnSync(process.execPath, [checkerPath, fixtureRoot], { encoding: "utf8" })
+}
+
+function webpHeader(width, height) {
+  const buffer = Buffer.alloc(26)
+  buffer.write("RIFF")
+  buffer.writeUInt32LE(18, 4)
+  buffer.write("WEBPVP8L", 8)
+  buffer.writeUInt32LE(5, 16)
+  buffer[20] = 0x2f
+  buffer.writeUInt32LE(((width - 1) | ((height - 1) << 14)) >>> 0, 21)
+  return buffer
 }
 
 function createFixture(decoding) {
@@ -90,6 +102,8 @@ function createFixture(decoding) {
       "export const resume = {",
       '  preview: "/resume-preview.png",',
       '  optimizedPreview: "/resume-preview.webp",',
+      '  previewSrcSet: resumePreviewSrcSet,',
+      '  previewSizes: resumePreviewSizes,',
       "}",
       "",
     ].join("\n"),
@@ -99,12 +113,15 @@ function createFixture(decoding) {
     "main/src/pages/Resume.jsx",
     [
       "export default function Resume() {",
-      '  return <picture><source srcSet={resume.optimizedPreview} type="image/webp" /><img src={resume.preview} loading="eager" fetchPriority="high" decoding="async" alt="Resume preview" /></picture>',
+      '  return <picture><source srcSet={resume.previewSrcSet} sizes={resume.previewSizes} type="image/webp" /><img src={resume.preview} loading="eager" fetchPriority="high" decoding="async" alt="Resume preview" /></picture>',
       "}",
       "",
     ].join("\n"),
   )
-  writeFixture(root, "main/public/resume-preview.webp", "webp")
+  writeFixture(root, "main/src/data/resume-preview.mjs", `export const resumePreviewVariants = ${JSON.stringify(resumePreviewVariants)}`)
+  for (const variant of resumePreviewVariants) {
+    writeFixture(root, `main/public${variant.src}`, webpHeader(variant.width, variant.height))
+  }
   writeFixture(
     root,
     "main/src/components/ProjectCard.jsx",
@@ -167,12 +184,12 @@ test("rejects an optimized resume preview above the byte ceiling", () => {
     writeFixture(
       fixtureRoot,
       "main/public/resume-preview.webp",
-      "x".repeat(150_001),
+      "x".repeat(120_001),
     )
     const result = runChecker(fixtureRoot)
 
     assert.equal(result.status, 1)
-    assert.match(result.stderr, /must not exceed 150000 bytes/)
+    assert.match(result.stderr, /must not exceed 120000 bytes/)
   } finally {
     rmSync(fixtureRoot, { recursive: true, force: true })
   }
@@ -183,12 +200,38 @@ test("rejects a resume page that does not wire the WebP source", () => {
 
   try {
     replaceFixture(fixtureRoot, "main/src/pages/Resume.jsx", [
-      ['srcSet={resume.optimizedPreview}', 'srcSet="/resume-preview.webp"'],
+      ['srcSet={resume.previewSrcSet}', 'srcSet="/resume-preview.webp"'],
     ])
     const result = runChecker(fixtureRoot)
 
     assert.equal(result.status, 1)
-    assert.match(result.stderr, /should use resume\.optimizedPreview/)
+    assert.match(result.stderr, /should use resume\.previewSrcSet/)
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true })
+  }
+})
+
+for (const variant of resumePreviewVariants) {
+  test(`guards ${variant.width}w dimensions and byte ceiling`, () => {
+    const fixtureRoot = createFixture("async")
+    try {
+      writeFixture(fixtureRoot, `main/public${variant.src}`, webpHeader(320, 414))
+      assert.match(runChecker(fixtureRoot).stderr, /dimensions must be/)
+      writeFixture(fixtureRoot, `main/public${variant.src}`, Buffer.alloc(variant.maxBytes + 1))
+      assert.match(runChecker(fixtureRoot).stderr, new RegExp(`must not exceed ${variant.maxBytes} bytes`))
+      rmSync(join(fixtureRoot, `main/public${variant.src}`))
+      assert.match(runChecker(fixtureRoot).stderr, /is required for the optimized resume preview/)
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true })
+    }
+  })
+}
+
+test("rejects responsive preview wiring without sizes", () => {
+  const fixtureRoot = createFixture("async")
+  try {
+    replaceFixture(fixtureRoot, "main/src/pages/Resume.jsx", [[' sizes={resume.previewSizes}', '']])
+    assert.match(runChecker(fixtureRoot).stderr, /should use resume.previewSrcSet and resume.previewSizes/)
   } finally {
     rmSync(fixtureRoot, { recursive: true, force: true })
   }

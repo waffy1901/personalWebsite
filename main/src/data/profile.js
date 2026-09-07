@@ -2,6 +2,7 @@ import gtLogo from "../images/gtLogo.png"
 import profilePicture450Webp from "../images/profilePic-450.webp"
 import profilePicture675Webp from "../images/profilePic-675.webp"
 import profilePicture from "../images/profilePic.jpg"
+import { resumePreviewSrcSet, resumePreviewSizes } from "./resume-preview.mjs"
 import {
   currentEmployment,
   portfolioUrls,
@@ -26,6 +27,8 @@ export const resume = {
   pdf: "/waffyAhmedResume.pdf",
   preview: "/resume-preview.png",
   optimizedPreview: "/resume-preview.webp",
+  previewSrcSet: resumePreviewSrcSet,
+  previewSizes: resumePreviewSizes,
 }
 
 export const contact = {

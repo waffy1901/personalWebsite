@@ -1173,7 +1173,8 @@ describe("App routes", () => {
       ?.querySelector('source[type="image/webp"]')
 
     expect(resumePreview).toHaveAttribute("src", "/resume-preview.png")
-    expect(resumePreviewSource).toHaveAttribute("srcset", "/resume-preview.webp")
+    expect(resumePreviewSource).toHaveAttribute("srcset", "/resume-preview-640.webp 640w, /resume-preview.webp 960w, /resume-preview-1280.webp 1280w, /resume-preview-1920.webp 1920w")
+    expect(resumePreviewSource).toHaveAttribute("sizes", "(min-width: 974px) 882px, (min-width: 640px) calc(100vw - 92px), calc(100vw - 84px)")
     expect(resumePreview).toHaveAttribute("width", "960")
     expect(resumePreview).toHaveAttribute("height", "1243")
     expectImagePolicy(resumePreview, {
@@ -1192,6 +1193,32 @@ describe("App routes", () => {
       "href",
       "mailto:waffyahmed@gmail.com"
     )
+  })
+
+  it("preserves resume PDF actions and their analytics placements", async () => {
+    const user = userEvent.setup()
+    renderRoute("/resume")
+    const open = await screen.findByRole("link", { name: /^open pdf$/i })
+    const preview = screen.getByRole("link", { name: /open waffy ahmed resume pdf/i })
+    const download = screen.getByRole("link", { name: /^download resume$/i })
+    for (const link of [open, preview]) {
+      expect(link).toHaveAttribute("href", "/waffyAhmedResume.pdf")
+      expect(link).toHaveAttribute("target", "_blank")
+      expect(link).toHaveAttribute("rel", "noopener noreferrer")
+    }
+    expect(download).toHaveAttribute("href", "/waffyAhmedResume.pdf")
+    expect(download).toHaveAttribute("download")
+    for (const link of [open, preview, download]) {
+      link.addEventListener("click", (event) => event.preventDefault())
+      await user.click(link)
+    }
+    expect(getAnalyticsEvents("resume_open")).toEqual([
+      ["event", "resume_open", expect.objectContaining({ placement: "resume_actions" })],
+      ["event", "resume_open", expect.objectContaining({ placement: "resume_preview" })],
+    ])
+    expect(getAnalyticsEvents("resume_download")).toEqual([
+      ["event", "resume_download", expect.objectContaining({ placement: "resume_actions" })],
+    ])
   })
 
   it("renders the contact route", async () => {

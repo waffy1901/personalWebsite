@@ -4,6 +4,7 @@ import path from "node:path"
 import { execFileSync } from "node:child_process"
 import { inflateSync } from "node:zlib"
 import { pathToFileURL } from "node:url"
+import { checkResumePreviews } from "../../../../main/scripts/resume-preview-assets.mjs"
 
 const repo = path.resolve(process.argv[2] ?? process.cwd())
 const errors = []
@@ -105,7 +106,9 @@ const extractPdfText = (buffer) => {
       if (/\bET\b/.test(operation)) text.push("\n")
     }
   }
-  return normalize(text.join(""))
+  // Decorative markers can be painted after their line in a positioned PDF.
+  // They are excluded from the tagged reading order and from prose comparison.
+  return normalize(text.join("").replaceAll("\u2022", ""))
 }
 
 const getPdfInfo = (pdfPath) => {
@@ -119,10 +122,6 @@ const getPdfInfo = (pdfPath) => {
 }
 
 const pngDimensions = (buffer) => ({ width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) })
-const webpDimensions = (buffer) => ({
-  width: buffer.readUIntLE(24, 3) + 1,
-  height: buffer.readUIntLE(27, 3) + 1,
-})
 
 const pdf = stat("main/public/waffyAhmedResume.pdf")
 const preview = stat("main/public/resume-preview.png")
@@ -188,6 +187,10 @@ if (errors.length === 0) {
   }
 
   const { resumeDocument } = await import(pathToFileURL(path.join(repo, "main/src/data/resume.mjs")).href)
+  const { validateResumeLayout } = await import(pathToFileURL(path.join(repo, "main/scripts/resume-layout.mjs")).href)
+  validateResumeLayout(resumeDocument)
+  const { resumePreviewVariants } = await import(pathToFileURL(path.join(repo, "main/src/data/resume-preview.mjs")).href)
+  errors.push(...checkResumePreviews(path.join(repo, "main/public"), resumePreviewVariants))
   const extractedText = extractPdfText(pdfBuffer)
   const expectedText = [
     resumeDocument.name,
@@ -225,8 +228,7 @@ if (errors.length === 0) {
   const webp = fs.readFileSync(path.join(repo, "main/public/resume-preview.webp"))
   if (!png.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) errors.push("Resume PNG preview has an invalid signature")
   if (webp.subarray(0, 4).toString("ascii") !== "RIFF" || webp.subarray(8, 12).toString("ascii") !== "WEBP") errors.push("Resume WebP preview has an invalid signature")
-  if (png.length >= 24 && (pngDimensions(png).width < 800 || pngDimensions(png).height < 1000)) errors.push("Resume PNG preview dimensions are unexpectedly small")
-  if (webp.length >= 30 && (webpDimensions(webp).width < 800 || webpDimensions(webp).height < 1000)) errors.push("Resume WebP preview dimensions are unexpectedly small")
+  if (png.length < 24 || pngDimensions(png).width !== 960 || pngDimensions(png).height !== 1243) errors.push("Resume PNG preview dimensions must be 960x1243")
 }
 
 if (errors.length > 0) {
