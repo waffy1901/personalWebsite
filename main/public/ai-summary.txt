@@ -400,7 +400,7 @@ Frontend Implementation Context:
 
 * Framework and build: React 19, Vite 8, React Router 8, Tailwind CSS 4, React
   Icons 5, Formspree, and Netlify.
-* Testing and quality: Vitest 4, Testing Library, jsdom, ESLint 9, and React
+* Testing and quality: Vitest 5, Testing Library, jsdom, ESLint 9, and React
   Hooks lint rules.
 * SEO and AI discovery: the site publishes sitemap.xml, robots.txt with a
   sitemap pointer, llms.txt, route-level canonical metadata, Open
