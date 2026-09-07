@@ -1197,6 +1197,7 @@ describe("App routes", () => {
 
   it("preserves resume PDF actions and their analytics placements", async () => {
     const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     renderRoute("/resume")
     const open = await screen.findByRole("link", { name: /^open pdf$/i })
     const preview = screen.getByRole("link", { name: /open waffy ahmed resume pdf/i })
