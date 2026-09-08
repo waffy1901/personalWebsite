@@ -7,12 +7,10 @@ description: AI-readable portfolio discovery maintenance for Waffy Ahmed's perso
 
 ## Workflow
 
-1. Preserve the intended AI summary: emphasize Waffy's backend, platform, production reliability, Kubernetes, observability, deployment automation, and incident-response work over website implementation details.
-2. Keep `main/public/llms.txt` short and navigational.
-3. Keep `main/public/ai-summary.txt` comprehensive, readable, and consistent with app content.
-4. Keep `main/public/portfolio.json` valid, structured, and stable for programmatic consumers.
-5. Keep JSON-LD in `main/index.html` aligned with canonical identity, resume, and case-study links.
-6. Run the static discovery check:
+1. Identify canonical inputs in `main/src/data/*`, especially `siteIdentity.js`, `publicPortfolio.js`, and route metadata in `seo.js`. For requested edits, change these inputs; keep read-only audits free of edits. Do not hand-edit generated discovery files, README blocks, JSON-LD, or its CSP hash. Preserve the intended AI summary: emphasize Waffy's backend, platform, production reliability, Kubernetes, observability, deployment automation, and incident-response work over website implementation details.
+2. Run `npm run generate:public` from the repository root after changes, inspect the diff, then run `npm run generate:public -- --check`. `main/scripts/generate-public-artifacts.mjs` owns the discovery files, README blocks, JSON-LD in `main/index.html`, and its hash in `netlify.toml`. For a read-only audit, run only the freshness check.
+3. Check the generated outputs: keep `llms.txt` short and navigational, `ai-summary.txt` readable and consistent with app content, and `portfolio.json` structured and stable. Keep JSON-LD aligned with canonical identity, resume, and case-study links.
+4. Run the static discovery check:
 
 ```bash
 node .codex/skills/ai-discovery-maintainer/scripts/check_ai_discovery.mjs /path/to/personalWebsite

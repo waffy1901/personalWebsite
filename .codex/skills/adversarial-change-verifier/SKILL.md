@@ -1,17 +1,19 @@
 ---
 name: adversarial-change-verifier
-description: Orchestrate adversarial, multi-agent regression verification for Waffy Ahmed's personalWebsite. Use when Codex is asked to spin up agents, run a team of agents, adversarially verify new or uncommitted changes, check regressions, validate all functionality, compare local or deploy-preview behavior against production, or perform broad post-change QA across routes, SEO, content, AI discovery, resume assets, analytics, CSP/security headers, visual layout, and deployed site behavior.
+description: Coordinate adversarial verification for Waffy Ahmed's personalWebsite when the user requests an agent team or adversarial verification, or concrete T2/T3 risk requires independent checks across coupled surfaces. Ordinary regression checks, uncommitted-change reviews, and release smoke tests should use the focused review or domain skill unless that broader risk is established.
 ---
 
 # Adversarial Change Verifier
 
 ## Core Workflow
 
+Only the coordinator plans lanes or delegates work. If assigned one QA lane, act as a worker: inspect that lane's artifacts, use only its relevant domain skills, and return evidence. Do not run the coordinator workflow or delegate further.
+
 1. Establish scope and safety.
    - Check `git status --short` before edits or verification.
    - Identify the target: uncommitted diff, branch, PR, local build, deploy preview, production, or a comparison between them.
    - Treat unrelated changes as user-owned. Stay in verification mode unless the user asks to fix, document, commit, push, or deploy.
-   - If live browser QA is in scope, tell the user it can count as GA4 traffic. `curl`, Node HTTP checks, GitHub automation, and package audits do not run the site in a browser and should not affect GA4.
+   - Use `$telemetry-safe-browser-qa` before browser navigation on localhost, deploy previews, or production. Configured analytics and forms can reach real services from any hostname; apply the required blocking or test destinations before loading the page.
 
 2. Load adjacent repo skills only when their surfaces are in scope.
    - Use `$portfolio-release-qa` for release readiness, lint/test/build, preview smoke checks, static assets, or Netlify deploy readiness.
@@ -25,15 +27,15 @@ description: Orchestrate adversarial, multi-agent regression verification for Wa
    - Use `$portfolio-audit-maintainer` for GitHub quality findings and project state, `docs/quality-and-verification-policy.md`, deployed evidence, finding classification, or archived audit provenance.
    - Use `$portfolio-github-automation-maintainer` for GitHub Actions workflows, Dependabot, CodeQL, deployed-header automation, or workflow-run behavior.
 
-3. Build a lane plan from the diff and the user's wording.
+3. Build a lane plan from the diff and the requested verification scope.
    - Read [references/verification-lanes.md](references/verification-lanes.md) and select the smallest set of lanes that covers the risk.
-   - For "all functionality", "fully functional", "regressions", or "spin up agents", run multiple independent lanes rather than one broad smoke test.
+   - Use multiple independent lanes for an explicit team/adversarial request or a concrete T2/T3 risk that requires them. Generic wording such as "regressions" or "all functionality" alone does not justify delegation. Route ordinary checks to the focused review or domain skill.
    - Prefer adversarial questions: what could this break, what changed indirectly, what route or asset would a crawler see first, what user action emits telemetry, what deploy-only behavior differs from local?
 
-4. Use independent agents when available.
-   - If multi-agent tools are available, search for them and spawn read-only agents with narrow prompts, raw artifacts, and no expected answer.
+4. Delegate only the selected independent lanes.
+   - When the lane plan justifies delegation and multi-agent tools are available, the coordinator may spawn read-only workers with narrow prompts, raw artifacts, and no expected answer. Use the smallest useful set of workers and avoid overlapping assignments.
    - Give each agent one lane, such as diff-risk mapping, route/functionality smoke, SEO/crawler checks, content/AI/resume consistency, analytics/CSP/security review, visual/browser QA, or deployed HTTP verification.
-   - Ask each agent for exact evidence, commands, routes, confidence, and residual risk. Do not ask agents to modify files unless the user explicitly requests fixes.
+   - Ask each agent for exact evidence, commands, routes, confidence, and residual risk. State that workers must not delegate further or invoke this coordinator workflow. Do not ask agents to modify files unless the user explicitly requests fixes.
    - If subagents are unavailable, run the same lanes sequentially and keep the notes separated.
 
 5. Verify with evidence.
@@ -46,5 +48,5 @@ description: Orchestrate adversarial, multi-agent regression verification for Wa
    - Lead with findings ordered by severity, with file/route/command evidence.
    - Separate true regressions from caveats and nitpicks in practical language.
    - If no issues are found, say so clearly and mention remaining test gaps or live checks not run.
-   - Include commands run, checks skipped, and whether live browser QA may have affected GA4.
+   - Include commands run, checks skipped, and the browser telemetry controls used on each environment; identify any unblocked traffic that may have affected GA4.
    - If findings must persist, create or update the corresponding GitHub issue and project item only when the user asks or the task explicitly includes tracking updates. Never rewrite the archived audit as current state.

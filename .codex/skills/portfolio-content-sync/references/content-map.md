@@ -13,6 +13,8 @@
 
 ## Public Discovery Files
 
+`main/scripts/generate-public-artifacts.mjs` derives these files, the README blocks, JSON-LD in `main/index.html`, and its CSP hash from canonical inputs. Edit the inputs, run `npm run generate:public`, inspect the diff, and check freshness with `npm run generate:public -- --check`; do not hand-edit generated output.
+
 - `main/public/portfolio.json`: structured public data for machines and AI systems.
 - `main/public/ai-summary.txt`: comprehensive plain-text portfolio summary.
 - `main/public/llms.txt`: concise AI-agent entry point.

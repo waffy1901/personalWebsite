@@ -1,6 +1,6 @@
 # Verification Lanes
 
-Use these lanes as reusable building blocks. Select by changed files, user wording, and deployment target.
+Use these lanes as reusable building blocks. The coordinator selects them by changed files, concrete risk, and deployment target. Only an explicit team/adversarial request or established T2/T3 risk warrants multiple independent agents; generic regression wording is not enough. A worker executes its assigned lane without planning other lanes or delegating.
 
 ## Inputs To Collect
 
@@ -115,7 +115,7 @@ Check:
 - `netlify.toml` still allows only required scripts, connections, forms, images, frames, and inline JSON-LD hash.
 - If `main/index.html` JSON-LD changed, recompute and verify the CSP `script-src` SHA-256 hash.
 
-Use live browser QA for analytics only when needed; disclose that it may create GA4 page views/users.
+Use `$telemetry-safe-browser-qa` before any browser session, including localhost. Event-emission assertions can use mocks or intercepted requests; real GA4 delivery requires a separately authorized integration check. Report which behavior the evidence establishes.
 
 ## Lane 7: Visual And Browser QA
 
@@ -153,11 +153,11 @@ Use real HTTP evidence for deployed claims. If sandbox/network limits prevent li
 Use a narrow, read-only prompt like this:
 
 ```text
-Use $adversarial-change-verifier in /Users/waffyahmed/Downloads/personalWebsite for one independent QA lane: <lane name>. Treat this as read-only. Inspect the relevant files or target URLs, run only the checks needed for this lane, and report findings first with exact evidence, commands, confidence, and residual risk. Do not modify files.
+Verify one independent QA lane in /Users/waffyahmed/Downloads/personalWebsite: <lane name>. Scope and raw artifacts: <target diff, files, URLs, and acceptance criteria>. Use only the relevant domain skills: <skill names>. Treat this as read-only. Inspect the artifacts, run only checks needed for this lane, and report findings first with exact evidence, commands, confidence, and residual risk. Do not modify files, delegate to other agents, or invoke the adversarial coordinator workflow. Return any coverage gaps to the coordinator.
 ```
 
-For live QA lanes, add:
+For browser QA lanes on any hostname, add:
 
 ```text
-If you use a real browser against https://waffy.dev/ or a deploy preview, explicitly note that the visit may contribute to GA4. Prefer curl or Node HTTP checks when browser interactivity is not required.
+Use $telemetry-safe-browser-qa before navigation, including localhost and deploy previews. Disable or intercept analytics and real form endpoints for visual/functional QA. Record the controls used and any remaining side effects. Prefer curl or Node HTTP checks when browser interactivity is not required.
 ```
