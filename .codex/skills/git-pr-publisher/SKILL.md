@@ -36,7 +36,7 @@ Do only the actions covered by that instruction or grant. A project plan, issue,
 3. Verify before committing.
    - Follow repository instructions such as `AGENTS.md` and any task-specific skill checks.
    - Compose `$portfolio-release-qa` for push/release readiness and use applicable domain skills; do not duplicate their procedures here.
-   - For docs-only or instruction-only changes, note why lint/tests/build were not necessary.
+   - Documentation-only and instruction-only publication still requires the lint, test, and production-build gates in `AGENTS.md`. Its narrower checks for local documentation work do not waive push/release readiness checks.
    - If relevant checks fail, fix only failures clearly caused by the current change. Otherwise report the failure and stop before pushing unless the user explicitly asks to continue.
 
 4. Stage deliberately.

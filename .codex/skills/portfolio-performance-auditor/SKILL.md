@@ -33,7 +33,7 @@ node --test .codex/skills/portfolio-performance-auditor/scripts/test_frontend_pe
 npm run build
 ```
 
-6. When layout or runtime performance is in scope, run a preview/dev server and inspect affected routes at desktop and a narrow mobile width. Browser QA against `waffy.dev` can count as GA4 traffic; local browser checks, `curl`, Node scripts, and builds do not affect GA4.
+6. When layout or runtime performance is in scope, run a preview/dev server and inspect affected routes at desktop and a narrow mobile width. Use `$telemetry-safe-browser-qa` before browser navigation on localhost, deploy previews, or production: configured analytics and form endpoints can reach real services from any hostname. For layout/performance checks, disable analytics or block its requests and prevent real form submissions before loading the page. Plain HTTP checks and static build inspection do not execute the site's browser analytics.
 
 Read [references/performance-map.md](references/performance-map.md) for route, image, layout, and verification guidance.
 

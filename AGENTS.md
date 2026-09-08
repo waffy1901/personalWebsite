@@ -57,6 +57,7 @@ node .codex/skills/portfolio-change-impact/scripts/check_change_impact.mjs --sou
 ## Verification Expectations
 
 - For code changes, run the narrowest meaningful check first, then `npm run lint`, `npm run test`, or `npm run build` as risk requires.
+- For local documentation or skill-only changes, use relevant link, metadata, generated-freshness, or script checks plus `git diff --check`. Application lint, tests, and build are only needed when application or build behavior is affected; this local-check policy does not waive publication checks.
 - For release, push, or deploy readiness, use `$portfolio-release-qa` and run lint, tests, and production build.
 - For visual or layout work, start the dev or preview server and inspect the affected route on desktop and mobile widths when possible.
 - For route changes, smoke-check canonical lowercase routes and legacy uppercase redirects.
