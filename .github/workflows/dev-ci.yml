@@ -34,12 +34,15 @@ jobs:
         working-directory: main
         run: npm ci
 
+      - name: Set up Python for migration checks
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
       - name: Lint
-        working-directory: main
         run: npm run lint
 
       - name: Test
-        working-directory: main
         run: npm test
 
       - name: Build
