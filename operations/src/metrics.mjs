@@ -345,7 +345,7 @@ export function calculateStatus({
   if (base.observationAgeMs >= STALE_MS) return { state: 'unknown', reason: 'stale', ...base };
 
   if (latest.outcome === 'failure') {
-    return state.failureStreak >= 2
+    return state.establishedDown || state.failureStreak >= 2
       ? { state: 'down', reason: 'consecutive_failures', ...base }
       : { state: 'degraded', reason: 'first_failure', ...base };
   }

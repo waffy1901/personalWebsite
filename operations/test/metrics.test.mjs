@@ -178,6 +178,47 @@ test('a down latch survives a missing slot but clears after confirmed recovery',
   ]).reason, 'fresh_success');
 });
 
+test('an interrupted recovery remains down in complete history and checkpoint processing', () => {
+  const history = [at(0, 'failure', undefined), at(1, 'failure', undefined), at(2), at(3, 'failure', undefined)];
+  const fullHistory = calculateStatus({
+    observations: history, enabledPeriods: openFromBase, nowMs: BASE + 3 * SLOT_MS + 100,
+  });
+  assert.deepEqual([fullHistory.state, fullHistory.reason], ['down', 'consecutive_failures']);
+
+  const established = calculateStatus({
+    observations: history.slice(0, 2), enabledPeriods: openFromBase, nowMs: BASE + SLOT_MS + 100,
+  });
+  const awaitingConfirmation = calculateStatus({
+    observations: [history[2]], enabledPeriods: openFromBase, nowMs: BASE + 2 * SLOT_MS + 100,
+    stateCheckpoint: established.stateCheckpoint,
+  });
+  assert.equal(awaitingConfirmation.reason, 'recovery_awaiting_confirmation');
+  const interrupted = calculateStatus({
+    observations: [history[3]], enabledPeriods: openFromBase, nowMs: BASE + 3 * SLOT_MS + 100,
+    stateCheckpoint: awaitingConfirmation.stateCheckpoint,
+  });
+  assert.deepEqual([interrupted.state, interrupted.reason], ['down', 'consecutive_failures']);
+});
+
+test('an established outage remains down through gaps, including retained checkpoint state', () => {
+  const gapFailure = calculateStatus({
+    observations: [at(0, 'failure', undefined), at(1, 'failure', undefined), at(3, 'failure', undefined)],
+    enabledPeriods: openFromBase, nowMs: BASE + 3 * SLOT_MS + 100,
+  });
+  assert.deepEqual([gapFailure.state, gapFailure.reason], ['down', 'consecutive_failures']);
+
+  const established = calculateStatus({
+    observations: [at(0, 'failure', undefined), at(1, 'failure', undefined)],
+    enabledPeriods: openFromBase, nowMs: BASE + SLOT_MS + 100,
+  });
+  const farSlot = (30 * 24 * 60 * 60 * 1_000 / SLOT_MS) + 1;
+  const retainedGapFailure = calculateStatus({
+    observations: [at(farSlot, 'failure', undefined)], enabledPeriods: openFromBase,
+    nowMs: BASE + farSlot * SLOT_MS + 100, stateCheckpoint: established.stateCheckpoint,
+  });
+  assert.deepEqual([retainedGapFailure.state, retainedGapFailure.reason], ['down', 'consecutive_failures']);
+});
+
 test('a validated checkpoint preserves the down latch across the raw-retention boundary', () => {
   const farSlot = (30 * 24 * 60 * 60 * 1_000 / SLOT_MS) + 1;
   const firstRecovery = calculateStatus({
