@@ -93,6 +93,39 @@ test('D1 workload uses bounded prepared statements and never overwrites the prim
   await assert.rejects(() => databaseWorkload(db, { slot: 1, observedAt: 2, primary: {} }), /Invalid slot/);
 });
 
+test('scheduled probes persist the scheduled five-minute slot despite timer jitter and delayed delivery', async (t) => {
+  const slot = Date.UTC(2026, 8, 13, 2, 30);
+  const observedAt = slot + 600000;
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 200 }));
+  t.mock.method(Date, 'now', () => observedAt);
+  t.mock.method(console, 'log', () => {});
+  const batches = [];
+  const db = {
+    prepare(sql) { return { bind(...bindings) { return { sql, bindings }; } }; },
+    async batch(statements) { batches.push(statements); return statements.map(() => ({ meta: {} })); },
+  };
+  for (const offset of [0, 25000, 299999]) {
+    await worker.scheduled({ scheduledTime: slot + offset }, { PROTOTYPE_ONLY: 'true', PROTOTYPE_DB: db });
+  }
+  assert.equal(fetchMock.mock.callCount(), 3);
+  assert.equal(batches.length, 3);
+  for (const statements of batches) {
+    assert.equal(statements[0].bindings[0], slot);
+    assert.equal(statements[0].bindings[1], observedAt);
+    assert.equal(statements[0].bindings[2], 'success');
+  }
+});
+
+test('invalid scheduler timestamps are rejected before probing or writing', async (t) => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 200 }));
+  for (const scheduledTime of [-1, NaN, Infinity, undefined, '300000', 300000.5]) {
+    await assert.rejects(() => worker.scheduled({ scheduledTime }, {
+      PROTOTYPE_ONLY: 'true', PROTOTYPE_DB: {},
+    }), /Invalid scheduled time/);
+  }
+  assert.equal(fetchMock.mock.callCount(), 0);
+});
+
 test('retention statements bind a fixed small batch and reject invalid clocks', () => {
   for (const statement of retentionStatements(1800000000000)) {
     assert.equal(statement.bindings.at(-1), CLEANUP_BATCH_SIZE);
