@@ -319,7 +319,14 @@ artifacts remained current. Exact source publication is recorded in the PR.
 No public content, SEO, AI discovery, route, resume, analytics, or CSP surface
 changes in this patch.
 
-Sanitized API measurements, deployment readbacks, SQL and restore comparisons are
-retained in the local staging evidence directory. They contain no owner session
-credentials. This tracked report summarizes observations and explicitly labels
-projections and unmeasured conditions.
+Sanitized API measurements, deployment readbacks, SQL and restore comparisons
+were recorded in a temporary local staging evidence directory. That directory
+was no longer available when publication resumed on September 19, so the raw
+artifacts cannot be independently reread from disk. This tracked report preserves
+the recorded observations and explicitly labels projections and unmeasured
+conditions; the earlier measurements were not rerun.
+
+A fresh API readback at 17:22:28 UTC on September 19 reconfirmed empty schedules
+and disabled workers.dev/preview URLs for all three Workers, with both benchmark
+and runner gates still false. This readback verifies the paused settings only;
+the September 13 usage totals above remain the historical analytics snapshot.
