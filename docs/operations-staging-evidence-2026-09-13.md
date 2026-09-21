@@ -70,6 +70,12 @@ scheduled timestamp contained seconds within the scheduled minute. The fix
 validates that event timestamp before network work and floors it to the
 five-minute epoch grid. Delayed delivery cannot move it to another slot.
 
+A September 21 source review also identified future timestamps reaching the
+probe before rejection. The source now rejects them against a clock captured
+before any effects, including future times inside the current slot. Fixed-clock
+regression checks cover those cases with zero fetch/database calls. This later
+source correction has not been deployed to the paused staging Workers.
+
 The fixed finite schedule was `10-35/5 14 13 9 *`. Removing it at 14:21:10
 still allowed one 14:25 invocation during propagation. Four real GETs to the
 allowlisted portfolio URL persisted; all returned HTTP 200 and outcome `ok`.

@@ -116,14 +116,20 @@ test('scheduled probes persist the scheduled five-minute slot despite timer jitt
   }
 });
 
-test('invalid scheduler timestamps are rejected before probing or writing', async (t) => {
+test('invalid and future scheduler timestamps are rejected before probing or writing', async (t) => {
+  const nowMs = Date.UTC(2026, 8, 13, 2, 30, 25);
+  t.mock.method(Date, 'now', () => nowMs);
   const fetchMock = t.mock.method(globalThis, 'fetch', async () => new Response(null, { status: 200 }));
-  for (const scheduledTime of [-1, NaN, Infinity, undefined, '300000', 300000.5]) {
+  const db = { prepare: t.mock.fn(), batch: t.mock.fn() };
+  for (const scheduledTime of [-1, NaN, Infinity, undefined, '300000', 300000.5,
+    nowMs + 1, nowMs + 300000, Number.MAX_SAFE_INTEGER]) {
     await assert.rejects(() => worker.scheduled({ scheduledTime }, {
-      PROTOTYPE_ONLY: 'true', PROTOTYPE_DB: {},
+      PROTOTYPE_ONLY: 'true', PROTOTYPE_DB: db,
     }), /Invalid scheduled time/);
   }
   assert.equal(fetchMock.mock.callCount(), 0);
+  assert.equal(db.prepare.mock.callCount(), 0);
+  assert.equal(db.batch.mock.callCount(), 0);
 });
 
 test('retention statements bind a fixed small batch and reject invalid clocks', () => {
