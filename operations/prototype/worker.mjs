@@ -96,11 +96,17 @@ export default {
   },
   async scheduled(event, env) {
     if (env.PROTOTYPE_ONLY !== 'true' || !env.PROTOTYPE_DB) throw new Error('Prototype is not configured');
+    const startedAt = Date.now();
+    if (!Number.isSafeInteger(event.scheduledTime) || event.scheduledTime < 0
+      || event.scheduledTime > startedAt) throw new Error('Invalid scheduled time');
+    // Cloudflare can schedule within the minute. Anchor to its timestamp, not delivery time.
+    const slot = Math.floor(event.scheduledTime / 300000) * 300000;
     const primary = await probeWorkload();
     const confirmation = primary.outcome === 'success' ? null : await probeWorkload();
     const results = await databaseWorkload(env.PROTOTYPE_DB, {
-      slot: event.scheduledTime, observedAt: Date.now(), primary, confirmation,
+      slot, observedAt: Date.now(), primary, confirmation,
     });
-    console.log(JSON.stringify({ workload: 'prototype', database: results.map(({ meta }) => ({ rowsRead: meta?.rows_read, rowsWritten: meta?.rows_written })) }));
+    console.log(JSON.stringify({ workload: 'prototype', scheduledTimeMs: event.scheduledTime, slotMs: slot,
+      database: results.map(({ meta }) => ({ rowsRead: meta?.rows_read, rowsWritten: meta?.rows_written })) }));
   },
 };
