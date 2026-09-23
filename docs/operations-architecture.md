@@ -2,11 +2,13 @@
 
 Refs #229. Decision version: `phase1-v1`, 2026-09-10.
 
-Phase 1 provides a local backend foundation. Cloudflare Workers, D1, and Access
-are the design target from the execution plan; account provisioning, production
-adoption, deployment, and paid plans remain unapproved. The $0/month assumption
-is conditional on the staging measurements below. No dashboard route, real
-collector, owner endpoint, or production resources are activated by this change.
+Phase 1 provides a backend foundation. Cloudflare Workers, D1, and Access are
+the design target. Isolated Free-plan staging was subsequently authorized and
+measured on 2026-09-13; production adoption and paid plans remain unapproved.
+The [staging evidence](operations-staging-evidence-2026-09-13.md) records successful
+component checks and the still-open provider exit gate. The $0/month assumption
+remains conditional. No dashboard route, production collector, owner mutation
+endpoint, or production resources are activated by this change.
 
 ## Architecture decision
 
@@ -169,7 +171,7 @@ such. [Access validation](https://developers.cloudflare.com/cloudflare-one/acces
 
 ## Cost assumption and required staging evidence
 
-Provider docs rechecked 2026-09-11 UTC: Workers Free allows 100,000 requests/day;
+Provider docs rechecked 2026-09-13 UTC: Workers Free allows 100,000 requests/day;
 free HTTP and cron invocations each have 10 ms CPU. Network/database waiting is
 not CPU time. Cold key import and authentication must be measured, not inferred
 from local elapsed time. [Pricing](https://developers.cloudflare.com/workers/platform/pricing/),
@@ -185,8 +187,8 @@ other account usage, traffic, retention, and owner authentication eligibility.
 [D1 pricing](https://developers.cloudflare.com/d1/platform/pricing/),
 [D1 limits](https://developers.cloudflare.com/d1/platform/limits/)
 
-Before Phase 1's provider exit gate can pass, obtain approval for an isolated
-Cloudflare staging target and record:
+Before Phase 1's provider exit gate can pass, complete the following evidence
+for the authorized isolated Cloudflare staging target:
 
 1. Account plan/Access eligibility, exact reviewed source, compatibility date,
    scratch database ID, deployed Worker version, and actual five-minute schedule.
@@ -204,7 +206,9 @@ Cloudflare staging target and record:
 
 Local `npm run prototype:operations` uses a synthetic response and generated key:
 it sends zero network requests and reports Cloudflare CPU/D1 measurements as
-`null`. Staging measurements and provider selection remain pending; no local
+`null`. The [dated staging report](operations-staging-evidence-2026-09-13.md)
+separates real provider measurements from synthetic checks and extrapolations.
+Full production-path feasibility and provider adoption remain pending; no local
 timing is presented as provider feasibility evidence.
 
 ## Phase boundaries and verification
