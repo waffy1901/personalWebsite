@@ -13,6 +13,7 @@ import { BrowserRouter, MemoryRouter } from "react-router"
 import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { SubmissionError } from "@formspree/core"
 import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
@@ -41,13 +42,17 @@ const formspreeMockState = vi.hoisted(() => ({
 }))
 const routePreloadMock = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 
-vi.mock("@formspree/react", () => ({
-  useForm: () => [
-    formspreeMockState.current,
-    formspreeSubmitMock,
-  ],
-  ValidationError: () => null,
-}))
+vi.mock("@formspree/react", async (importOriginal) => {
+  const actual = await importOriginal()
+
+  return {
+    ...actual,
+    useForm: () => [
+      formspreeMockState.current,
+      formspreeSubmitMock,
+    ],
+  }
+})
 
 vi.mock("./utils/routePrefetch.js", () => ({
   preloadRoute: routePreloadMock,
@@ -965,12 +970,135 @@ describe("App routes", () => {
     await waitFor(() => expect(successStatus).toHaveFocus())
   })
 
-  it("renders and focuses a general contact form submission error", async () => {
+  it("renders and focuses general contact failures with canonical email recovery", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     formspreeMockState.current = {
-      errors: {
-        getFieldErrors: () => [],
-        getFormErrors: () => [{ message: "Submission failed" }],
-      },
+      errors: new SubmissionError({ message: "Submission failed" }),
+      submitting: false,
+      succeeded: false,
+    }
+    renderRoute("/contact")
+
+    const submissionAlert = await screen.findByRole("alert")
+    const recoveryLink = screen.getByRole("link", { name: /open an email draft/i })
+
+    expect(submissionAlert).toHaveTextContent(/message could not be sent/i)
+    expect(submissionAlert).toHaveTextContent(/try again, or email me directly/i)
+    expect(submissionAlert).toHaveAttribute("tabindex", "-1")
+    expect(recoveryLink).toHaveAttribute("href", socialLinks.find((link) => link.id === "email").href)
+    expect(screen.getByLabelText(/first name/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/last name/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/^email$/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/message/i)).not.toHaveAttribute("aria-invalid")
+    await waitFor(() => expect(submissionAlert).toHaveFocus())
+
+    await waitFor(() =>
+      expect(document.getElementById("google-analytics-script")).toBeInTheDocument()
+    )
+    await clickWithoutNavigation(user, recoveryLink)
+    expect(getAnalyticsEvents("contact_email_click")).toEqual([
+      [
+        "event",
+        "contact_email_click",
+        expect.objectContaining({
+          link_url: "mailto:waffyahmed@gmail.com",
+          placement: "contact_form_error_recovery",
+          send_to: "G-TEST123",
+        }),
+      ],
+    ])
+  })
+
+  it("associates Formspree field errors with every visible contact control", async () => {
+    formspreeMockState.current = {
+      errors: new SubmissionError(
+        { field: "firstName", message: "Enter your first name." },
+        { field: "lastName", message: "Enter your last name." },
+        { field: "email", message: "Use a valid email address." },
+        { field: "message", message: "Add a little more detail." }
+      ),
+      submitting: false,
+      succeeded: false,
+    }
+    renderRoute("/contact")
+
+    const submissionAlert = await screen.findByRole("alert")
+    const fields = [
+      ["first name", "firstName-error", "First name Enter your first name."],
+      ["last name", "lastName-error", "Last name Enter your last name."],
+      ["^email$", "email-error", "Email Use a valid email address."],
+      ["message", "message-error", "Message Add a little more detail."],
+    ]
+
+    expect(submissionAlert).toHaveTextContent(/correct the highlighted fields/i)
+    expect(screen.queryByRole("link", { name: /open an email draft/i })).not.toBeInTheDocument()
+    for (const [label, errorId, message] of fields) {
+      const field = screen.getByLabelText(new RegExp(label, "i"))
+
+      expect(field).toHaveAttribute("aria-invalid", "true")
+      expect(field).toHaveAttribute("aria-describedby", expect.stringContaining(errorId))
+      expect(document.getElementById(errorId)).toHaveTextContent(message)
+    }
+    expect(screen.getByLabelText(/message/i)).toHaveAttribute(
+      "aria-describedby",
+      "message-hint message-error"
+    )
+    await waitFor(() => expect(submissionAlert).toHaveFocus())
+  })
+
+  it("keeps combined form and field errors actionable", async () => {
+    formspreeMockState.current = {
+      errors: new SubmissionError(
+        { message: "Service unavailable." },
+        { field: "email", message: "Use a valid email address." }
+      ),
+      submitting: false,
+      succeeded: false,
+    }
+    renderRoute("/contact")
+
+    const submissionAlert = await screen.findByRole("alert")
+
+    expect(submissionAlert).toHaveTextContent(/correct the highlighted fields, try again, or email me directly/i)
+    expect(screen.getByRole("link", { name: /open an email draft/i })).toHaveAttribute(
+      "href",
+      "mailto:waffyahmed@gmail.com"
+    )
+    expect(screen.getByLabelText(/^email$/i)).toHaveAttribute("aria-invalid", "true")
+    expect(document.getElementById("email-error")).toHaveTextContent(
+      "Email Use a valid email address."
+    )
+    expect(screen.getByLabelText(/first name/i)).not.toHaveAttribute("aria-invalid")
+  })
+
+  it("gives unknown provider field failures general recovery without invalidating controls", async () => {
+    formspreeMockState.current = {
+      errors: new SubmissionError({
+        field: "unexpectedField",
+        message: "Unexpected provider error.",
+      }),
+      submitting: false,
+      succeeded: false,
+    }
+    renderRoute("/contact")
+
+    const submissionAlert = await screen.findByRole("alert")
+
+    expect(submissionAlert).toHaveTextContent(/try again, or email me directly/i)
+    expect(screen.getByRole("link", { name: /open an email draft/i })).toHaveAttribute(
+      "href",
+      "mailto:waffyahmed@gmail.com"
+    )
+    expect(screen.getByLabelText(/first name/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/last name/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/^email$/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/message/i)).not.toHaveAttribute("aria-invalid")
+  })
+
+  it("gives empty provider errors general recovery without invalidating controls", async () => {
+    formspreeMockState.current = {
+      errors: new SubmissionError(),
       submitting: false,
       succeeded: false,
     }
@@ -979,8 +1107,77 @@ describe("App routes", () => {
     const submissionAlert = await screen.findByRole("alert")
 
     expect(submissionAlert).toHaveTextContent(/message could not be sent/i)
-    expect(submissionAlert).toHaveAttribute("tabindex", "-1")
-    await waitFor(() => expect(submissionAlert).toHaveFocus())
+    expect(submissionAlert).toHaveTextContent(/try again, or email me directly/i)
+    expect(screen.getByRole("link", { name: /open an email draft/i })).toHaveAttribute(
+      "href",
+      "mailto:waffyahmed@gmail.com"
+    )
+    expect(screen.getByLabelText(/first name/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/last name/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/^email$/i)).not.toHaveAttribute("aria-invalid")
+    expect(screen.getByLabelText(/message/i)).not.toHaveAttribute("aria-invalid")
+  })
+
+  it("preserves values and native constraints while contact errors resolve", async () => {
+    const user = userEvent.setup()
+    formspreeMockState.current = {
+      errors: new SubmissionError({
+        field: "email",
+        message: "Use a valid email address.",
+      }),
+      submitting: false,
+      succeeded: false,
+    }
+    const view = renderRoute("/contact")
+    const firstName = await screen.findByLabelText(/first name/i)
+    const email = screen.getByLabelText(/^email$/i)
+    const message = screen.getByLabelText(/message/i)
+
+    await user.type(firstName, "Waffy")
+    await user.type(email, "waffy@example.com")
+    await user.type(message, "Hello from a real visitor.")
+    expect(firstName).toBeRequired()
+    expect(firstName).toHaveAttribute("maxlength", "60")
+    expect(email).toHaveAttribute("type", "email")
+    expect(email).toHaveAttribute("maxlength", "254")
+    expect(message).toHaveAttribute("minlength", "10")
+    expect(message).toHaveAttribute("maxlength", "1500")
+    expect(screen.getByRole("alert")).toBeInTheDocument()
+    expect(email).toHaveAttribute("aria-invalid", "true")
+
+    formspreeMockState.current = {
+      errors: null,
+      submitting: false,
+      succeeded: false,
+    }
+    view.rerender(
+      <MemoryRouter initialEntries={["/contact"]}>
+        <App />
+      </MemoryRouter>
+    )
+
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument())
+    expect(firstName).toHaveValue("Waffy")
+    expect(email).toHaveValue("waffy@example.com")
+    expect(message).toHaveValue("Hello from a real visitor.")
+    expect(email).not.toHaveAttribute("aria-invalid")
+    expect(email).not.toHaveAttribute("aria-describedby")
+    expect(message).toHaveAttribute("aria-describedby", "message-hint")
+  })
+
+  it("disables contact submission while Formspree is submitting", async () => {
+    formspreeMockState.current = {
+      errors: null,
+      submitting: true,
+      succeeded: false,
+    }
+    renderRoute("/contact")
+
+    const submitButton = await screen.findByRole("button", { name: /send message/i })
+
+    expect(submitButton).toBeDisabled()
+    fireEvent.submit(submitButton.closest("form"))
+    expect(formspreeSubmitMock).not.toHaveBeenCalled()
   })
 
   it("publishes ProfilePage structured data with a main entity", () => {
