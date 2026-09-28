@@ -10,6 +10,34 @@ const fieldLimits = {
   messageMax: 1500,
 }
 
+const visibleFieldNames = ["firstName", "lastName", "email", "message"]
+
+const getContactErrorState = (errors) => {
+  if (!errors) {
+    return {
+      hasFieldErrors: false,
+      hasGeneralErrors: false,
+      fieldsWithErrors: new Set(),
+    }
+  }
+
+  const fieldsWithErrors = new Set(
+    visibleFieldNames.filter((field) => errors.getFieldErrors(field).length > 0)
+  )
+  const hasUnknownFieldErrors = errors
+    .getAllFieldErrors()
+    .some(([field]) => !visibleFieldNames.includes(field))
+
+  return {
+    hasFieldErrors: fieldsWithErrors.size > 0,
+    hasGeneralErrors:
+      errors.getFormErrors().length > 0 ||
+      hasUnknownFieldErrors ||
+      fieldsWithErrors.size === 0,
+    fieldsWithErrors,
+  }
+}
+
 function ContactForm() {
   const formKey = import.meta.env.VITE_FORMSPREE_KEY
   const emailLink = socialLinks.find((link) => link.id === "email")
@@ -43,13 +71,16 @@ function ContactForm() {
     )
   }
 
-  return <ContactFormFields formKey={formKey} />
+  return <ContactFormFields formKey={formKey} emailLink={emailLink} />
 }
 
-function ContactFormFields({ formKey }) {
+function ContactFormFields({ formKey, emailLink }) {
   const [state, handleSubmit] = useForm(formKey)
   const successRef = useRef(null)
   const errorRef = useRef(null)
+  const { hasFieldErrors, hasGeneralErrors, fieldsWithErrors } = getContactErrorState(
+    state.errors
+  )
   const handleTrackedSubmit = (event) => {
     if (state.submitting) {
       event.preventDefault()
@@ -110,10 +141,33 @@ function ContactFormFields({ formKey }) {
             tabIndex="-1"
             className="mb-4 rounded-lg border border-[#FFB077]/40 bg-[#F96302]/15 p-4 text-sm text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-[#FFB077] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
           >
-            <p className="font-black text-white">The message could not be sent.</p>
-            <p className="mt-1 leading-relaxed text-slate-200">
-              Please check the highlighted fields and try again.
+            <p className="font-black text-white">
+              {hasGeneralErrors
+                ? "The message could not be sent."
+                : "Please correct the highlighted fields."}
             </p>
+            <p className="mt-1 leading-relaxed text-slate-200">
+              {hasGeneralErrors && hasFieldErrors
+                ? "Please correct the highlighted fields, try again, or email me directly."
+                : hasGeneralErrors
+                  ? "Please try again, or email me directly."
+                  : "Please correct the highlighted fields and try again."}
+            </p>
+            {hasGeneralErrors && emailLink ? (
+              <a
+                className="mt-3 inline-flex font-black text-[#FFB077] underline"
+                href={emailLink.href}
+                onClick={() =>
+                  trackLinkClick("contact_email_click", {
+                    href: emailLink.href,
+                    label: emailLink.label,
+                    placement: "contact_form_error_recovery",
+                  })
+                }
+              >
+                Open an email draft
+              </a>
+            ) : null}
           </div>
         ) : null}
         <div className="absolute left-[-9999px] h-px w-px overflow-hidden" aria-hidden="true">
@@ -139,7 +193,21 @@ function ContactFormFields({ formKey }) {
               autoComplete="given-name"
               title="First name can be up to 60 characters."
               required
+              aria-invalid={fieldsWithErrors.has("firstName") || undefined}
+              aria-describedby={
+                fieldsWithErrors.has("firstName") ? "firstName-error" : undefined
+              }
             />
+            {fieldsWithErrors.has("firstName") ? (
+              <div id="firstName-error">
+                <ValidationError
+                  prefix="First name"
+                  field="firstName"
+                  errors={state.errors}
+                  className="mt-2 text-sm font-bold text-[#FFB077]"
+                />
+              </div>
+            ) : null}
           </div>
           <div>
             <label htmlFor="lastName" className="mb-2 block font-black text-slate-200">Last Name</label>
@@ -153,7 +221,21 @@ function ContactFormFields({ formKey }) {
               autoComplete="family-name"
               title="Last name can be up to 60 characters."
               required
+              aria-invalid={fieldsWithErrors.has("lastName") || undefined}
+              aria-describedby={
+                fieldsWithErrors.has("lastName") ? "lastName-error" : undefined
+              }
             />
+            {fieldsWithErrors.has("lastName") ? (
+              <div id="lastName-error">
+                <ValidationError
+                  prefix="Last name"
+                  field="lastName"
+                  errors={state.errors}
+                  className="mt-2 text-sm font-bold text-[#FFB077]"
+                />
+              </div>
+            ) : null}
           </div>
         </div>
         <div className="mb-4">
@@ -168,13 +250,19 @@ function ContactFormFields({ formKey }) {
             autoComplete="email"
             title="Use a valid email address so I can reply."
             required
+            aria-invalid={fieldsWithErrors.has("email") || undefined}
+            aria-describedby={fieldsWithErrors.has("email") ? "email-error" : undefined}
           />
-          <ValidationError
-            prefix="Email"
-            field="email"
-            errors={state.errors}
-            className="mt-2 text-sm font-bold text-[#FFB077]"
-          />
+          {fieldsWithErrors.has("email") ? (
+            <div id="email-error">
+              <ValidationError
+                prefix="Email"
+                field="email"
+                errors={state.errors}
+                className="mt-2 text-sm font-bold text-[#FFB077]"
+              />
+            </div>
+          ) : null}
         </div>
         <div className="mb-4">
           <label htmlFor="message" className="mb-2 block font-black text-slate-200">Message</label>
@@ -188,16 +276,26 @@ function ContactFormFields({ formKey }) {
             maxLength={fieldLimits.messageMax}
             title="Message must be 10 to 1500 characters."
             required
+            aria-invalid={fieldsWithErrors.has("message") || undefined}
+            aria-describedby={
+              fieldsWithErrors.has("message")
+                ? "message-hint message-error"
+                : "message-hint"
+            }
           />
-          <p className="mt-2 text-xs font-bold text-slate-400">
+          <p id="message-hint" className="mt-2 text-xs font-bold text-slate-400">
             {fieldLimits.messageMin}-{fieldLimits.messageMax} characters helps keep the signal clear.
           </p>
-          <ValidationError
-            prefix="Message"
-            field="message"
-            errors={state.errors}
-            className="mt-2 text-sm font-bold text-[#FFB077]"
-          />
+          {fieldsWithErrors.has("message") ? (
+            <div id="message-error">
+              <ValidationError
+                prefix="Message"
+                field="message"
+                errors={state.errors}
+                className="mt-2 text-sm font-bold text-[#FFB077]"
+              />
+            </div>
+          ) : null}
         </div>
         <div className="flex justify-end">
           <button
