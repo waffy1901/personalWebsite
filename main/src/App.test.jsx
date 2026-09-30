@@ -1303,8 +1303,11 @@ describe("App routes", () => {
     expect(aiSummary).toContain(
       "Re-architected order reconciliation from Cloud SQL to Cloud Spanner"
     )
+    expect(aiSummary).toContain(
+      "Led a team of 4 engineers from design through stakeholder validation"
+    )
     expect(aiSummary).toMatch(
-      /GitHub Actions OIDC authentication for\s+JFrog/
+      /Drove JFrog OIDC adoption across\s+2 teams and 20 repositories/
     )
     expect(portfolioJson.skills).toContain("Cloud Spanner")
     expect(
@@ -1386,6 +1389,10 @@ describe("App routes", () => {
     expect(screen.getByRole("heading", { name: "Experience" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Skills" })).toBeInTheDocument()
+    expect(screen.getByText(/Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent/)).toBeInTheDocument()
+    expect(screen.getByText(/Drove JFrog OIDC adoption across 2 teams and 20 repositories/)).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: /^CDC Data Reconciliation/ })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Fintech @ Georgia Tech" })).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: /email:\s*waffyahmed@gmail.com/i })).toHaveAttribute(
       "href",
       "mailto:waffyahmed@gmail.com"
@@ -1598,7 +1605,7 @@ describe("App routes", () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/7 weekly runs via kubernetes cronjob/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/github actions oidc authentication for jfrog/i)
+      screen.getByText(/drove jfrog oidc adoption across 2 teams and 20 repositories/i)
     ).toBeInTheDocument()
     expect(screen.getByText(/nodeport usage/i)).toBeInTheDocument()
     await waitFor(() => expect(backButton).toHaveFocus())

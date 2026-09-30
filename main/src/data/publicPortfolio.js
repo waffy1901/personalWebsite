@@ -2,7 +2,7 @@ import { currentEmployment } from "./siteIdentity.js"
 
 export const publicPortfolio = {
   schemaVersion: "1.1",
-  contentLastReviewed: "2026-08-08",
+  contentLastReviewed: "2026-09-29",
   person: {
     title: currentEmployment.currentTitle,
     location: "United States",

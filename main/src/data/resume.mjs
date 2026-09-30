@@ -26,6 +26,8 @@ export const resumeDocument = {
           title: "Software Engineer II",
           date: "July 2026 - Present",
           bullets: [
+            "Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent spanning 7 payment applications; unified code/config tracing, BigQuery, and store telemetry with historical baselines and coverage checks, delivering cited diagnoses and suggested fixes while suppressing false findings.",
+            "Drove JFrog OIDC adoption across 2 teams and 20 repositories, replacing shared Maven/Docker credentials with short-lived, job-scoped tokens; resolved 1,100+ security findings tied to plaintext token exposure in CI logs.",
             "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets, eliminating human production access.",
             "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation; automated 7 weekly runs via Kubernetes CronJob, eliminating ~120 engineer-hours of recurring toil annually.",
           ],
@@ -55,14 +57,6 @@ export const resumeDocument = {
     },
   ],
   projects: [
-    {
-      name: "Fintech @ Georgia Tech",
-      technologies: "React, React Native, TypeScript, Stripe API, Chakra UI",
-      bullets: [
-        "Reduced page load times by ~35% via transforming a multi-page credit card website into a React-based single-page application, streamlining card wallet management and adding a card removal feature for authenticated users.",
-        "Implemented a cart page for a React Native grocery application, allowing users to add/remove items, adjust quantities, view real-time total costs, and integrated the Stripe API for streamlined in-app credit card payments.",
-      ],
-    },
     {
       name: "CDC Data Reconciliation",
       technologies: "Python, FastAPI, SQLite, React, Tailwind CSS",
