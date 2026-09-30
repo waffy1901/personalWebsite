@@ -21,7 +21,7 @@
 
 - Run `npm run generate:resume` from the repository root; requires Playwright Chromium, the installed Computer Modern fonts, Poppler `pdftoppm`, and `cwebp` on PATH.
 - `main/scripts/generate-resume-assets.mjs` creates a tagged Letter PDF, rasterizes each preview directly from that final PDF, and encodes WebP losslessly. All outputs are prepared and checked in a temporary directory before replacing public assets.
-- `main/scripts/resume-layout-reference.json` records the owner-approved Downloads PDF's physical lines, baselines, prose widths, and section rules. Its source hash and historical Git commit make the reference reproducible without the owner's local file.
+- `main/scripts/resume-layout-reference.json` records the owner-approved PDF's physical lines, baselines, prose widths, and section rules. The exact owner upload is retained at `main/scripts/fixtures/resume-layout-source.pdf`; provenance uses that fixture path and SHA-256 because the source was supplied outside Git history.
 - `main/scripts/resume-layout.mjs` checks that the print lines still contain the canonical words. A resume content change requires an explicit layout review; do not make a mismatch pass by weakening text normalization or silently reflowing lines.
 - Print positioning does not constrain the responsive semantic HTML alternative in `ResumeDocument.jsx`.
 
