@@ -73,20 +73,81 @@ jobs:
             exit 1
           fi
 
-          deploy_json="$(curl -fsS \
+          curl -fsS \
             -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
-            "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/deploys?production=true&per_page=1")"
-          deploy_state="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); print((deploys[0] if deploys else {}).get("state", ""))')"
-          deploy_commit="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); print((deploys[0] if deploys else {}).get("commit_ref", ""))')"
-          deploy_id="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); print((deploys[0] if deploys else {}).get("id", ""))')"
-          deploy_url="$(printf '%s' "$deploy_json" | python3 -c 'import json,sys; deploys=json.load(sys.stdin); deploy=deploys[0] if deploys else {}; print(deploy.get("deploy_ssl_url") or deploy.get("ssl_url") or "")')"
+            "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}" \
+            | python3 -c '
+          import json
+          import re
+          import sys
+          from urllib.parse import urlsplit
 
-          test "$deploy_state" = ready
-          test "$deploy_commit" = "$TARGET_COMMIT"
-          test -n "$deploy_id"
-          test -n "$deploy_url"
-          echo "id=$deploy_id" >> "$GITHUB_OUTPUT"
-          echo "url=$deploy_url" >> "$GITHUB_OUTPUT"
+          expected_commit, output_path = sys.argv[1:]
+
+          def fail(message):
+              raise SystemExit(f"Invalid Netlify published deploy: {message}")
+
+          def reject_constant(value):
+              fail(f"response contains invalid JSON constant {value}")
+
+          def unique_object(pairs):
+              result = {}
+              for key, value in pairs:
+                  if key in result:
+                      fail("response contains a duplicate object member")
+                  result[key] = value
+              return result
+
+          try:
+              response = sys.stdin.buffer.read().decode("utf-8")
+              site = json.loads(
+                  response,
+                  parse_constant=reject_constant,
+                  object_pairs_hook=unique_object,
+              )
+          except (json.JSONDecodeError, UnicodeDecodeError):
+              fail("site response is not valid JSON")
+
+          if not isinstance(site, dict):
+              fail("site response must be an object")
+          deploy = site.get("published_deploy")
+          if not isinstance(deploy, dict):
+              fail("published_deploy must be an object")
+          if deploy.get("state") != "ready":
+              fail("published_deploy is not ready")
+
+          commit_ref = deploy.get("commit_ref")
+          if not isinstance(commit_ref, str) or not re.fullmatch(r"[0-9a-f]{40}", commit_ref):
+              fail("published_deploy.commit_ref must be a lowercase 40-character SHA")
+          if commit_ref != expected_commit:
+              fail("published_deploy.commit_ref does not match target_commit")
+
+          deploy_id = deploy.get("id")
+          if not isinstance(deploy_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}", deploy_id):
+              fail("published_deploy.id is missing or unsafe")
+
+          deploy_url = deploy.get("deploy_ssl_url") or deploy.get("ssl_url")
+          if not isinstance(deploy_url, str):
+              fail("published_deploy HTTPS URL is missing")
+          if any(
+              character.isspace() or ord(character) < 32 or ord(character) == 127
+              for character in deploy_url
+          ):
+              fail("published_deploy HTTPS URL contains whitespace or control characters")
+          if "\\" in deploy_url:
+              fail("published_deploy URL is malformed")
+          try:
+              parsed_url = urlsplit(deploy_url)
+              parsed_url.port
+          except ValueError:
+              fail("published_deploy URL is malformed")
+          if parsed_url.scheme != "https" or not parsed_url.hostname or parsed_url.username or parsed_url.password:
+              fail("published_deploy URL must be HTTPS without credentials")
+
+          with open(output_path, "a", encoding="utf-8") as output:
+              output.write(f"id={deploy_id}\n")
+              output.write(f"url={deploy_url}\n")
+          ' "$TARGET_COMMIT" "$GITHUB_OUTPUT"
 
       - name: Require matching deployment provenance release
         id: deploy_release

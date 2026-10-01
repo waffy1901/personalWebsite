@@ -7,6 +7,8 @@ This repository keeps two independent release records:
 
 The deployment-release workflow exits successfully without creating a GitHub release when Netlify marks the exact commit's production deploy with `skipped: true` or returns the exact no-content cancellation signal. This covers non-deployable commits without weakening the exact-commit gate: other terminal deploy failures, malformed responses, and polling timeouts still fail closed.
 
+The semantic-release workflow resolves production from `GET /api/v1/sites/{site_id}` and its `published_deploy` object. It does not select the newest deploy attempt, so a newer pending, failed, skipped, or unpublished ready deploy cannot displace the deployment currently serving production. Before publication, the workflow requires that pointer to be ready, match the requested lowercase 40-character commit SHA, and expose a safe nonempty deploy ID and HTTPS URL. Missing or malformed site and deployment metadata fails closed.
+
 `main/package.json` is the authoritative semantic version. `main/package-lock.json` repeats the same value in its top-level `version` and root-package `packages[""]` fields. A release request must use the package version without a `v`; the published tag receives the `v` prefix.
 
 ## Version policy
@@ -30,11 +32,23 @@ The primary implementation PR never changes `main/package.json` or `main/package
 ## Operator procedure
 
 1. Land the primary implementation with a merge commit on `main`, then wait for its **Create deployment release** workflow and Netlify production deploy to succeed.
-2. Confirm Netlify's current ready production deploy has the exact primary merge SHA as `commit_ref`, and confirm a non-draft `deploy-*` GitHub release targets that same SHA. Stop if production has advanced.
+2. Confirm Netlify's site-level `published_deploy` is ready and has the exact primary merge SHA as `commit_ref`, and confirm a non-draft `deploy-*` GitHub release targets that same SHA. Stop if production has advanced.
 3. For an assessment of `patch`, `minor`, or `major`, obtain a new direct `IMPLEMENT_TO_PR` grant and create a dedicated version-only `release-carrier` PR. Independently review it and merge only with later exact merge authorization. Do not treat the primary PR, its merge, or its deployment as authority for this carrier.
-4. Wait for the carrier merge's deployment release and Netlify production deploy. Confirm the current ready production deploy and non-draft `deploy-*` release both target that exact carrier merge SHA; stop if production has advanced.
+4. Wait for the carrier merge's deployment release and Netlify production deploy. Confirm the site-level `published_deploy` and non-draft `deploy-*` release both target that exact carrier merge SHA; stop if production has advanced.
 5. Ensure `main/package.json` and both version fields in `main/package-lock.json` agree at the carrier SHA. Run `npm run test:release` and the normal release checks.
 6. With a separate `RELEASE_OR_DEPLOY` grant, run **Publish semantic production release** from `main`. Provide the core version (for example `0.1.0`) and the exact 40-character carrier merge SHA. The workflow verifies ancestry on `main`, version consistency, Netlify readiness, matching deployment provenance, existing semantic releases/tags, and monotonic version ordering before creating a release.
 7. Read back the Actions run, tag target, non-draft release, Latest status, release notes, deployment release, and Netlify deploy metadata. Record those exact links and identifiers on the tracking issue.
 
 The workflow is idempotent only when the requested semantic tag and published non-draft release already point to the supplied commit. Tag-only, draft, duplicate, non-increasing, or different-target collisions fail for manual investigation.
+
+## Local verification
+
+Run the deterministic workflow fixtures and existing release checks from the repository root:
+
+```bash
+python3 scripts/test_semantic_release_workflow.py
+python3 scripts/test_netlify_deploy_state.py
+npm run test:release
+```
+
+The semantic-release fixture suite executes the workflow's embedded Netlify lookup with synthetic responses and the deployment-provenance JavaScript with synthetic GitHub release data. It makes no provider requests and performs no release or deployment writes.
