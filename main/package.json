@@ -29,7 +29,9 @@
     "performance:baseline": "node scripts/measure-route-performance.mjs --build --serve",
     "test:performance:baseline": "node --test scripts/measure-route-performance.node-test.mjs",
     "performance:first-navigation": "node scripts/measure-first-navigation.mjs --build --serve",
-    "test:performance:first-navigation": "node --test scripts/measure-first-navigation.node-test.mjs"
+    "test:performance:first-navigation": "node --test scripts/measure-first-navigation.node-test.mjs",
+    "performance:report": "node scripts/measure-route-performance-report.mjs",
+    "test:performance:report": "node --test scripts/route-performance-report.node-test.mjs"
   },
   "browserslist": {
     "production": [
