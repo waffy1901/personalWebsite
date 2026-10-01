@@ -65,3 +65,9 @@ jobs:
 
       - name: Check frontend performance policy
         run: node .codex/skills/portfolio-performance-auditor/scripts/check_frontend_performance.mjs "$GITHUB_WORKSPACE"
+
+      - name: Test historical Issue 174 performance contract
+        run: npm run test:performance:baseline
+
+      - name: Test route performance reporting
+        run: npm run test:performance:report

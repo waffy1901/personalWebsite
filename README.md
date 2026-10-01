@@ -139,6 +139,8 @@ Run these commands from the repository root:
 | `npm run test:performance:baseline` | Run performance-baseline measurement tests |
 | `npm run performance:first-navigation` | Measure first-navigation route performance |
 | `npm run test:performance:first-navigation` | Run first-navigation performance measurement tests |
+| `npm run performance:report` | Run the bounded full-route Lighthouse report harness; pass `--build --serve` for a complete local report |
+| `npm run test:performance:report` | Run deterministic full-route report, integrity, baseline-selection, and lifecycle tests |
 | `npm run build` | Create the production build |
 | `npm run preview` | Preview the production build locally |
 
@@ -154,6 +156,8 @@ Vite only exposes client-side environment variables prefixed with `VITE_`.
 | `VITE_SITE_URL` | Provides the canonical site URL |
 
 `VITE_DEPLOY_DATE` is injected by the production build without rewriting local `.env` files. Production builds pin `VITE_SITE_URL` to `https://waffy.dev`.
+
+Scheduled full-route performance evidence, compatibility rules, and reproducible local commands are documented in [`docs/performance-reporting.md`](docs/performance-reporting.md).
 
 Provide the Formspree and analytics values through a local `.env` file or Netlify environment variables. Do not commit secrets or private credentials.
 

@@ -20,6 +20,8 @@
     "test:performance:baseline": "npm --prefix main run test:performance:baseline --",
     "performance:first-navigation": "npm --prefix main run performance:first-navigation --",
     "test:performance:first-navigation": "npm --prefix main run test:performance:first-navigation --",
+    "performance:report": "npm --prefix main run performance:report --",
+    "test:performance:report": "npm --prefix main run test:performance:report --",
     "preview": "npm --prefix main run preview --"
   }
 }
