@@ -54,6 +54,9 @@ jobs:
       - name: Test Netlify deploy-state classifier
         run: python3 scripts/test_netlify_deploy_state.py
 
+      - name: Test semantic-release workflow guards
+        run: python3 scripts/test_semantic_release_workflow.py
+
       - name: Check AI discovery artifacts
         run: node .codex/skills/ai-discovery-maintainer/scripts/check_ai_discovery.mjs "$GITHUB_WORKSPACE"
 
