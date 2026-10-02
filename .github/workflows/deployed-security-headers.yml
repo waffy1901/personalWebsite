@@ -95,7 +95,9 @@ jobs:
           DEPLOYED_COMMIT: ${{ steps.production.outputs.commit }}
           PRODUCTION_HEALTH_STATUS: ${{ job.status }}
         run: |
-          echo "## Production health" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Deployed commit: \`${DEPLOYED_COMMIT:-unresolved}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Site: https://waffy.dev/" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Result: ${PRODUCTION_HEALTH_STATUS}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Production health"
+            echo "- Deployed commit: \`${DEPLOYED_COMMIT:-unresolved}\`"
+            echo "- Site: https://waffy.dev/"
+            echo "- Result: ${PRODUCTION_HEALTH_STATUS}"
+          } >> "$GITHUB_STEP_SUMMARY"
