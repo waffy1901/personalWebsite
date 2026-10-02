@@ -8,6 +8,7 @@
     "generate:public": "npm --prefix main run generate:public --",
     "generate:resume": "npm --prefix main run generate:resume --",
     "lint": "npm run lint:operations && npm --prefix main run lint --",
+    "lint:workflows": "bash scripts/check-workflows.sh",
     "test": "npm run test:operations && npm --prefix main run test --",
     "lint:operations": "npm --prefix operations run lint",
     "test:operations": "npm --prefix operations test",
