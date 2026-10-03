@@ -1,0 +1,61 @@
+name: External link report
+
+"on":
+  schedule:
+    - cron: "23 8 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: external-link-report-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Check current public external links
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.22.3
+
+      - name: Install checksum-pinned Lychee
+        run: bash scripts/install-lychee.sh "$RUNNER_TEMP/lychee"
+
+      - name: Run deterministic link-report fixtures
+        env:
+          LYCHEE_BIN: ${{ runner.temp }}/lychee/lychee
+        run: npm run test:links
+
+      - name: Build advisory external-link report
+        env:
+          LYCHEE_BIN: ${{ runner.temp }}/lychee/lychee
+        run: npm run links:report
+
+      - name: Publish report in the Actions summary
+        if: always()
+        run: |
+          if [ -f external-link-results/current/report.md ]; then
+            cat external-link-results/current/report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "External-link setup failed before a report checkpoint was written." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Retain external-link evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: external-link-report-v1-${{ github.run_id }}-${{ github.run_attempt }}
+          path: external-link-results/current
+          if-no-files-found: warn
+          retention-days: 21

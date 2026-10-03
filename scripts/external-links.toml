@@ -1,0 +1,17 @@
+# Lychee 0.24.2 policy for the scheduled external-link report.
+scheme = ["http", "https"]
+method = "get"
+accept = ["200..=299"]
+max_concurrency = 3
+host_concurrency = 1
+host_request_interval = "1s"
+timeout = 15
+max_redirects = 10
+max_retries = 0
+exclude_all_private = true
+include_fragments = "none"
+include_mail = false
+insecure = false
+cache = false
+suggest = false
+no_progress = true

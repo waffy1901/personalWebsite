@@ -23,6 +23,9 @@
     "test:performance:first-navigation": "npm --prefix main run test:performance:first-navigation --",
     "performance:report": "npm --prefix main run performance:report --",
     "test:performance:report": "npm --prefix main run test:performance:report --",
+    "links:inventory": "node scripts/check-external-links.mjs --inventory-only",
+    "links:report": "node scripts/check-external-links.mjs",
+    "test:links": "node --test scripts/check-external-links.node-test.mjs",
     "preview": "npm --prefix main run preview --"
   }
 }
