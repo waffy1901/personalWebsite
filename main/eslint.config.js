@@ -12,6 +12,7 @@ module.exports = [
       "node_modules/**",
       "playwright-report/**",
       "test-results/**",
+      "webkit-results/**",
     ],
   },
   js.configs.recommended,
@@ -63,7 +64,7 @@ module.exports = [
     },
   },
   {
-    files: ["playwright.production.config.js", "e2e/**/*.js"],
+    files: ["playwright.*.config.js", "e2e/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "commonjs",

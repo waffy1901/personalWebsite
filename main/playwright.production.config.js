@@ -43,12 +43,20 @@ module.exports = defineConfig({
   projects: [
     {
       name: "desktop-chromium",
+      metadata: {
+        browserEngine: "chromium",
+        viewportClass: "desktop",
+      },
       use: {
         viewport: { width: 1440, height: 1000 },
       },
     },
     {
       name: "mobile-chromium",
+      metadata: {
+        browserEngine: "chromium",
+        viewportClass: "mobile",
+      },
       use: {
         viewport: { width: 390, height: 844 },
         deviceScaleFactor: 1,
