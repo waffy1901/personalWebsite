@@ -8,6 +8,7 @@ handoff.md
 main/playwright-report/
 main/test-results/
 main/performance-results/
+external-link-results/
 
 # Machine-specific Codex/Headroom configuration
 .codex/config.toml
