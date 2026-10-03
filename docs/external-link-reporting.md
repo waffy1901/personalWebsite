@@ -50,6 +50,8 @@ Create the current inventory without network requests:
 npm run links:inventory
 ```
 
+Custom output directories must be strict descendants of the selected repository's `external-link-results/` directory, such as `external-link-results/local/inventory`. The checker rejects the owned output root itself, paths outside that subtree, and paths with existing symbolic-link or non-directory components before cleanup. A valid run replaces only its selected output directory and preserves sibling runs.
+
 Run the advisory real-link report explicitly:
 
 ```bash

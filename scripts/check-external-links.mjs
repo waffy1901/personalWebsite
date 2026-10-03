@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
-import { readFile, readdir, rm, mkdir, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import { isIP } from "node:net";
 import path from "node:path";
 import process from "node:process";
@@ -612,32 +612,79 @@ async function writeReport(outputDir, report) {
   await writeFile(path.join(outputDir, "report.md"), reportMarkdown(report));
 }
 
-function isWithin(parent, child) {
-  const relative = path.relative(parent, child);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
-}
-
-function assertSafeOutputDirectory(root, outputDir) {
+async function resetOwnedOutputDirectory(root, outputDir, { createRaw = false } = {}) {
   const resolvedRoot = path.resolve(root);
   const resolvedOutput = path.resolve(outputDir);
-  if (resolvedOutput === resolvedRoot || isWithin(resolvedOutput, resolvedRoot)) {
-    throw new CheckerError("Output directory cannot be the repository root or one of its ancestors.", "UNSAFE_OUTPUT_DIR");
+  let canonicalRoot;
+  try {
+    canonicalRoot = await realpath(resolvedRoot);
+  } catch (error) {
+    throw new CheckerError(
+      `Unable to resolve the repository root before output cleanup: ${error.message}`,
+      "UNSAFE_OUTPUT_DIR",
+    );
   }
-  if (isWithin(resolvedRoot, resolvedOutput)) {
-    const firstSegment = path.relative(resolvedRoot, resolvedOutput).split(path.sep)[0];
-    if (firstSegment !== "external-link-results") {
+
+  let rootStats;
+  try {
+    rootStats = await lstat(canonicalRoot);
+  } catch (error) {
+    throw new CheckerError(
+      `Unable to inspect the repository root before output cleanup: ${error.message}`,
+      "UNSAFE_OUTPUT_DIR",
+    );
+  }
+  if (!rootStats.isDirectory()) {
+    throw new CheckerError("The repository root must resolve to a directory.", "UNSAFE_OUTPUT_DIR");
+  }
+
+  const relativeOutput = path.relative(resolvedRoot, resolvedOutput);
+  const outputSegments = relativeOutput.split(path.sep).filter(Boolean);
+  if (
+    relativeOutput === ""
+    || relativeOutput.startsWith(`..${path.sep}`)
+    || relativeOutput === ".."
+    || path.isAbsolute(relativeOutput)
+    || outputSegments[0] !== "external-link-results"
+    || outputSegments.length < 2
+  ) {
+    throw new CheckerError(
+      "Output directory must be a strict descendant of the selected repository's external-link-results/ directory.",
+      "UNSAFE_OUTPUT_DIR",
+    );
+  }
+
+  let componentPath = canonicalRoot;
+  for (const segment of outputSegments) {
+    componentPath = path.join(componentPath, segment);
+    let componentStats;
+    try {
+      componentStats = await lstat(componentPath);
+    } catch (error) {
+      if (error.code === "ENOENT") break;
       throw new CheckerError(
-        "Output directories inside the repository must be under external-link-results/.",
+        `Unable to inspect output path component ${componentPath}: ${error.message}`,
+        "UNSAFE_OUTPUT_DIR",
+      );
+    }
+    if (componentStats.isSymbolicLink()) {
+      throw new CheckerError(
+        `Output path component cannot be a symbolic link: ${componentPath}`,
+        "UNSAFE_OUTPUT_DIR",
+      );
+    }
+    if (!componentStats.isDirectory()) {
+      throw new CheckerError(
+        `Output path component must be a directory: ${componentPath}`,
         "UNSAFE_OUTPUT_DIR",
       );
     }
   }
-  for (const protectedDirectory of ["main", "scripts", "docs", ".github", ".git", ".codex"]) {
-    const protectedPath = path.join(resolvedRoot, protectedDirectory);
-    if (isWithin(protectedPath, resolvedOutput)) {
-      throw new CheckerError(`Output directory cannot be inside ${protectedDirectory}/.`, "UNSAFE_OUTPUT_DIR");
-    }
-  }
+
+  const canonicalOutput = path.join(canonicalRoot, ...outputSegments);
+  await rm(canonicalOutput, { recursive: true, force: true });
+  await mkdir(createRaw ? path.join(canonicalOutput, "raw") : canonicalOutput, { recursive: true });
+  return canonicalOutput;
 }
 
 function refreshOutcomes(report, inventory, attemptsByUrl) {
@@ -691,9 +738,7 @@ export async function runReport({
   outputDir = path.resolve(outputDir);
   config = path.resolve(config);
   const deadline = Date.now() + overallTimeoutMs;
-  assertSafeOutputDirectory(root, outputDir);
-  await rm(outputDir, { recursive: true, force: true });
-  await mkdir(path.join(outputDir, "raw"), { recursive: true });
+  outputDir = await resetOwnedOutputDirectory(root, outputDir, { createRaw: true });
 
   let inventory;
   try {
@@ -825,8 +870,7 @@ async function runCli() {
     return;
   }
   if (options.inventoryOnly) {
-    assertSafeOutputDirectory(options.root, options.outputDir);
-    await rm(options.outputDir, { recursive: true, force: true });
+    options.outputDir = await resetOwnedOutputDirectory(options.root, options.outputDir);
     const inventory = await buildInventory(options);
     await writeInventory(options.outputDir, inventory);
     process.stdout.write(`Inventoried ${inventory.counts.eligible} eligible URL(s) and ${inventory.counts.excluded} exclusion(s).\n`);

@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
-import { chmod, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { chmod, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 
 import {
   buildInventory,
@@ -14,8 +16,10 @@ import {
 } from "./check-external-links.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const SCRIPT_PATH = path.join(SCRIPT_DIR, "check-external-links.mjs");
 const CONFIG_PATH = path.join(SCRIPT_DIR, "external-links.toml");
 const LYCHEE_BIN = process.env.LYCHEE_BIN;
+const execFileAsync = promisify(execFile);
 
 async function makeFixtureRoot({ dataText, portfolioText = "{}\n", rootReadmeBlock = "", mainReadmeBlock = "" }) {
   const root = await mkdtemp(path.join(os.tmpdir(), "external-links-fixture-"));
@@ -162,8 +166,11 @@ test("Lychee payload validation never infers missing results as success", () => 
 test("setup failures replace stale output and leave an honest checkpoint", async (t) => {
   const root = await makeFixtureRoot({ dataText: "export const url = 'https://example.com/';\n" });
   const outputDir = path.join(root, "external-link-results", "current");
+  const siblingOutputDir = path.join(root, "external-link-results", "previous");
   await mkdir(outputDir, { recursive: true });
   await writeFile(path.join(outputDir, "stale.txt"), "stale\n");
+  await mkdir(siblingOutputDir, { recursive: true });
+  await writeFile(path.join(siblingOutputDir, "sentinel.txt"), "preserve\n");
   t.after(() => rm(root, { recursive: true, force: true }));
   await assert.rejects(
     runReport({ root, outputDir, config: CONFIG_PATH, lychee: path.join(root, "missing-lychee") }),
@@ -173,20 +180,127 @@ test("setup failures replace stale output and leave an honest checkpoint", async
   assert.equal(report.completion.status, "setup-failure");
   assert.ok(report.completion.errors.length > 0);
   assert.match(await readFile(path.join(outputDir, "report.md"), "utf8"), /setup-failure/);
+  assert.equal(await readFile(path.join(siblingOutputDir, "sentinel.txt"), "utf8"), "preserve\n");
 });
 
-test("output cleanup rejects repository and source-directory targets", async (t) => {
+test("report cleanup rejects root, external, traversal, and lookalike targets without mutation", async (t) => {
   const root = await makeFixtureRoot({ dataText: "export const url = 'https://example.com/';\n" });
+  const outside = await mkdtemp(path.join(os.tmpdir(), "external-links-outside-"));
+  const sentinel = path.join(outside, "sentinel.txt");
+  await writeFile(sentinel, "preserve\n");
   t.after(() => rm(root, { recursive: true, force: true }));
+  t.after(() => rm(outside, { recursive: true, force: true }));
+
+  for (const outputDir of [
+    root,
+    path.join(root, "external-link-results"),
+    outside,
+    path.join(root, "external-link-results", "..", "main", "danger"),
+    path.join(root, "external-link-results-lookalike", "current"),
+  ]) {
+    await assert.rejects(
+      runReport({ root, outputDir, config: CONFIG_PATH, lychee: "missing" }),
+      /must be a strict descendant/,
+    );
+  }
+
   await assert.rejects(
-    runReport({ root, outputDir: root, config: CONFIG_PATH, lychee: "missing" }),
-    /cannot be the repository root/,
+    execFileAsync(process.execPath, [
+      SCRIPT_PATH,
+      "--inventory-only",
+      "--root", root,
+      "--output-dir", outside,
+    ]),
+    (error) => error.code === 2 && /must be a strict descendant/.test(error.stderr),
   );
-  await assert.rejects(
-    runReport({ root, outputDir: path.join(root, "main", "danger"), config: CONFIG_PATH, lychee: "missing" }),
-    /must be under external-link-results/,
-  );
+
+  assert.equal(await readFile(sentinel, "utf8"), "preserve\n");
   assert.match(await readFile(path.join(root, "main", "src", "data", "links.js"), "utf8"), /example\.com/);
+});
+
+test("report and inventory-only cleanup reject symlinks and non-directory components", async (t) => {
+  const root = await makeFixtureRoot({ dataText: "export const url = 'https://example.com/';\n" });
+  const outside = await mkdtemp(path.join(os.tmpdir(), "external-links-symlink-target-"));
+  const ownedRoot = path.join(root, "external-link-results");
+  const sentinel = path.join(outside, "sentinel.txt");
+  await writeFile(sentinel, "preserve\n");
+  await mkdir(ownedRoot);
+  t.after(() => rm(root, { recursive: true, force: true }));
+  t.after(() => rm(outside, { recursive: true, force: true }));
+
+  const linkedRun = path.join(ownedRoot, "linked-run");
+  await symlink(outside, linkedRun, "dir");
+  await assert.rejects(
+    runReport({ root, outputDir: linkedRun, config: CONFIG_PATH, lychee: "missing" }),
+    /cannot be a symbolic link/,
+  );
+  assert.equal(await readFile(sentinel, "utf8"), "preserve\n");
+
+  const danglingRun = path.join(ownedRoot, "dangling-run");
+  await symlink(path.join(outside, "missing"), danglingRun, "dir");
+  await assert.rejects(
+    execFileAsync(process.execPath, [
+      SCRIPT_PATH,
+      "--inventory-only",
+      "--root", root,
+      "--output-dir", danglingRun,
+    ]),
+    (error) => error.code === 2 && /cannot be a symbolic link/.test(error.stderr),
+  );
+
+  const intermediateLink = path.join(ownedRoot, "linked-parent");
+  await symlink(outside, intermediateLink, "dir");
+  await assert.rejects(
+    execFileAsync(process.execPath, [
+      SCRIPT_PATH,
+      "--inventory-only",
+      "--root", root,
+      "--output-dir", path.join(intermediateLink, "run"),
+    ]),
+    (error) => error.code === 2 && /cannot be a symbolic link/.test(error.stderr),
+  );
+
+  const fileComponent = path.join(ownedRoot, "file-component");
+  await writeFile(fileComponent, "not a directory\n");
+  await assert.rejects(
+    runReport({ root, outputDir: path.join(fileComponent, "run"), config: CONFIG_PATH, lychee: "missing" }),
+    /must be a directory/,
+  );
+
+  await rm(ownedRoot, { recursive: true, force: true });
+  await symlink(outside, ownedRoot, "dir");
+  await assert.rejects(
+    execFileAsync(process.execPath, [
+      SCRIPT_PATH,
+      "--inventory-only",
+      "--root", root,
+      "--output-dir", path.join(ownedRoot, "current"),
+    ]),
+    (error) => error.code === 2 && /cannot be a symbolic link/.test(error.stderr),
+  );
+  assert.equal(await readFile(sentinel, "utf8"), "preserve\n");
+});
+
+test("inventory-only cleanup replaces one owned run and preserves sibling runs", async (t) => {
+  const root = await makeFixtureRoot({ dataText: "export const url = 'https://example.com/';\n" });
+  const current = path.join(root, "external-link-results", "nested", "current");
+  const sibling = path.join(root, "external-link-results", "previous");
+  await mkdir(current, { recursive: true });
+  await mkdir(sibling, { recursive: true });
+  await writeFile(path.join(current, "stale.txt"), "remove\n");
+  await writeFile(path.join(sibling, "sentinel.txt"), "preserve\n");
+  t.after(() => rm(root, { recursive: true, force: true }));
+
+  await execFileAsync(process.execPath, [
+    SCRIPT_PATH,
+    "--inventory-only",
+    "--root", root,
+    "--output-dir", current,
+  ]);
+
+  await assert.rejects(readFile(path.join(current, "stale.txt"), "utf8"));
+  assert.equal(JSON.parse(await readFile(path.join(current, "inventory.json"), "utf8")).counts.eligible, 1);
+  assert.equal(await readFile(path.join(sibling, "sentinel.txt"), "utf8"), "preserve\n");
 });
 
 test("fixture loopback mode rejects any eligible real-provider target before Lychee runs", async (t) => {
