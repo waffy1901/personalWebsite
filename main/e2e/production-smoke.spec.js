@@ -1,6 +1,8 @@
-const { test: base, expect } = require("@playwright/test")
-
-const telemetryGuardMarker = "__playwrightTelemetryGuardActive"
+const {
+  expect,
+  telemetryGuardMarker,
+  test,
+} = require("./support/telemetry-safe-test")
 const useLocalPreview = process.env.PLAYWRIGHT_LOCAL_PREVIEW === "1"
 
 const canonicalRouteExpectations = [
@@ -23,21 +25,6 @@ const canonicalRouteExpectations = [
   { path: "/resume/", heading: "Resume" },
   { path: "/contact/", heading: "Let's connect" },
 ]
-
-function isAnalyticsHost(hostname) {
-  return (
-    hostname === "www.googletagmanager.com" ||
-    hostname === "stats.g.doubleclick.net" ||
-    hostname === "google-analytics.com" ||
-    hostname.endsWith(".google-analytics.com") ||
-    hostname === "analytics.google.com" ||
-    hostname.endsWith(".analytics.google.com")
-  )
-}
-
-function isFormspreeHost(hostname) {
-  return hostname === "formspree.io" || hostname.endsWith(".formspree.io")
-}
 
 function isExpectedAnalyticsCspError(message) {
   return (
@@ -72,52 +59,6 @@ function isExpectedProductionNotFoundConsoleError(message, page, siteOrigin) {
   )
 }
 
-const test = base.extend({
-  externalRequests: [
-    async ({ context }, use) => {
-      const externalRequests = {
-        analytics: [],
-        formspree: [],
-      }
-
-      await context.addInitScript((guardMarker) => {
-        globalThis[guardMarker] = true
-        globalThis.dataLayer = []
-        globalThis.gtag = () => undefined
-      }, telemetryGuardMarker)
-
-      await context.route("**/*", async (route) => {
-        const request = route.request()
-        const { hostname } = new URL(request.url())
-
-        if (isAnalyticsHost(hostname)) {
-          externalRequests.analytics.push(request.url())
-          await route.fulfill({
-            status: 200,
-            contentType:
-              request.resourceType() === "script"
-                ? "application/javascript"
-                : "text/plain",
-            body: "",
-          })
-          return
-        }
-
-        if (isFormspreeHost(hostname)) {
-          externalRequests.formspree.push(request.url())
-          await route.abort("blockedbyclient")
-          return
-        }
-
-        await route.continue()
-      })
-
-      await use(externalRequests)
-    },
-    { auto: true },
-  ],
-})
-
 for (const profile of [
   { name: "desktop 1x", width: 1440, height: 1000, dpr: 1, source: "/resume-preview.webp" },
   { name: "desktop 2x", width: 1440, height: 1000, dpr: 2, source: "/resume-preview-1920.webp" },
@@ -128,9 +69,16 @@ for (const profile of [
     test.use({ viewport: { width: profile.width, height: profile.height }, deviceScaleFactor: profile.dpr, isMobile: profile.width === 390, hasTouch: profile.width === 390 })
     test("selects a sharp source and preserves image space while it loads", async ({ page }, testInfo) => {
       // Each profile sets its own viewport/DPR; don't duplicate across projects.
-      test.skip(testInfo.project.name !== "desktop-chromium", "Explicit resume profiles run once")
+      test.skip(
+        testInfo.project.metadata.viewportClass !== "desktop",
+        "Explicit resume profiles run once per browser engine"
+      )
       await page.addInitScript(() => {
         globalThis.__resumeLayoutShift = 0
+        globalThis.__resumeLayoutShiftSupported =
+          typeof PerformanceObserver !== "undefined" &&
+          PerformanceObserver.supportedEntryTypes?.includes("layout-shift")
+        if (!globalThis.__resumeLayoutShiftSupported) return
         new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             if (!entry.hadRecentInput) globalThis.__resumeLayoutShift += entry.value
@@ -161,13 +109,29 @@ for (const profile of [
         top: image.getBoundingClientRect().top,
         overflow: globalThis.document.documentElement.scrollWidth > globalThis.innerWidth,
         cls: globalThis.__resumeLayoutShift,
+        clsSupported: globalThis.__resumeLayoutShiftSupported,
       }))
       expect(metrics.source).toBe(profile.source)
       expect(metrics.width).toBeCloseTo(profile.width === 390 ? 306 : 882, 0)
       expect(metrics.overflow).toBe(false)
       expect(Math.abs(metrics.height - before.height)).toBeLessThan(1)
       expect(Math.abs(metrics.top - before.y)).toBeLessThan(1)
-      expect(metrics.cls).toBeLessThan(0.001)
+      if (testInfo.project.metadata.browserEngine === "chromium") {
+        expect(
+          metrics.clsSupported,
+          "Chromium should expose layout-shift PerformanceObserver entries"
+        ).toBe(true)
+      }
+      if (metrics.clsSupported) {
+        expect(metrics.cls).toBeLessThan(0.001)
+      } else {
+        expect(testInfo.project.metadata.browserEngine).toBe("webkit")
+        testInfo.annotations.push({
+          type: "unsupported",
+          description:
+            "This WebKit runtime does not expose layout-shift PerformanceObserver entries; geometry assertions still ran.",
+        })
+      }
     })
   })
 }
@@ -282,9 +246,19 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
   baseURL,
 }, testInfo) => {
   test.skip(
-    testInfo.project.name !== "mobile-chromium",
+    testInfo.project.metadata.viewportClass !== "mobile",
     "mobile viewport coverage only"
   )
+  const usesMacWebKitTraversal =
+    testInfo.project.metadata.browserEngine === "webkit" &&
+    process.platform === "darwin"
+  const focusTraversalKey = usesMacWebKitTraversal ? "Alt+Tab" : "Tab"
+  testInfo.annotations.push({
+    type: "keyboardTraversal",
+    description: usesMacWebKitTraversal
+      ? "Alt+Tab (macOS WebKit Option-Tab link traversal)"
+      : "Tab",
+  })
 
   const monitor = monitorPage(page, baseURL)
 
@@ -300,19 +274,19 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
   await expect(navLinks).toHaveCount(6)
   await expect(navLinks.first()).toHaveAttribute("aria-current", "page")
   await expect(navLinks.first()).toHaveClass(/active/)
-  await page.keyboard.press("Tab")
+  await page.keyboard.press(focusTraversalKey)
   await expect(
     page.getByRole("link", { name: "Skip to main content" })
   ).toBeFocused()
-  await page.keyboard.press("Tab")
+  await page.keyboard.press(focusTraversalKey)
   await expect(
     page.getByRole("link", { name: "Waffy Ahmed home" })
   ).toBeFocused()
-  await page.keyboard.press("Tab")
+  await page.keyboard.press(focusTraversalKey)
 
   for (let index = 0; index < (await navLinks.count()); index += 1) {
     if (index > 0) {
-      await page.keyboard.press("Tab")
+      await page.keyboard.press(focusTraversalKey)
     }
 
     const focusedLink = navLinks.nth(index)

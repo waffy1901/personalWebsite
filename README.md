@@ -135,6 +135,7 @@ Run these commands from the repository root:
 | `npm run test:release` | Run semantic-release version validator tests |
 | `npm run test:e2e:premerge` | Build and smoke-test a local production-equivalent Vite preview |
 | `npm run test:e2e:production` | Run telemetry-safe Chromium smoke tests against production |
+| `npm run test:e2e:webkit` | Build and run the local-only desktop/mobile WebKit smoke lane |
 | `npm run performance:baseline` | Measure route performance against the checked-in baseline workflow |
 | `npm run test:performance:baseline` | Run performance-baseline measurement tests |
 | `npm run performance:first-navigation` | Measure first-navigation route performance |
@@ -163,6 +164,8 @@ Vite only exposes client-side environment variables prefixed with `VITE_`.
 Scheduled full-route performance evidence, compatibility rules, and reproducible local commands are documented in [`docs/performance-reporting.md`](docs/performance-reporting.md).
 
 The weekly advisory external-link inventory, HTTP policy, classifications, and evidence limits are documented in [`docs/external-link-reporting.md`](docs/external-link-reporting.md).
+
+The weekly/manual WebKit smoke lane, mocked side-effect boundaries, report fields, and Safari evidence limits are documented in [`docs/webkit-smoke.md`](docs/webkit-smoke.md).
 
 Provide the Formspree and analytics values through a local `.env` file or Netlify environment variables. Do not commit secrets or private credentials.
 
@@ -231,6 +234,12 @@ Tag Manager, DoubleClick, and Formspree requests, and it never submits the
 contact form. It therefore validates hydration, navigation, responsive
 overflow, lazy chunks, resume rendering, and browser errors without validating
 analytics delivery or form submission.
+
+`npm run test:e2e:webkit` builds with synthetic client configuration and serves
+only `127.0.0.1`. Its desktop and mobile WebKit projects reuse the shared route
+smoke cases and add local mocked contact-error and resume-download coverage.
+The lane provides Playwright WebKit compatibility evidence; it does not claim
+coverage of real Safari or iOS devices.
 
 ## Deployment
 
