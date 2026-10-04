@@ -68,6 +68,7 @@ export const BLOCKED_URL_PATTERNS = [
 const PERFORMANCE_AUDITS = [
   "first-contentful-paint",
   "largest-contentful-paint",
+  "cumulative-layout-shift",
   "total-blocking-time",
   "total-byte-weight",
   "resource-summary",
@@ -159,6 +160,7 @@ export function summarizeLhr(lhr) {
     metrics: {
       lcpMs: numericAuditValue(lhr, "largest-contentful-paint"),
       fcpMs: numericAuditValue(lhr, "first-contentful-paint"),
+      cls: numericAuditValue(lhr, "cumulative-layout-shift"),
       tbtMs: numericAuditValue(lhr, "total-blocking-time"),
       totalTransferredBytes: numericAuditValue(lhr, "total-byte-weight"),
       bytesByResourceType: resourceBytesByType(lhr),
@@ -227,7 +229,7 @@ export function measurementValidationErrors(result) {
   }
   errors.push(...criticalDependencyValidationErrors(result?.criticalDependencyEvidence))
   const metrics = result?.metrics
-  for (const metric of ["lcpMs", "fcpMs", "tbtMs", "totalTransferredBytes"]) {
+  for (const metric of ["lcpMs", "fcpMs", "cls", "tbtMs", "totalTransferredBytes"]) {
     if (!isFiniteNonNegative(metrics?.[metric])) {
       errors.push(`${metric} must be a finite nonnegative number; received ${String(metrics?.[metric])}`)
     }
@@ -341,6 +343,7 @@ export function aggregateSuccessfulRuns(runs) {
       median: {
         lcpMs: metricMedian("lcpMs"),
         fcpMs: metricMedian("fcpMs"),
+        cls: metricMedian("cls"),
         tbtMs: metricMedian("tbtMs"),
         totalTransferredBytes: metricMedian("totalTransferredBytes"),
         bytesByResourceType: Object.fromEntries(
@@ -637,6 +640,10 @@ function formatBytes(value) {
   return value === null ? "n/a" : `${Math.round(value).toLocaleString()} B`
 }
 
+function formatCls(value) {
+  return Number.isFinite(value) ? value.toFixed(3) : "n/a"
+}
+
 function formatChangedFileManifest(changedFiles) {
   if (changedFiles.length === 0) return "clean"
   return changedFiles.map((file) => `${file.scope}:${file.status}:${file.path}`).join(", ")
@@ -661,9 +668,9 @@ function reportMarkdown(summary) {
     "",
     "## Median metrics by route/profile",
     "",
-    "| Profile | Route | LCP | FCP | TBT | Total transferred |",
-    "| --- | --- | ---: | ---: | ---: | ---: |",
-    ...summary.aggregates.map((entry) => `| ${entry.profile} | ${entry.route} | ${formatMs(entry.median.lcpMs)} | ${formatMs(entry.median.fcpMs)} | ${formatMs(entry.median.tbtMs)} | ${formatBytes(entry.median.totalTransferredBytes)} |`),
+    "| Profile | Route | LCP | FCP | CLS | TBT | Total transferred |",
+    "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+    ...summary.aggregates.map((entry) => `| ${entry.profile} | ${entry.route} | ${formatMs(entry.median.lcpMs)} | ${formatMs(entry.median.fcpMs)} | ${formatCls(entry.median.cls)} | ${formatMs(entry.median.tbtMs)} | ${formatBytes(entry.median.totalTransferredBytes)} |`),
     "",
     "## Observed bottleneck evidence",
     "",

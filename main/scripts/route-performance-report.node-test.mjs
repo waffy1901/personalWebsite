@@ -81,6 +81,7 @@ function lhrFor({ route = "/", profile = PROFILES[0], value = 1000, lighthouseVe
     audits: {
       "largest-contentful-paint": { numericValue: value },
       "first-contentful-paint": { numericValue: value / 2 },
+      "cumulative-layout-shift": { numericValue: value / 10000 },
       "total-blocking-time": { numericValue: value / 10 },
       "total-byte-weight": { numericValue: value * 10 },
       "resource-summary": { details: { items: [{ resourceType: "total", transferSize: value * 10 }] } },
@@ -236,17 +237,21 @@ test("computes medians and compatible baseline deltas", () => {
   const plan = { routes: ["/"], profiles: [PROFILES[0]], samplesPerGroup: 5 }
   const records = [500, 100, 400, 300, 200].map((value, index) => ({
     status: "success", profile: PROFILES[0], route: "/", sample: index + 1,
-    result: { metrics: { lcpMs: value, fcpMs: value, tbtMs: value, totalTransferredBytes: value } },
+    result: { metrics: { lcpMs: value, fcpMs: value, cls: value / 10000, tbtMs: value, totalTransferredBytes: value } },
     rawArtifact: `raw/${index}.json`,
   }))
   const current = { aggregates: aggregateRecords(records, plan) }
   assert.equal(current.aggregates[0].median.lcpMs, 300)
+  assert.equal(current.aggregates[0].median.cls, 0.03)
   const baseline = structuredClone(current)
   baseline.aggregates[0].median.lcpMs = 250
+  baseline.aggregates[0].median.cls = 0.02
   assert.equal(compareAggregates(current, baseline)[0].delta.lcpMs, 50)
+  assert.ok(Math.abs(compareAggregates(current, baseline)[0].delta.cls - 0.01) < Number.EPSILON)
   assert.deepEqual(compareAggregates(current, { aggregates: [] })[0].delta, {
     lcpMs: null,
     fcpMs: null,
+    cls: null,
     tbtMs: null,
     totalTransferredBytes: null,
   })
@@ -337,6 +342,14 @@ test("matrix and aggregate validation reject incomplete, duplicate, invalid, and
   nonfinite.records[0].result.metrics.lcpMs = Number.NaN
   assert.match(matrixValidationErrors(nonfinite).join("\n"), /invalid lcpMs/)
 
+  const missingCls = structuredClone(base)
+  delete missingCls.records[0].result.metrics.cls
+  assert.match(matrixValidationErrors(missingCls).join("\n"), /invalid cls/)
+
+  const negativeCls = structuredClone(base)
+  negativeCls.records[0].result.metrics.cls = -0.01
+  assert.match(matrixValidationErrors(negativeCls).join("\n"), /invalid cls/)
+
   const wrongUrl = structuredClone(base)
   wrongUrl.records[0].result.finalUrl = `${BASE_URL}wrong/`
   assert.match(matrixValidationErrors(wrongUrl).join("\n"), /wrong final URL/)
@@ -397,6 +410,31 @@ test("baseline selection skips corrupt and provenance-mismatched candidates but 
   const workflowMismatch = await selectCompatibleBaseline({ currentSummary: current, candidates: [candidateFor(good, { workflowPath: ".github/workflows/other.yml" })], now: new Date("2026-09-30T00:00:00Z") })
   assert.equal(workflowMismatch.status, "corrupt")
   assert.deepEqual(workflowMismatch.skipped[0].fields, ["workflow path"])
+})
+
+test("historical artifacts without CLS cannot become complete comparable baselines", async (t) => {
+  const currentFixture = await makeArtifact({ runId: "current" })
+  const historicalFixture = await makeArtifact({ runId: "99" })
+  t.after(() => Promise.all([
+    rm(currentFixture.dir, { recursive: true, force: true }),
+    rm(historicalFixture.dir, { recursive: true, force: true }),
+  ]))
+
+  delete historicalFixture.summary.records[0].result.metrics.cls
+  delete historicalFixture.summary.aggregates[0].median.cls
+  await rewriteSummary(historicalFixture)
+
+  const current = structuredClone(currentFixture.summary)
+  const selected = await selectCompatibleBaseline({
+    currentSummary: current,
+    candidates: [candidateFor(historicalFixture)],
+    now: new Date("2026-09-30T00:00:00Z"),
+  })
+
+  assert.equal(selected.status, "corrupt")
+  assert.equal(selected.selected, null)
+  assert.equal(selected.skipped[0].reason, "corrupt-or-incomplete")
+  assert.match(selected.skipped[0].errors.join("\n"), /invalid cls/)
 })
 
 test("baseline selection skips a null-record artifact and malformed entry before a compatible fallback", async (t) => {

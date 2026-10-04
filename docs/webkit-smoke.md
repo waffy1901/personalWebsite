@@ -16,7 +16,7 @@ The build clears `VITE_GA_MEASUREMENT_ID`, uses only the synthetic Formspree key
 
 The command uses the lockfile-resolved Playwright CLI and installs its matching WebKit runtime. Failed attempts retain a screenshot and trace. `main/webkit-results/current/report.md` and `report.json` record executed and skipped counts per project, skip reasons, runtime version, viewport, route, and retained failure attachments. The HTML report and raw Playwright test results live in the same directory. GitHub retains the complete directory for 14 days.
 
-The numeric CLS assertion uses the Layout Instability API when the browser exposes `layout-shift` performance entries. Playwright WebKit currently does not expose that entry type, so the report records the assertion as unsupported while the source-selection, reserved-height, top-position, width, and overflow checks still run. Chromium continues to enforce the numeric CLS threshold.
+The shared lazy-route checks install their Layout Instability observer before navigation, retain the maximum five-second session window separated by one-second gaps, and exclude entries with recent input. They verify that the route shell keeps the footer below the first viewport during the fallback and after mount. The separate resume image-arrival check still resets after the route mounts so it isolates source arrival. Playwright WebKit currently does not expose `layout-shift` performance entries, so its report records numeric CLS as unsupported while all fallback, mounted-route, image, width, and overflow geometry assertions still run. Chromium enforces the numeric CLS thresholds.
 
 ## Commands
 

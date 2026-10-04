@@ -26,6 +26,14 @@ const canonicalRouteExpectations = [
   { path: "/contact/", heading: "Let's connect" },
 ]
 
+const delayedLazyRouteExpectations = [
+  { path: "/projects/", heading: "Practical builds for real workflows", chunk: "Projects" },
+  { path: "/experience/", heading: "Work Experience", chunk: "Experience" },
+  { path: "/case-studies/", heading: "Selected engineering case studies", chunk: "CaseStudies" },
+  { path: "/resume/", heading: "Resume", chunk: "Resume" },
+  { path: "/contact/", heading: "Let's connect", chunk: "Contact" },
+]
+
 function isExpectedAnalyticsCspError(message) {
   return (
     message.startsWith(
@@ -208,6 +216,49 @@ async function expectHydratedRoute(page, route) {
   ).toBeVisible()
 }
 
+async function installWholeNavigationClsObserver(page) {
+  await page.addInitScript(() => {
+    const supported =
+      typeof PerformanceObserver !== "undefined" &&
+      PerformanceObserver.supportedEntryTypes?.includes("layout-shift")
+    globalThis.__wholeNavigationCls = { supported, value: 0 }
+    if (!supported) return
+
+    let sessionValue = 0
+    let sessionStartTime = 0
+    let lastEntryTime = 0
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.hadRecentInput) continue
+
+        const startsNewSession =
+          sessionStartTime === 0 ||
+          entry.startTime - lastEntryTime > 1000 ||
+          entry.startTime - sessionStartTime > 5000
+        if (startsNewSession) {
+          sessionValue = entry.value
+          sessionStartTime = entry.startTime
+        } else {
+          sessionValue += entry.value
+        }
+        lastEntryTime = entry.startTime
+        globalThis.__wholeNavigationCls.value = Math.max(
+          globalThis.__wholeNavigationCls.value,
+          sessionValue
+        )
+      }
+    }).observe({ type: "layout-shift", buffered: true })
+  })
+}
+
+async function routeShellGeometry(page) {
+  return page.locator("[data-route-shell]").evaluate((shell) => ({
+    footerTop: shell.nextElementSibling?.getBoundingClientRect().top ?? -1,
+    shellBottom: shell.getBoundingClientRect().bottom,
+    viewportHeight: globalThis.innerHeight,
+  }))
+}
+
 async function expectNoHorizontalOverflow(page) {
   const documentWidth = await page.evaluate(() => ({
     clientWidth: globalThis.document.documentElement.clientWidth,
@@ -224,6 +275,78 @@ const setViewportScrollY = (page, scrollY) =>
   page.evaluate((top) => {
     globalThis.scrollTo({ top, left: 0, behavior: "instant" })
   }, scrollY)
+
+for (const route of delayedLazyRouteExpectations) {
+  test(`${route.path} keeps the footer below the mobile viewport through lazy mount`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.metadata.viewportClass !== "mobile",
+      "mobile viewport covers every affected lazy route; representative desktop checks run separately"
+    )
+
+    await installWholeNavigationClsObserver(page)
+    let releaseChunk
+    let chunkWasDelayed = false
+    const chunkGate = new Promise((resolve) => { releaseChunk = resolve })
+    await page.route("**/assets/*.js", async (requestRoute) => {
+      const pathname = new URL(requestRoute.request().url()).pathname
+      if (pathname.includes(`/assets/${route.chunk}-`)) {
+        chunkWasDelayed = true
+        await chunkGate
+      }
+      await requestRoute.continue()
+    })
+
+    await page.goto(route.path, { waitUntil: "domcontentloaded" })
+    try {
+      await expect(page.locator("[data-route-loading-fallback]")).toBeVisible()
+      expect(chunkWasDelayed, `${route.chunk} lazy chunk should be delayed`).toBe(true)
+      const fallbackGeometry = await routeShellGeometry(page)
+      expect(fallbackGeometry.shellBottom).toBeGreaterThanOrEqual(
+        fallbackGeometry.viewportHeight - 1
+      )
+      expect(fallbackGeometry.footerTop).toBeGreaterThanOrEqual(
+        fallbackGeometry.viewportHeight - 1
+      )
+    } finally {
+      releaseChunk()
+    }
+
+    await expectHydratedRoute(page, route)
+    await page.evaluate(() => globalThis.document.fonts.ready)
+    await page.evaluate(() => new Promise((resolve) =>
+      globalThis.requestAnimationFrame(() => globalThis.requestAnimationFrame(resolve))
+    ))
+    const mountedGeometry = await routeShellGeometry(page)
+    expect(mountedGeometry.shellBottom).toBeGreaterThanOrEqual(
+      mountedGeometry.viewportHeight - 1
+    )
+    expect(mountedGeometry.footerTop).toBeGreaterThanOrEqual(
+      mountedGeometry.viewportHeight - 1
+    )
+
+    const cls = await page.evaluate(() => globalThis.__wholeNavigationCls)
+    if (testInfo.project.metadata.browserEngine === "chromium") {
+      expect(
+        cls.supported,
+        "Chromium should expose layout-shift PerformanceObserver entries"
+      ).toBe(true)
+      expect(cls.value).toBeLessThanOrEqual(0.1)
+    } else {
+      expect(testInfo.project.metadata.browserEngine).toBe("webkit")
+      if (cls.supported) {
+        expect(cls.value).toBeLessThanOrEqual(0.1)
+      } else {
+        testInfo.annotations.push({
+          type: "unsupported",
+          description:
+            "This WebKit runtime does not expose layout-shift PerformanceObserver entries; fallback and mounted geometry assertions still ran.",
+        })
+      }
+    }
+  })
+}
 
 for (const route of canonicalRouteExpectations) {
   test(`${route.path} hydrates without horizontal overflow`, async ({
