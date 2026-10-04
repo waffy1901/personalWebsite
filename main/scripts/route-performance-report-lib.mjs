@@ -18,7 +18,7 @@ export const ATTEMPT_TIMEOUT_MS = 90 * 1000
 export const ATTEMPT_CLEANUP_GRACE_MS = 10 * 1000
 export const BASELINE_WINDOW_RUNS = 20
 export const BASELINE_MAX_AGE_DAYS = 90
-export const REQUIRED_METRICS = ["lcpMs", "fcpMs", "tbtMs", "totalTransferredBytes"]
+export const REQUIRED_METRICS = ["lcpMs", "fcpMs", "cls", "tbtMs", "totalTransferredBytes"]
 
 export function stableJson(value) {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`

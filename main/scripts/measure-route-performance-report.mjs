@@ -258,6 +258,10 @@ function formatMetric(value, unit) {
   return Number.isFinite(value) ? `${Math.round(value).toLocaleString()} ${unit}` : "n/a"
 }
 
+function formatCls(value) {
+  return Number.isFinite(value) ? value.toFixed(3) : "n/a"
+}
+
 function reportMarkdown(summary) {
   const lines = [
     "# Route performance report",
@@ -271,17 +275,17 @@ function reportMarkdown(summary) {
     `- Samples: ${summary.records.filter((record) => record.status === "success").length}/${summary.plan.primarySamples} successful primary samples; at most one retry per sample.`,
     `- Runtime bounds: ${summary.limits.totalMeasurementBudgetMs / 60000} minute measurement budget, ${summary.limits.attemptTimeoutMs / 1000} second attempt timeout, ${summary.limits.attemptCleanupGraceMs / 1000} second cleanup grace, ${summary.plan.maximumAttempts} maximum attempts.`,
     `- Baseline: ${summary.baseline.status}${summary.baseline.selected ? ` (run ${summary.baseline.selected.runId}, commit ${summary.baseline.selected.commitSha})` : ""}.`,
-    "- Timing deltas are advisory. Incomplete measurements, invalid provenance, or corrupt evidence fail the report.",
+    "- Metric deltas are advisory. Incomplete measurements, invalid provenance, or corrupt evidence fail the report.",
     "",
     "## Median metrics and advisory deltas",
     "",
-    "| Profile | Route | LCP | Delta | FCP | Delta | TBT | Delta | Transfer | Delta |",
-    "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+    "| Profile | Route | LCP | Delta | FCP | Delta | CLS | Delta | TBT | Delta | Transfer | Delta |",
+    "| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
   ]
   const comparisons = new Map((summary.comparison ?? []).map((entry) => [entry.key, entry]))
   for (const aggregate of summary.aggregates) {
     const delta = comparisons.get(aggregate.key)?.delta ?? {}
-    lines.push(`| ${aggregate.profile} | ${aggregate.route} | ${formatMetric(aggregate.median.lcpMs, "ms")} | ${formatMetric(delta.lcpMs, "ms")} | ${formatMetric(aggregate.median.fcpMs, "ms")} | ${formatMetric(delta.fcpMs, "ms")} | ${formatMetric(aggregate.median.tbtMs, "ms")} | ${formatMetric(delta.tbtMs, "ms")} | ${formatMetric(aggregate.median.totalTransferredBytes, "B")} | ${formatMetric(delta.totalTransferredBytes, "B")} |`)
+    lines.push(`| ${aggregate.profile} | ${aggregate.route} | ${formatMetric(aggregate.median.lcpMs, "ms")} | ${formatMetric(delta.lcpMs, "ms")} | ${formatMetric(aggregate.median.fcpMs, "ms")} | ${formatMetric(delta.fcpMs, "ms")} | ${formatCls(aggregate.median.cls)} | ${formatCls(delta.cls)} | ${formatMetric(aggregate.median.tbtMs, "ms")} | ${formatMetric(delta.tbtMs, "ms")} | ${formatMetric(aggregate.median.totalTransferredBytes, "B")} | ${formatMetric(delta.totalTransferredBytes, "B")} |`)
   }
   if (summary.validation.errors.length > 0) {
     lines.push("", "## Validation failures", "", ...summary.validation.errors.map((error) => `- ${error}`))
@@ -345,7 +349,7 @@ function createSummary({ run, plan, environment, config, provenance, measurement
       profile: profile.id,
       route,
       baselineMedian: null,
-      delta: { lcpMs: null, fcpMs: null, tbtMs: null, totalTransferredBytes: null },
+      delta: { lcpMs: null, fcpMs: null, cls: null, tbtMs: null, totalTransferredBytes: null },
     }))),
   }
   summary.configFingerprint = compatibilityFingerprint(summary)

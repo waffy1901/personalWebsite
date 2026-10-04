@@ -216,6 +216,24 @@ describe("App routes", () => {
     )
   })
 
+  it("reserves the route shell through lazy route rendering", async () => {
+    renderRoute("/projects")
+
+    const routeShell = document.querySelector("[data-route-shell]")
+    expect(routeShell).toHaveClass(
+      "min-h-dvh",
+      "flex-1",
+      "overflow-auto"
+    )
+
+    await screen.findByRole("heading", {
+      name: "Practical builds for real workflows",
+    })
+    expect(routeShell).toContainElement(
+      document.querySelector('[data-route-ready="/projects"]')
+    )
+  })
+
   it("makes the skip link the first focusable control and moves focus to the route main", async () => {
     const user = userEvent.setup()
     vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: false })))

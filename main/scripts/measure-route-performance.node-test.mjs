@@ -33,6 +33,7 @@ function completeResult(overrides = {}) {
     metrics: {
       lcpMs: 2500,
       fcpMs: 1200,
+      cls: 0.04,
       tbtMs: 0,
       totalTransferredBytes: 100000,
       bytesByResourceType: { total: 100000, Script: 60000, Image: 40000 },
@@ -62,6 +63,7 @@ test("Lighthouse profiles use simulated throttling and block analytics endpoints
   assert.equal(desktop.throttling.cpuSlowdownMultiplier, 1)
   assert.deepEqual(mobile.blockedUrlPatterns, BLOCKED_URL_PATTERNS)
   assert.ok(mobile.onlyAudits.includes("network-dependency-tree-insight"))
+  assert.ok(mobile.onlyAudits.includes("cumulative-layout-shift"))
   assert.ok(!mobile.onlyAudits.includes("critical-request-chains"))
 })
 
@@ -74,6 +76,7 @@ test("LHR summary and aggregation retain metrics, resource bytes, and critical-c
     audits: {
       "largest-contentful-paint": { numericValue: 2500 },
       "first-contentful-paint": { numericValue: 1200 },
+      "cumulative-layout-shift": { numericValue: 0.04 },
       "total-blocking-time": { numericValue: 75 },
       "total-byte-weight": { numericValue: 100000 },
       "resource-summary": { details: { items: [{ resourceType: "Script", transferSize: 60000 }, { resourceType: "Image", transferSize: 40000 }] } },
@@ -82,6 +85,7 @@ test("LHR summary and aggregation retain metrics, resource bytes, and critical-c
   }
   const result = summarizeLhr(lhr)
   assert.equal(result.metrics.lcpMs, 2500)
+  assert.equal(result.metrics.cls, 0.04)
   assert.equal(result.metrics.bytesByResourceType.Script, 60000)
   assert.equal(result.criticalDependencyEvidence.auditId, "network-dependency-tree-insight")
   const aggregates = aggregateSuccessfulRuns([
@@ -89,13 +93,18 @@ test("LHR summary and aggregation retain metrics, resource bytes, and critical-c
     { status: "success", profile: PROFILES[0], route: ROUTES[0], rawArtifact: "b.json", result: { ...result, metrics: { ...result.metrics, lcpMs: 3500 } } },
   ])
   assert.equal(aggregates[0].median.lcpMs, 3000)
+  assert.equal(aggregates[0].median.cls, 0.04)
   assert.equal(aggregates[0].median.bytesByResourceType.Image, 40000)
 })
 
-test("metric completeness rejects missing LCP or resource-summary totals and invalidates the baseline", () => {
+test("metric completeness requires finite nonnegative CLS and invalidates incomplete baselines", () => {
   const validResult = completeResult()
   assert.deepEqual(measurementValidationErrors(validResult), [])
   assert.match(measurementValidationErrors({ ...validResult, metrics: { ...validResult.metrics, lcpMs: null } }).join(" "), /lcpMs/)
+  assert.match(measurementValidationErrors({ ...validResult, metrics: { ...validResult.metrics, cls: null } }).join(" "), /cls/)
+  assert.match(measurementValidationErrors({ ...validResult, metrics: { ...validResult.metrics, cls: Number.NaN } }).join(" "), /cls/)
+  assert.match(measurementValidationErrors({ ...validResult, metrics: { ...validResult.metrics, cls: -0.01 } }).join(" "), /cls/)
+  assert.deepEqual(measurementValidationErrors({ ...validResult, metrics: { ...validResult.metrics, cls: 0 } }), [])
   assert.match(measurementValidationErrors({ ...validResult, metrics: { ...validResult.metrics, bytesByResourceType: { Script: 60000 } } }).join(" "), /total/)
 
   const plan = validateMeasurementPlan({ routes: ROUTES, profiles: PROFILES, runs: 5 })

@@ -198,7 +198,10 @@ function App() {
         Skip to main content
       </a>
       <Navbar />
-      <div className="flex-1 overflow-auto">
+      <div
+        className="min-h-dvh flex-1 overflow-auto"
+        data-route-shell
+      >
         <DelayedRoutePendingIndicator key={location.key} pending={routePending} />
         <RouteErrorBoundary
           resetKey={displayedLocation.pathname}
