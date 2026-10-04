@@ -219,11 +219,16 @@ if ownership moves to default setup, remove the checked-in workflow first to
 avoid duplicate analysis.
 
 `netlify.toml` remains the source of truth for production security headers. The
-scheduled **Production health** workflow resolves Netlify's current ready
-production commit, checks out that exact revision, and validates route, header,
-CSP, and byte-for-byte public-artifact contracts against `https://waffy.dev/`.
-Run it manually after intentional production-policy or public-artifact changes
-have deployed.
+daily **Production health** workflow runs at 14:37 UTC and can also be dispatched
+manually. It resolves Netlify's current ready production commit, checks out that
+exact revision, and validates route, header, CSP, and byte-for-byte
+public-artifact contracts against `https://waffy.dev/`. GitHub runs scheduled
+workflows from the default branch, so the daily cadence takes effect on `main`
+after merge; [scheduled runs can be delayed during periods of high
+load](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+This periodic contract check is not continuous uptime monitoring. Run it
+manually after intentional production-policy or public-artifact changes have
+deployed.
 
 `npm run test:e2e:premerge` builds the app with a synthetic, non-secret
 Formspree key and opens only a local Vite preview. `npm run
