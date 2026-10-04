@@ -18,7 +18,7 @@ import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
-import { resume, socialLinks } from "./data/profile.js"
+import { portfolioUrls, resume, socialLinks } from "./data/profile.js"
 import { resumeDocument } from "./data/resume.mjs"
 import { currentEmployment } from "./data/siteIdentity.js"
 import {
@@ -438,6 +438,39 @@ describe("App routes", () => {
     expect(main).not.toContainElement(footer)
   })
 
+  it.each([
+    { key: "{Enter}", name: "Enter" },
+    { key: " ", name: "Space" },
+  ])("preserves the ChatGPT footer handoff with $name activation", async ({ key }) => {
+    const user = userEvent.setup()
+    const openMock = vi.spyOn(window, "open").mockReturnValue(null)
+    const clipboardWriteMock = vi.spyOn(navigator.clipboard, "writeText")
+    renderRoute("/")
+
+    await screen.findByRole("heading", { name: /waffy ahmed/i })
+    const footer = screen.getByRole("contentinfo")
+    const chatgptButton = within(footer).getByRole("button", {
+      name: "Summarize with ChatGPT",
+    })
+
+    expect(within(footer).getAllByRole("button")).toHaveLength(1)
+    expect(footer.innerHTML).not.toMatch(/claude/i)
+    expect(footer).toHaveTextContent(/created:\s*\S+/i)
+    expect(footer).toHaveTextContent(/last updated:\s*\S+/i)
+    expect(footer).toHaveTextContent(`© ${new Date().getFullYear()} Waffy Ahmed`)
+
+    chatgptButton.focus()
+    expect(chatgptButton).toHaveFocus()
+    await user.keyboard(key)
+
+    expect(openMock).toHaveBeenCalledExactlyOnceWith(
+      `https://chat.openai.com/?q=${encodeURIComponent(`Summarize ${portfolioUrls.aiSummary}`)}`,
+      "_blank",
+      "noopener,noreferrer"
+    )
+    expect(clipboardWriteMock).not.toHaveBeenCalled()
+  })
+
   it("keeps one main landmark and one h1 on every primary route", async () => {
     for (const route of [
       "/",
@@ -455,6 +488,12 @@ describe("App routes", () => {
       )
       expect(screen.getAllByRole("main")).toHaveLength(1)
       expect(screen.getAllByRole("contentinfo")).toHaveLength(1)
+      const footer = screen.getByRole("contentinfo")
+      expect(within(footer).getAllByRole("button")).toHaveLength(1)
+      expect(within(footer).getByRole("button", {
+        name: "Summarize with ChatGPT",
+      })).toBeInTheDocument()
+      expect(footer.innerHTML).not.toMatch(/claude/i)
 
       view.unmount()
     }

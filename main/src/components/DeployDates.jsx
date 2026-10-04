@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { portfolioUrls } from "../data/profile";
 
 function DeployDates({ first }) {
-  const [copiedProvider, setCopiedProvider] = useState(null);
   const [localPreviewDate] = useState(() => new Date());
 
   const firstDate = new Date(first).toLocaleString(undefined, {
@@ -27,48 +26,7 @@ function DeployDates({ first }) {
   const year = new Date().getFullYear();
 
   const prompt = `Summarize ${portfolioUrls.aiSummary}`;
-
-  /**
-   * AI Provider Configuration
-   */
-  const AI_PROVIDERS = [
-    {
-      name: "chatgpt",
-      label: "Summarize with ChatGPT",
-      icon: "/logos/chatgpt.svg",
-      type: "prefill",
-      url: `https://chat.openai.com/?q=${encodeURIComponent(prompt)}`,
-    },
-    {
-      name: "claude",
-      label: "Summarize with Claude",
-      icon: "/logos/claude.svg",
-      type: "copyThenOpen",
-      url: "https://claude.ai",
-    },
-  ];
-
-  /**
-   * Unified action handler
-   */
-  const handleAIAction = async (provider) => {
-    if (provider.type === "prefill") {
-      window.open(provider.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    if (provider.type === "copyThenOpen") {
-      try {
-        await navigator.clipboard.writeText(prompt);
-        setCopiedProvider(provider.name);
-        setTimeout(() => setCopiedProvider(null), 900);
-      } catch {
-        console.error("Clipboard copy failed");
-      }
-
-      window.open(provider.url, "_blank", "noopener,noreferrer");
-    }
-  };
+  const chatgptUrl = `https://chat.openai.com/?q=${encodeURIComponent(prompt)}`;
 
   return (
     <footer className="mc-panel-dark mt-4 flex flex-col gap-4 p-4 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
@@ -85,41 +43,29 @@ function DeployDates({ first }) {
       <div className="flex items-center gap-3">
         <p className="text-xs font-black uppercase text-[#93B4FF]">AI brief</p>
         <div className="flex gap-2">
-          {AI_PROVIDERS.map((provider) => (
-            <div key={provider.name} className="group relative flex items-center">
-              <button
-                type="button"
-                onClick={() => handleAIAction(provider)}
-                aria-label={provider.label}
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
-              >
-                <img
-                  src={provider.icon}
-                  alt=""
-                  aria-hidden="true"
-                  loading="lazy"
-                  decoding="async"
-                  className="h-5 w-5 opacity-90"
-                />
-              </button>
+          <div className="group relative flex items-center">
+            <button
+              type="button"
+              onClick={() => window.open(chatgptUrl, "_blank", "noopener,noreferrer")}
+              aria-label="Summarize with ChatGPT"
+              className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/10 transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+            >
+              <img
+                src="/logos/chatgpt.svg"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                decoding="async"
+                className="h-5 w-5 opacity-90"
+              />
+            </button>
 
-              <div className="pointer-events-none absolute right-0 top-full mt-2">
-                <span
-                  className={`whitespace-nowrap rounded-sm bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-xs transition-all duration-150 ${
-                    copiedProvider === provider.name
-                      ? "translate-y-0 opacity-100"
-                      : "translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
-                  }`}
-                >
-                  {copiedProvider === provider.name
-                    ? "Copied"
-                    : provider.name === "chatgpt"
-                    ? "ChatGPT"
-                    : "Claude"}
-                </span>
-              </div>
+            <div className="pointer-events-none absolute right-0 top-full mt-2">
+              <span className="whitespace-nowrap rounded-sm bg-white px-2 py-1 text-xs font-bold text-slate-700 shadow-xs transition-all duration-150 translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100">
+                ChatGPT
+              </span>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </footer>
