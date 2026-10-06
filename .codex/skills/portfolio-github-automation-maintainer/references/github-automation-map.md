@@ -18,11 +18,13 @@ Use this reference for workflow, Dependabot, security automation, and GitHub run
 | Netlify token reminder | `.github/workflows/netlify-token-rotation-reminder.yml` | Opens or updates one issue when the Netlify auth token approaches expiration. | `NETLIFY_AUTH_TOKEN_EXPIRES_AT` repository variable is the source of truth; `workflow_dispatch.expiration_date` intentionally overrides it for testing. |
 | Auto assign PRs | `.github/workflows/auto-assign-prs.yml` | Assigns PRs to `waffy1901`. | Runs on `pull_request_target`; do not execute untrusted branch code here. |
 | CodeQL | `.github/workflows/codeql.yml` | Runs JavaScript/TypeScript CodeQL analysis if checked in. | Check GitHub-managed code scanning/default setup before adding or changing duplicate CodeQL automation. |
-| Dependabot | `.github/dependabot.yml` | Groups npm and GitHub Actions dependency updates. | Keep schedules timezone-aware and PR limits modest. |
+| Dependabot | `.github/dependabot.yml` | Groups npm and GitHub Actions dependency updates. | The root GitHub Actions updater recognizes immutable action SHAs with adjacent version comments; keep schedules timezone-aware and PR limits modest. |
 
 ## Safety Rules
 
 - Use least-privilege `permissions` per workflow and job.
+- Keep active third-party actions pinned to reviewed full commit SHAs with adjacent full release comments. When Dependabot proposes an update, verify the official release tag and update the SHA and comment together.
+- Prefer deny-by-default or read-only workflow permissions and place write grants on the single job that needs them.
 - Keep `actions/checkout` `persist-credentials: false` unless a job must push.
 - Never print secrets, token values, or full authorization headers.
 - Treat repository variables as non-secret metadata; treat repository secrets as opaque.
