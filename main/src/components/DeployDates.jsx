@@ -37,7 +37,7 @@ function DeployDates({ first }) {
         <p>
           <span className="font-black text-white">Last updated:</span> {lastDate}
         </p>
-        <p className="text-xs text-slate-500">© {year} Waffy Ahmed</p>
+        <p className="text-xs text-slate-400">© {year} Waffy Ahmed</p>
       </div>
 
       <div className="flex items-center gap-3">
