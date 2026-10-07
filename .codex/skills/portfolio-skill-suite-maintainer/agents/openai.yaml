@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Skill Suite Maintainer"
+  short_description: "Validate portfolio skill routing and behavior"
+  default_prompt: "Use $portfolio-skill-suite-maintainer to tune and validate this repository skill suite."
