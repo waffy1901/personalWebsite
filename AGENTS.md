@@ -70,6 +70,7 @@ node .codex/skills/portfolio-change-impact/scripts/check_change_impact.mjs --sou
 - Use `$portfolio-actions-run-diagnoser` for failing, pending, flaky, late, or missing Actions runs; use `$portfolio-github-automation-maintainer` for workflow edits.
 - Use `$portfolio-deployment-verifier` for read-only verification of an exact merge SHA, Netlify published deployment, deployment release, and live evidence.
 - Use `$portfolio-skill-suite-maintainer` for repository-scoped skill tuning, structural validation, and behavioral scenarios.
+- Use `$pr-review-chat` for a pasted PR URL or PR number and read-only, defect-first findings in chat. A PR cited only as background does not select this workflow.
 - Use `$portfolio-release-qa` for pre-push checks, release readiness, route smoke checks, build/test/lint verification, resume/static asset validation, or Netlify deploy readiness.
 - Use `$portfolio-content-sync` when changing profile, experience, projects, case studies, metrics, links, route slugs, public portfolio metadata, recruiter-facing copy, or AI/SEO-visible content.
 - Use `$resume-site-sync` when replacing, validating, linking, previewing, or summarizing the resume PDF or resume preview image.
