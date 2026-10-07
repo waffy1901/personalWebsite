@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 import copy
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 from verify_deployment_evidence import verify, load_classifier
 
@@ -49,7 +54,7 @@ class DeploymentTests(unittest.TestCase):
         packet = fixture()
         for key in ("site_before", "site_after"):
             packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
-        packet["target_attempt"] = {"context": "production", "state": "ready", "commit_ref": TARGET}
+        packet["target_attempt"] = {"context": "production", "site_id": "site-123", "state": "ready", "commit_ref": TARGET}
         result = verify(packet)
         self.assertEqual(result["classification"], "different_commit")
         self.assertFalse(result["provenance_verified"])
@@ -69,7 +74,7 @@ class DeploymentTests(unittest.TestCase):
             packet["release"] = packet["resolved_tag"] = None
             for key in ("site_before", "site_after"):
                 packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
-            attempt = {"context": "production", "commit_ref": TARGET}
+            attempt = {"context": "production", "site_id": "site-123", "commit_ref": TARGET}
             if mode == "explicit":
                 attempt["skipped"] = True
             else:
@@ -78,6 +83,72 @@ class DeploymentTests(unittest.TestCase):
             result = verify(packet)
             self.assertEqual(result["classification"], "target_skipped")
             self.assertFalse(result["provenance_verified"])
+
+    def test_skipped_attempt_requires_the_expected_site(self):
+        for mode in ("explicit", "no content"):
+            for site_id in (None, "site-other"):
+                with self.subTest(mode=mode, site_id=site_id):
+                    packet = fixture()
+                    packet["release"] = packet["resolved_tag"] = None
+                    for key in ("site_before", "site_after"):
+                        packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
+                    attempt = {"context": "production", "commit_ref": TARGET}
+                    if site_id is not None:
+                        attempt["site_id"] = site_id
+                    if mode == "explicit":
+                        attempt["skipped"] = True
+                    else:
+                        attempt.update(state="error", error_message="Failed during stage 'checking build content for changes': Canceled build due to no content change")
+                    packet["target_attempt"] = attempt
+                    with self.assertRaises(ValueError):
+                        verify(packet)
+
+    def test_release_requires_the_complete_workflow_url(self):
+        for suffix in ("42", "/jobs/7", "?attempt=2", "#logs"):
+            with self.subTest(suffix=suffix):
+                packet = fixture()
+                url = packet["workflow"]["html_url"]
+                packet["release"]["body"] = packet["release"]["body"].replace(url, url + suffix)
+                with self.assertRaises(ValueError):
+                    verify(packet)
+
+    def test_release_requires_the_complete_deploy_url(self):
+        for suffix in (".attacker.test", ":8443", "/another-deploy", "?preview=1", "#other-deploy"):
+            with self.subTest(suffix=suffix):
+                packet = fixture()
+                url = packet["site_after"]["site"]["published_deploy"]["deploy_ssl_url"]
+                packet["release"]["body"] = packet["release"]["body"].replace(url, url + suffix)
+                with self.assertRaises(ValueError):
+                    verify(packet)
+
+    def test_cli_rejects_provenance_counterexamples(self):
+        packets = []
+        for kind in ("workflow", "deploy"):
+            packet = fixture()
+            url = (packet["workflow"]["html_url"] if kind == "workflow"
+                   else packet["site_after"]["site"]["published_deploy"]["deploy_ssl_url"])
+            suffix = "42" if kind == "workflow" else ".attacker.test"
+            packet["release"]["body"] = packet["release"]["body"].replace(url, url + suffix)
+            packets.append((kind, packet))
+        for site_id in (None, "site-other"):
+            packet = fixture()
+            packet["release"] = packet["resolved_tag"] = None
+            for key in ("site_before", "site_after"):
+                packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
+            packet["target_attempt"] = {"context": "production", "commit_ref": TARGET, "skipped": True}
+            if site_id is not None:
+                packet["target_attempt"]["site_id"] = site_id
+            packets.append((f"site-{site_id}", packet))
+        script = Path(__file__).with_name("verify_deployment_evidence.py")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "packet.json"
+            for case, packet in packets:
+                with self.subTest(case=case):
+                    path.write_text(json.dumps(packet))
+                    result = subprocess.run([sys.executable, str(script), "--packet", str(path)],
+                                            text=True, capture_output=True)
+                    self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                    self.assertEqual(result.stdout, "")
 
     def test_generic_error_or_other_commit_is_not_skip(self):
         for attempt in ({"commit_ref": TARGET, "state": "error", "error_message": "unrelated error"},

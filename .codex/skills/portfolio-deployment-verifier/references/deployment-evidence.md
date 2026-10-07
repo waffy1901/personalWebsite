@@ -31,6 +31,8 @@ the site points to it. Reuse `scripts/check_netlify_deploy_state.py` for the exa
 `skipped: true` or exact no-content cancellation signal. Generic build errors,
 an absent target attempt, a successful workflow, and changed-files guesses do
 not prove a skip.
+The raw attempt's `site_id` must match the independently confirmed expected site;
+the helper rejects a missing or different site identity before classifying a skip.
 
 Find a non-draft, non-prerelease `deploy-*` release for the target; do not select
 the newest release or a `v*` semantic release as a substitute. Read its tag ref
@@ -38,6 +40,9 @@ and peel annotated tag objects until reaching the commit. Compare that SHA to
 the target; `target_commitish: main` is not resolved commit evidence. Retain the
 release URL/body with exact workflow and Netlify deploy links. If no release has
 been found, complete pagination before claiming absence.
+The helper compares complete standalone URL tokens, as emitted by the release
+workflow. A longer run ID, lookalike host, port, path, query, or fragment cannot
+substitute for the expected workflow or published-deploy URL.
 
 ## Snapshot classification helper
 
@@ -51,7 +56,7 @@ The packet has these keys:
 | `workflow` | Raw REST run object, with repository/path/ref/SHA/attempt identity |
 | `release` | Matching raw REST release object, or null |
 | `resolved_tag` | `{ "tag_name": "deploy-...", "commit_sha": "resolved full SHA" }`, or null |
-| `target_attempt` | Optional raw production deploy object used to confirm a skip |
+| `target_attempt` | Optional raw production deploy object with matching `site_id`, used to confirm a skip |
 | `ancestry` | Optional `{ "ancestor": target_sha, "descendant": serving_sha, "is_ancestor": true }`, backed by a retained ancestry check |
 
 Keep raw responses and collection commands next to the assembled packet.

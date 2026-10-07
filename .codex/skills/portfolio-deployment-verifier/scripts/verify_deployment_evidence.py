@@ -94,6 +94,8 @@ def verify(packet):
     if attempt is not None:
         if not isinstance(attempt, dict) or attempt.get("context") != "production":
             raise ValueError("target_attempt must be a captured production deploy")
+        if attempt.get("site_id") != site_id:
+            raise ValueError("target_attempt does not match the expected site id")
         skipped = load_classifier()([attempt], target)["decision"] == "skipped"
     if before != after:
         result["classification"] = "production_changed_during_checks"
@@ -126,7 +128,8 @@ def verify(packet):
             or tag.get("tag_name") != tag_name or tag.get("commit_sha") != target):
         raise ValueError("deployment release/tag does not resolve to the exact target")
     body = release.get("body")
-    if not isinstance(body, str) or any(value not in body for value in (target, run_url, after["url"])):
+    if (not isinstance(body, str) or target not in body
+            or not {run_url, after["url"]}.issubset(body.split())):
         raise ValueError("release body does not link the exact commit, workflow, and published deploy URL")
     result["release_url"] = release["html_url"]
     result["resolved_tag"] = tag
