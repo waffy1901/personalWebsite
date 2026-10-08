@@ -138,7 +138,7 @@ function CaseStudy() {
               <div className="mt-5 grid gap-4 md:grid-cols-3">
                 {caseStudy.flow.map((step, index) => (
                   <div key={step.title} className="rounded-lg border border-slate-200 bg-[#E8EDF2] p-4">
-                    <p className="text-xs font-black uppercase text-[#2563EB]">
+                    <p className="text-xs font-black uppercase text-[#1D4ED8]">
                       Step {index + 1}
                     </p>
                     <h3 className="mt-3 text-lg font-black text-[#0B1220]">

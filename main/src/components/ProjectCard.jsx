@@ -204,7 +204,12 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
           <h3 id={`${detailsId}-heading`} className="mt-2 text-xl font-black">
             {title} details
           </h3>
-          <div className="mt-4 grow overflow-y-auto pr-2">
+          <div
+            role="group"
+            aria-label={`${title} technical details`}
+            tabIndex={isFlipped ? 0 : -1}
+            className="mt-4 grow overflow-y-auto pr-2 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+          >
             <ul className="space-y-3">
               {bullets.map((bullet, index) => (
                 <li key={index} className="flex gap-3 text-sm leading-relaxed text-slate-200">

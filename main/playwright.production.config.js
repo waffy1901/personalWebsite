@@ -10,7 +10,9 @@ const baseURL = useLocalPreview
 
 module.exports = defineConfig({
   testDir: "./e2e",
-  testMatch: "production-smoke.spec.js",
+  testMatch: useLocalPreview
+    ? ["production-smoke.spec.js", "accessibility.spec.js"]
+    : "production-smoke.spec.js",
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
