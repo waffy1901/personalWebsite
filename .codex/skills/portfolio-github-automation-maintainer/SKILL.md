@@ -1,11 +1,13 @@
 ---
 name: portfolio-github-automation-maintainer
-description: GitHub automation maintenance for Waffy Ahmed's personalWebsite. Use when Codex changes or reviews GitHub Actions workflows, Dependabot configuration, CodeQL or security scanning setup, npm audit automation, Netlify token rotation reminders, deployed-header checks, release-on-deploy automation, auto-assignment, workflow run failures, or GitHub-managed security-feature overlap.
+description: GitHub automation maintenance for Waffy Ahmed's personalWebsite. Use when Codex changes or reviews GitHub Actions workflows, Dependabot configuration, CodeQL or security scanning setup, npm audit automation, Netlify token rotation reminders, deployed-header checks, release-on-deploy automation, auto-assignment, or GitHub-managed security-feature overlap.
 ---
 
 # Portfolio GitHub Automation Maintainer
 
 ## Workflow
+
+For failing or delayed runs, use `$portfolio-actions-run-diagnoser` first. This skill owns workflow changes and repository automation policy.
 
 1. Check `git status --short` before editing and treat unrelated app changes as user-owned.
 2. Identify the automation surface:
@@ -23,10 +25,9 @@ description: GitHub automation maintenance for Waffy Ahmed's personalWebsite. Us
 4. Prefer repo-owned automation only when it adds value beyond GitHub-managed features. Check existing secret scanning, push protection, Dependabot alerts, Dependabot security updates, and CodeQL/code scanning before adding duplicates.
 5. Keep permissions minimal, avoid secret exposure, and keep `pull_request_target` jobs free of untrusted checkout or script execution.
 6. Run narrow verification first:
-   - YAML/static review for docs-only or metadata-only workflow edits.
+   - `npm run lint:workflows` for edits to `.github/workflows/*.yml` or `*.yaml`, including permissions, schedules, and action pins. Follow `docs/workflow-lint.md` if tools need setup. Use focused documentation checks for prose-only changes.
    - `npm run lint`, `npm run test`, and `npm run build` when workflow changes mirror app CI.
    - `npm audit --audit-level=moderate` only when dependency/audit behavior is in scope.
-   - `gh run view <run_id> --log` when diagnosing a specific Actions run and authenticated `gh` is available.
 7. For publish or release readiness, hand off to `$portfolio-release-qa` or `$git-pr-publisher` as appropriate.
 
 ## Reporting

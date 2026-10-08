@@ -9,6 +9,14 @@ description: Portfolio release and pre-push QA for Waffy Ahmed's personalWebsite
 
 Resolve the repository root. The expected checkout contains `package.json`, `main/package.json`, `netlify.toml`, and `main/src`.
 
+For authoritative readiness evidence, first read [references/validation-environment.md](references/validation-environment.md) and check the runtime and installed direct dependencies:
+
+```bash
+rtk proxy node .codex/skills/portfolio-release-qa/scripts/check_validation_environment.mjs /path/to/personalWebsite
+```
+
+This read-only diagnostic can detect stale top-level modules; passing it does not prove a clean lockfile install.
+
 Run the hook-safe checks:
 
 ```bash
@@ -20,10 +28,11 @@ Use this script for pre-push hooks because it only runs lint, tests, and product
 ## Full Release Workflow
 
 1. Check `git status --short` and identify unrelated user changes before editing.
-2. Run `npm run lint`, `npm run test`, and `npm run build` from the repository root.
+2. Confirm the pinned runtime and install provenance; use an isolated clean install when the environment reference requires it. Run `npm run lint`, `npm run test`, and `npm run build` from the repository root.
 3. For deploy readiness, run `npm run preview` and smoke-check `/`, `/resume`, `/projects`, `/case-studies`, `/experience`, `/contact`, `/waffyAhmedResume.pdf`, `/llms.txt`, `/ai-summary.txt`, and `/portfolio.json`.
 4. Inspect `netlify.toml` when headers, redirects, CSP, Formspree, GA4, or asset paths changed.
-5. Use [references/release-checklist.md](references/release-checklist.md) for expected routes, artifacts, and command notes.
+5. For already-deployed production evidence, use `$portfolio-deployment-verifier`; local checks do not verify a serving SHA.
+6. Use [references/release-checklist.md](references/release-checklist.md) for expected routes, artifacts, and command notes.
 
 ## Hook Policy
 

@@ -24,14 +24,16 @@ description: Portfolio quality tracking and historical audit maintenance for Waf
 6. Preserve exact provenance in the issue. Keep dates, PR and issue numbers,
    commit hashes, deploy tags, workflow IDs, URLs, evidence classes, and
    telemetry boundaries exact.
-7. Reconcile before changing status:
+7. Reconcile before changing status. For closeout, read [references/closeout-readback.md](references/closeout-readback.md) and the closure contract in the repository policy:
    - Close an issue only when its acceptance criteria and evidence contract are
-     satisfied.
+     satisfied and a direct human grant names the exact target. Prepare the evidence packet before acting on that grant.
    - Keep historical context in the issue, PR, release, or archived audit; do
      not present fixed production issues as current.
    - Separate true breakage from low-severity caveats, investigations, and
      product hypotheses.
+   - After authorized writes, independently read back issue state/reason, assignment, Project 2 membership, and every relevant field. A mutation response is not persistence proof. Use the readback helper described in the closeout reference.
 8. Use adjacent skills for specialized evidence:
+   - `$portfolio-deployment-verifier` for exact production SHA, published deploy, workflow, and deploy-release provenance.
    - `$seo-spa-auditor` for route metadata, redirects, sitemap, robots, and crawler-visible HTML.
    - `$ai-discovery-maintainer` and `$portfolio-content-sync` for public AI/content surfaces.
    - `$resume-site-sync` for resume PDF and preview evidence.

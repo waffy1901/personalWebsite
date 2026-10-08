@@ -33,11 +33,7 @@ Use this reference for workflow, Dependabot, security automation, and GitHub run
 
 ## Diagnosis Patterns
 
-- Specific workflow run:
-
-```bash
-gh run view <run_id> --log
-```
+- Use `$portfolio-actions-run-diagnoser` for specific workflow runs, failed checks, and late or absent scheduled occurrences. Read its schedule-timing reference before attributing trigger delays to runners.
 
 - Specific issue created by automation:
 
