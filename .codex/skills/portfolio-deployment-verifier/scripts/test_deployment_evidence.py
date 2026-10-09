@@ -12,6 +12,13 @@ TARGET = "a" * 40
 OTHER = "b" * 40
 
 
+def attempt_fixture(**overrides):
+    attempt = {"id": "6ac57980be631d00088913fe", "context": "production", "site_id": "site-123",
+               "state": "ready", "commit_ref": TARGET}
+    attempt.update(overrides)
+    return attempt
+
+
 def fixture():
     tag = "deploy-20261007T140000Z-aaaaaaa"
     url = "https://deploy-123--waffy.netlify.app"
@@ -54,7 +61,7 @@ class DeploymentTests(unittest.TestCase):
         packet = fixture()
         for key in ("site_before", "site_after"):
             packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
-        packet["target_attempt"] = {"context": "production", "site_id": "site-123", "state": "ready", "commit_ref": TARGET}
+        packet["target_attempt"] = attempt_fixture()
         result = verify(packet)
         self.assertEqual(result["classification"], "different_commit")
         self.assertFalse(result["provenance_verified"])
@@ -74,7 +81,7 @@ class DeploymentTests(unittest.TestCase):
             packet["release"] = packet["resolved_tag"] = None
             for key in ("site_before", "site_after"):
                 packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
-            attempt = {"context": "production", "site_id": "site-123", "commit_ref": TARGET}
+            attempt = attempt_fixture(state="error")
             if mode == "explicit":
                 attempt["skipped"] = True
             else:
@@ -92,7 +99,8 @@ class DeploymentTests(unittest.TestCase):
                     packet["release"] = packet["resolved_tag"] = None
                     for key in ("site_before", "site_after"):
                         packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
-                    attempt = {"context": "production", "commit_ref": TARGET}
+                    attempt = attempt_fixture(state="error")
+                    del attempt["site_id"]
                     if site_id is not None:
                         attempt["site_id"] = site_id
                     if mode == "explicit":
@@ -135,7 +143,8 @@ class DeploymentTests(unittest.TestCase):
             packet["release"] = packet["resolved_tag"] = None
             for key in ("site_before", "site_after"):
                 packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
-            packet["target_attempt"] = {"context": "production", "commit_ref": TARGET, "skipped": True}
+            packet["target_attempt"] = attempt_fixture(state="error", skipped=True)
+            del packet["target_attempt"]["site_id"]
             if site_id is not None:
                 packet["target_attempt"]["site_id"] = site_id
             packets.append((f"site-{site_id}", packet))
@@ -151,9 +160,62 @@ class DeploymentTests(unittest.TestCase):
                     self.assertEqual(result.stdout, "")
 
     def test_generic_error_or_other_commit_is_not_skip(self):
-        for attempt in ({"commit_ref": TARGET, "state": "error", "error_message": "unrelated error"},
-                        {"commit_ref": OTHER, "skipped": True}):
-            self.assertNotEqual(load_classifier()([attempt], TARGET)["decision"], "skipped")
+        for attempt in (attempt_fixture(state="error", error_message="unrelated error"),
+                        attempt_fixture(commit_ref=OTHER, state="error", skipped=True)):
+            self.assertNotEqual(load_classifier()([attempt], TARGET, "site-123")["decision"], "skipped")
+
+    def run_cli(self, packet):
+        script = Path(__file__).with_name("verify_deployment_evidence.py")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "packet.json"
+            path.write_text(json.dumps(packet))
+            return subprocess.run([sys.executable, str(script), "--packet", str(path)],
+                                  text=True, capture_output=True)
+
+    def test_cli_accepts_exact_target_with_captured_attempt(self):
+        packet = fixture()
+        packet["target_attempt"] = attempt_fixture()
+        result = self.run_cli(packet)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stderr, "")
+        evidence = json.loads(result.stdout)
+        self.assertEqual(evidence["classification"], "exact_target")
+        self.assertTrue(evidence["provenance_verified"])
+        self.assertFalse(evidence["live_behavior_verified"])
+
+    def test_cli_accepts_both_supported_skip_signals(self):
+        for mode in ("explicit", "no content"):
+            with self.subTest(mode=mode):
+                packet = fixture()
+                packet["release"] = packet["resolved_tag"] = None
+                for key in ("site_before", "site_after"):
+                    packet[key]["site"]["published_deploy"]["commit_ref"] = OTHER
+                attempt = attempt_fixture(state="error")
+                if mode == "explicit":
+                    attempt["skipped"] = True
+                else:
+                    attempt["error_message"] = "Failed during stage 'checking build content for changes': Canceled build due to no content change"
+                packet["target_attempt"] = attempt
+                result = self.run_cli(packet)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(result.stderr, "")
+                evidence = json.loads(result.stdout)
+                self.assertEqual(evidence["classification"], "target_skipped")
+                self.assertFalse(evidence["provenance_verified"])
+                self.assertFalse(evidence["live_behavior_verified"])
+                self.assertEqual(evidence["published_after"]["sha"], OTHER)
+
+    def test_cli_rejects_malformed_captured_attempt_metadata(self):
+        for field, value in (("id", None), ("id", "unsafe-id"), ("state", None),
+                             ("commit_ref", "abc"), ("context", "deploy-preview"),
+                             ("site_id", "site-other"), ("skipped", "true")):
+            with self.subTest(field=field, value=value):
+                packet = fixture()
+                packet["target_attempt"] = attempt_fixture(**{field: value})
+                result = self.run_cli(packet)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertEqual(result.stdout, "")
+                self.assertIn("Invalid deployment evidence:", result.stderr)
 
     def test_deployment_race_including_same_sha_new_id_stays_unverified(self):
         for field, value in (("commit_ref", OTHER), ("id", "deploy-456")):

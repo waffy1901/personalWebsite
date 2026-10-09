@@ -96,7 +96,7 @@ def verify(packet):
             raise ValueError("target_attempt must be a captured production deploy")
         if attempt.get("site_id") != site_id:
             raise ValueError("target_attempt does not match the expected site id")
-        skipped = load_classifier()([attempt], target)["decision"] == "skipped"
+        skipped = load_classifier()([attempt], target, site_id)["decision"] == "skipped"
     if before != after:
         result["classification"] = "production_changed_during_checks"
         gaps.append("published deployment changed; observations cannot be bound to one deployment instance")
