@@ -132,6 +132,16 @@ def get_header_values(headers, name):
     return headers.get(name.lower(), [])
 
 
+def is_immutable_netlify_url(site_url):
+    # Match the whole URL without normalization: aliases, credentials, ports,
+    # non-root paths and suffix lookalikes must not receive the HSTS allowance.
+    match = re.fullmatch(
+        r"https://([0-9a-f]{24}--[a-z0-9]+(?:-[a-z0-9]+)*)\.netlify\.app/?",
+        site_url,
+    )
+    return match is not None and len(match.group(1)) <= 63
+
+
 def parse_csp_directives(policy):
     directives = {}
     duplicate_directives = set()
@@ -254,10 +264,20 @@ def main():
     actual_headers = fetch_headers(args.site_url, args.timeout, args.retries, args.retry_delay)
 
     failures = []
+    immutable_url = is_immutable_netlify_url(args.site_url)
+    hsts_preload_allowance_used = False
     for header_name, expected_value in expected_headers.items():
         actual_values = get_header_values(actual_headers, header_name)
-        if actual_values != [expected_value]:
-            failures.append((header_name, expected_value, actual_values))
+        if actual_values == [expected_value]:
+            continue
+        if (
+            header_name.lower() == "strict-transport-security"
+            and immutable_url
+            and actual_values == [expected_value + "; preload"]
+        ):
+            hsts_preload_allowance_used = True
+            continue
+        failures.append((header_name, expected_value, actual_values))
 
     if failures:
         print("Production security headers do not match netlify.toml.", file=sys.stderr)
@@ -273,7 +293,11 @@ def main():
         return 1
 
     checked = ", ".join(expected_headers.keys())
-    print(f"Production security headers match netlify.toml: {checked}")
+    allowance = (
+        " with immutable Netlify HSTS preload allowance"
+        if hsts_preload_allowance_used else ""
+    )
+    print(f"Production security headers match netlify.toml{allowance}: {checked}")
     return 0
 
 
