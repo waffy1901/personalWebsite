@@ -17,6 +17,8 @@ import check_netlify_deploy_state as checker  # noqa: E402
 
 EXPECTED_COMMIT = "a" * 40
 OTHER_COMMIT = "b" * 40
+SITE_ID = "synthetic-site-id"
+DEPLOY_ID = "a" * 24
 MISSING = object()
 
 
@@ -28,6 +30,9 @@ def deploy(
     error_message=MISSING,
 ):
     payload = {
+        "id": DEPLOY_ID,
+        "site_id": SITE_ID,
+        "context": "production",
         "commit_ref": commit_ref,
         "state": state,
         "deploy_ssl_url": "https://example-deploy.netlify.app",
@@ -41,7 +46,7 @@ def deploy(
 
 class NetlifyDeployStateTest(unittest.TestCase):
     def decision(self, payload):
-        return checker.classify_deploys(payload, EXPECTED_COMMIT)["decision"]
+        return checker.classify_deploys(payload, EXPECTED_COMMIT, SITE_ID)["decision"]
 
     def test_no_content_message_matches_netlify_signal(self):
         self.assertEqual(
@@ -78,7 +83,7 @@ class NetlifyDeployStateTest(unittest.TestCase):
                     error_message=checker.NO_CONTENT_CHANGE_ERROR_MESSAGE,
                 )
             ],
-            EXPECTED_COMMIT,
+            EXPECTED_COMMIT, SITE_ID,
         )
 
         self.assertEqual(result["decision"], "skipped")
@@ -166,13 +171,13 @@ class NetlifyDeployStateTest(unittest.TestCase):
 
     def test_exact_ready_deploy_is_ready(self):
         result = checker.classify_deploys(
-            [deploy(state="ready")], EXPECTED_COMMIT
+            [deploy(state="ready")], EXPECTED_COMMIT, SITE_ID
         )
 
         self.assertEqual(result["decision"], "ready")
         self.assertEqual(result["commit_ref"], EXPECTED_COMMIT)
         self.assertEqual(
-            result["deploy_url"], "https://example-deploy.netlify.app"
+            result["deploy_id"], DEPLOY_ID
         )
 
     def test_nonterminal_and_unknown_states_wait(self):
@@ -189,14 +194,14 @@ class NetlifyDeployStateTest(unittest.TestCase):
         for payload in invalid_payloads:
             with self.subTest(payload=payload):
                 with self.assertRaises(ValueError):
-                    checker.classify_deploys(payload, EXPECTED_COMMIT)
+                    checker.classify_deploys(payload, EXPECTED_COMMIT, SITE_ID)
 
     def test_invalid_skipped_types_fail_closed(self):
         for skipped in ("true", 1, 0.0, [], {}):
             with self.subTest(skipped=skipped):
                 with self.assertRaisesRegex(ValueError, "'skipped'"):
                     checker.classify_deploys(
-                        [deploy(state="ready", skipped=skipped)], EXPECTED_COMMIT
+                        [deploy(state="ready", skipped=skipped)], EXPECTED_COMMIT, SITE_ID
                     )
 
     def test_invalid_error_message_types_and_newlines_fail_closed(self):
@@ -220,16 +225,42 @@ class NetlifyDeployStateTest(unittest.TestCase):
                                 error_message=error_message,
                             )
                         ],
-                        EXPECTED_COMMIT,
+                        EXPECTED_COMMIT, SITE_ID,
                     )
 
-    def test_only_newest_deploy_is_considered(self):
+    def test_exact_target_behind_newer_unrelated_attempt_is_selected(self):
         payload = [
             deploy(commit_ref=OTHER_COMMIT, state="ready"),
             deploy(commit_ref=EXPECTED_COMMIT, state="ready"),
         ]
 
-        self.assertEqual(self.decision(payload), "wait")
+        self.assertEqual(self.decision(payload), "ready")
+
+    def test_identity_metadata_fails_closed(self):
+        for field, values in {
+            "id": (None, "", "bad/id", "bad\ninjected=true"),
+            "site_id": (None, "other-site", SITE_ID + "\n"),
+            "commit_ref": (None, "", "A" * 40, "a" * 39),
+            "state": (None, "", "ready\ninjected=true"),
+            "context": (None, "deploy-preview"),
+        }.items():
+            for value in values:
+                with self.subTest(field=field, value=value):
+                    with self.assertRaises(ValueError):
+                        self.decision([{**deploy(state="ready"), field: value}])
+            invalid = deploy(state="ready")
+            del invalid[field]
+            with self.assertRaises(ValueError):
+                self.decision([invalid])
+
+    def test_selected_attempt_must_retain_id_and_commit(self):
+        result = checker.classify_deploys(deploy(state="ready"), EXPECTED_COMMIT,
+                                         SITE_ID, DEPLOY_ID)
+        self.assertEqual(result["decision"], "ready")
+        for invalid in ([deploy()], {**deploy(), "id": "b" * 24},
+                        deploy(commit_ref=OTHER_COMMIT)):
+            with self.assertRaises(ValueError):
+                checker.classify_deploys(invalid, EXPECTED_COMMIT, SITE_ID, DEPLOY_ID)
 
     def test_cli_rejects_malformed_json_without_echoing_it(self):
         malformed = '{"secret": "do-not-log"'
@@ -237,6 +268,8 @@ class NetlifyDeployStateTest(unittest.TestCase):
             [
                 sys.executable,
                 str(CHECKER_PATH),
+                "--expected-site",
+                SITE_ID,
                 "--expected-commit",
                 EXPECTED_COMMIT,
             ],
@@ -256,6 +289,8 @@ class NetlifyDeployStateTest(unittest.TestCase):
             [
                 sys.executable,
                 str(CHECKER_PATH),
+                "--expected-site",
+                SITE_ID,
                 "--expected-commit",
                 EXPECTED_COMMIT,
             ],

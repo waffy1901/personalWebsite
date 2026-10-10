@@ -46,6 +46,11 @@ jobs:
       - name: Test Netlify deploy-state classifier
         run: python3 scripts/test_netlify_deploy_state.py
 
+      - name: Test Netlify publication identity and workflow
+        run: |
+          python3 scripts/test_netlify_published_deploy.py
+          python3 scripts/test_release_on_deploy_workflow.py
+
       - name: Build
         working-directory: main
         run: npm run build
@@ -54,9 +59,11 @@ jobs:
     name: Resolve Netlify production deploy
     runs-on: ubuntu-latest
     needs: verify
+    timeout-minutes: 40
     outputs:
       deployed: ${{ steps.resolve.outputs.deployed }}
       deploy_url: ${{ steps.resolve.outputs.deploy_url }}
+      deploy_id: ${{ steps.resolve.outputs.deploy_id }}
 
     steps:
       - name: Check out repository
@@ -78,51 +85,72 @@ jobs:
             exit 1
           fi
 
+          selected_id=""
           for attempt in $(seq 1 45); do
-            deploy_json="$(curl -fsS \
-              -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
-              "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/deploys?production=true&per_page=1")"
-            if ! classification="$(printf '%s' "$deploy_json" | python3 scripts/check_netlify_deploy_state.py --expected-commit "$EXPECTED_COMMIT")"; then
-              echo "::error::Could not classify the latest Netlify production deploy."
+            if [ -n "$selected_id" ]; then
+              lookup_url="https://api.netlify.com/api/v1/deploys/${selected_id}"
+            else
+              lookup_url="https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}/deploys?production=true&per_page=100"
+            fi
+            deploy_json="$(curl -fsS --connect-timeout 5 --max-time 15 \
+              -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" "$lookup_url")"
+            if ! classification="$(printf '%s' "$deploy_json" | python3 scripts/check_netlify_deploy_state.py \
+              --expected-commit "$EXPECTED_COMMIT" --expected-site "$NETLIFY_SITE_ID" --selected-deploy-id "$selected_id")"; then
+              echo "::error::Could not classify the target Netlify production deploy."
               exit 1
             fi
 
             decision="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["decision"])')"
-            deploy_state="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["state"])')"
-            deploy_commit="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["commit_ref"])')"
-            deploy_url="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["deploy_url"])')"
+            selected_id="$(printf '%s' "$classification" | python3 -c 'import json, sys; print(json.load(sys.stdin)["deploy_id"])')"
 
             case "$decision" in
               ready)
-                echo "Netlify production deploy is ready for ${EXPECTED_COMMIT}: ${deploy_url}"
-                echo "deployed=true" >> "$GITHUB_OUTPUT"
-                echo "deploy_url=${deploy_url}" >> "$GITHUB_OUTPUT"
-                exit 0
+                site_json="$(curl -fsS --connect-timeout 5 --max-time 15 \
+                  -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
+                  "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}")"
+                if ! publication="$(printf '%s' "$site_json" | python3 scripts/check_netlify_published_deploy.py \
+                  --expected-commit "$EXPECTED_COMMIT" --expected-site "$NETLIFY_SITE_ID" --expected-deploy "$selected_id")"; then
+                  echo "::error::Could not validate the Netlify published deployment."
+                  exit 1
+                fi
+                published="$(printf '%s' "$publication" | python3 -c 'import json, sys; print(json.load(sys.stdin)["decision"])')"
+                if [ "$published" = "published" ]; then
+                  deploy_url="$(printf '%s' "$publication" | python3 -c 'import json, sys; print(json.load(sys.stdin)["deploy_url"])')"
+                  echo "Netlify publishes ${selected_id} for ${EXPECTED_COMMIT}: ${deploy_url}"
+                  {
+                    echo "deployed=true"
+                    echo "deploy_url=${deploy_url}"
+                    echo "deploy_id=${selected_id}"
+                  } >> "$GITHUB_OUTPUT"
+                  exit 0
+                fi
                 ;;
               skipped)
                 echo "Netlify skipped the production deploy for ${EXPECTED_COMMIT}; no deployment release will be created."
-                echo "deployed=false" >> "$GITHUB_OUTPUT"
-                echo "deploy_url=" >> "$GITHUB_OUTPUT"
+                {
+                  echo "deployed=false"
+                  echo "deploy_url="
+                  echo "deploy_id="
+                } >> "$GITHUB_OUTPUT"
                 exit 0
                 ;;
               failed)
-                echo "::error::Netlify production deploy ${EXPECTED_COMMIT} reached terminal state ${deploy_state}."
+                echo "::error::Netlify production deploy ${EXPECTED_COMMIT} failed."
                 exit 1
                 ;;
-              wait)
-                if [ "$attempt" = "45" ]; then
-                  echo "::error::Timed out waiting for Netlify production deploy ${EXPECTED_COMMIT}. Last state=${deploy_state}, commit=${deploy_commit}, url=${deploy_url}"
-                  exit 1
-                fi
-
-                echo "Waiting for Netlify production deploy ${EXPECTED_COMMIT}; attempt ${attempt}/45 saw state=${deploy_state}, commit=${deploy_commit}"
-                sleep 20
-                ;;
+              wait) ;;
               *)
-                echo "::error::Deploy-state classifier returned unexpected decision ${decision}."
+                echo "::error::Deploy-state classifier returned an unexpected decision."
                 exit 1
                 ;;
             esac
+
+            if [ "$attempt" = "45" ]; then
+              echo "::error::Timed out waiting for Netlify to publish target deployment ${EXPECTED_COMMIT} (${selected_id})."
+              exit 1
+            fi
+            echo "Waiting for Netlify publication of ${EXPECTED_COMMIT}; attempt ${attempt}/45."
+            sleep 20
           done
 
   release:
@@ -156,6 +184,14 @@ jobs:
       - name: Verify CSP JSON-LD hash
         run: node .codex/skills/csp-security-header-maintainer/scripts/check_csp_jsonld_hash.mjs "$GITHUB_WORKSPACE"
 
+      - name: Validate immutable deployment
+        env:
+          SITE_URL: ${{ needs.resolve_deploy.outputs.deploy_url }}
+        run: |
+          python3 scripts/check-deployed-routes.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+          python3 scripts/check-deployed-security-headers.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+          python3 scripts/check-deployed-artifacts.py --repo "$GITHUB_WORKSPACE" --site-url "$SITE_URL"
+
       - name: Validate deployed routes
         env:
           SITE_URL: https://waffy.dev
@@ -180,10 +216,27 @@ jobs:
           printf '%s\n' "$legacy_headers" | grep -Eiq '^HTTP/[0-9.]+ 301'
           printf '%s\n' "$legacy_headers" | tr -d '\r' | grep -Fiq 'Location: https://waffy.dev/waffyAhmedResume.pdf'
 
+      - name: Recheck published deployment before release
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_DEPLOY_ID: ${{ needs.resolve_deploy.outputs.deploy_id }}
+          NETLIFY_DEPLOY_URL: ${{ needs.resolve_deploy.outputs.deploy_url }}
+        run: |
+          set -euo pipefail
+          site_json="$(curl -fsS --connect-timeout 5 --max-time 15 \
+            -H "Authorization: Bearer ${NETLIFY_AUTH_TOKEN}" \
+            "https://api.netlify.com/api/v1/sites/${NETLIFY_SITE_ID}")"
+          printf '%s' "$site_json" | python3 scripts/check_netlify_published_deploy.py \
+            --expected-commit "$EXPECTED_COMMIT" --expected-site "$NETLIFY_SITE_ID" \
+            --expected-deploy "$NETLIFY_DEPLOY_ID" --expected-url "$NETLIFY_DEPLOY_URL" --require-published
+
       - name: Create GitHub release
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           NETLIFY_DEPLOY_URL: ${{ needs.resolve_deploy.outputs.deploy_url }}
+          NETLIFY_DEPLOY_ID: ${{ needs.resolve_deploy.outputs.deploy_id }}
         with:
           script: |
             const shortSha = context.sha.slice(0, 7);
@@ -201,6 +254,7 @@ jobs:
               `- Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
               "- Site: https://waffy.dev",
               `- Netlify deploy: ${process.env.NETLIFY_DEPLOY_URL}`,
+              `- Netlify deploy ID: ${process.env.NETLIFY_DEPLOY_ID}`,
             ].join("\n");
 
             await github.rest.repos.createRelease({
