@@ -29,3 +29,15 @@ jobs:
 
       - name: Check workflow files
         run: bash scripts/check-workflows.sh
+
+      - name: Set up Node for deployment release fixtures
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.22.3
+
+      - name: Test automatic deployment release guards
+        run: |
+          python3 scripts/test_netlify_deploy_state.py
+          python3 .codex/skills/portfolio-deployment-verifier/scripts/test_deployment_evidence.py
+          python3 scripts/test_netlify_published_deploy.py
+          python3 scripts/test_release_on_deploy_workflow.py

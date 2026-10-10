@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+"""Classify a validated exact-target attempt; readiness is not publication."""
 import argparse
 import json
+import re
 import sys
 
 
@@ -11,85 +13,109 @@ NO_CONTENT_CHANGE_ERROR_MESSAGE = (
 )
 
 
+def require_pattern(value, pattern, field):
+    if not isinstance(value, str) or re.fullmatch(pattern, value) is None:
+        raise ValueError(f"{field} is missing or unsafe")
+    return value
+
+
+def validate_inputs(expected_commit, expected_site):
+    require_pattern(expected_commit, r"[0-9a-f]{40}", "expected commit")
+    require_pattern(expected_site, r"[a-z0-9]+(?:-[a-z0-9]+)*", "expected site")
+
+
+def deploy_id(value):
+    return require_pattern(value, r"[a-z0-9]{1,63}", "deployment id")
+
+
 def _optional_string(deploy, field):
     value = deploy.get(field)
     if value is None:
         return ""
     if not isinstance(value, str):
-        raise ValueError(f"latest deploy field {field!r} must be a string or null")
-    if "\n" in value or "\r" in value:
-        raise ValueError(f"latest deploy field {field!r} must not contain newlines")
+        raise ValueError(f"deploy field {field!r} must be a string or null")
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise ValueError(f"deploy field {field!r} must not contain control characters")
     return value
 
 
-def classify_deploys(deploys, expected_commit):
-    if not isinstance(expected_commit, str) or not expected_commit:
-        raise ValueError("expected commit must be a nonempty string")
-    if not isinstance(deploys, list):
-        raise ValueError("Netlify response must be a JSON list")
-
-    if not deploys:
-        return {
-            "decision": "wait",
-            "state": "",
-            "commit_ref": "",
-            "deploy_url": "",
-        }
-
-    deploy = deploys[0]
+def validate_deploy(deploy, expected_site):
     if not isinstance(deploy, dict):
-        raise ValueError("latest deploy entry must be a JSON object")
-
-    state = _optional_string(deploy, "state")
-    commit_ref = _optional_string(deploy, "commit_ref")
-    deploy_ssl_url = _optional_string(deploy, "deploy_ssl_url")
-    ssl_url = _optional_string(deploy, "ssl_url")
-    deploy_url = deploy_ssl_url or ssl_url
-    error_message = _optional_string(deploy, "error_message")
-
+        raise ValueError("deploy must be a JSON object")
+    if deploy.get("site_id") != expected_site:
+        raise ValueError("deploy site_id does not match expected site")
+    deploy_id(deploy.get("id"))
+    require_pattern(deploy.get("commit_ref"), r"[0-9a-f]{40}", "deploy commit_ref")
+    require_pattern(deploy.get("state"), r"[a-z][a-z0-9_-]*", "deploy state")
+    if deploy.get("context") != "production":
+        raise ValueError("deploy context must be production")
+    _optional_string(deploy, "error_message")
     skipped = deploy.get("skipped")
     if skipped is not None and not isinstance(skipped, bool):
-        raise ValueError(
-            "latest deploy field 'skipped' must be a boolean or null"
-        )
+        raise ValueError("deploy field 'skipped' must be a boolean or null")
 
-    decision = "wait"
-    if commit_ref == expected_commit:
-        if skipped is True:
+
+def strict_json(stream):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            if key in result:
+                raise ValueError("duplicate JSON object member")
+            result[key] = value
+        return result
+
+    def invalid_constant(_value):
+        raise ValueError("invalid JSON constant")
+
+    return json.load(stream, object_pairs_hook=pairs, parse_constant=invalid_constant)
+
+
+def classify_deploys(deploys, expected_commit, expected_site, selected_id=""):
+    validate_inputs(expected_commit, expected_site)
+    if selected_id:
+        deploy_id(selected_id)
+        if not isinstance(deploys, dict) or deploys.get("id") != selected_id:
+            raise ValueError("selected deployment identity changed")
+        candidates = [deploys]
+    else:
+        if not isinstance(deploys, list):
+            raise ValueError("Netlify response must be a JSON list")
+        candidates = deploys
+
+    result = {"decision": "wait", "state": "", "commit_ref": "", "deploy_id": ""}
+    for deploy in candidates:
+        validate_deploy(deploy, expected_site)
+        if deploy["commit_ref"] != expected_commit:
+            if selected_id:
+                raise ValueError("selected deployment commit changed")
+            continue
+        decision = "wait"
+        if deploy.get("skipped") is True:
             decision = "skipped"
-        elif state == "error" and error_message == NO_CONTENT_CHANGE_ERROR_MESSAGE:
+        elif (deploy["state"] == "error" and
+              deploy.get("error_message") == NO_CONTENT_CHANGE_ERROR_MESSAGE):
             decision = "skipped"
-        elif state == "ready":
+        elif deploy["state"] == "ready":
             decision = "ready"
-        elif state in TERMINAL_FAILURE_STATES:
+        elif deploy["state"] in TERMINAL_FAILURE_STATES:
             decision = "failed"
-
-    return {
-        "decision": decision,
-        "state": state,
-        "commit_ref": commit_ref,
-        "deploy_url": deploy_url,
-    }
+        return {"decision": decision, "state": deploy["state"],
+                "commit_ref": deploy["commit_ref"], "deploy_id": deploy["id"]}
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Classify the latest Netlify production deploy for a commit."
-    )
-    parser.add_argument(
-        "--expected-commit",
-        required=True,
-        help="Exact Git commit SHA expected from the newest production deploy.",
-    )
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--expected-commit", required=True)
+    parser.add_argument("--expected-site", required=True)
+    parser.add_argument("--selected-deploy-id", default="")
     args = parser.parse_args()
-
     try:
-        deploys = json.load(sys.stdin)
-        result = classify_deploys(deploys, args.expected_commit)
-    except (json.JSONDecodeError, ValueError) as error:
+        result = classify_deploys(strict_json(sys.stdin), args.expected_commit,
+                                  args.expected_site, args.selected_deploy_id)
+    except (ValueError, UnicodeError) as error:
         print(f"Invalid Netlify deploy response: {error}", file=sys.stderr)
         return 2
-
     json.dump(result, sys.stdout, sort_keys=True)
     sys.stdout.write("\n")
     return 0
