@@ -35,6 +35,8 @@ routing_runtime_inspection:
   supports_reasoning_effort_override: <yes | no>
   supports_fork_turns: <yes | no>
   available_model_overrides: <runtime-observed list, unavailable, or no spawn required>
+  supported_efforts_by_model: <runtime-observed effort sets, unavailable, or no spawn required>
+  capability_mapping_evidence: <current generation/class mapping with live descriptions or official source and observation date>
 role_routing_records:
   - role: <planner | implementer | reviewer | specialist>
     decision_inputs:
@@ -43,7 +45,7 @@ role_routing_records:
       failure_cost: <low | medium | high with concise evidence>
       failed_attempts_or_uncertainty: <none or concise evidence>
     requested_capability: <efficient | balanced | frontier>
-    requested_model: <policy-selected model target, for example gpt-5.6-terra; never inherited_parent or unavailable>
+    requested_model: <policy-selected current model target, for example gpt-6.1-sol; never inherited_parent or unavailable>
     requested_reasoning_effort: <policy-selected runtime-supported effort, for example low, medium, high, xhigh, max, or ultra; never unavailable>
     routing_source: <explicit_spawn_override | intentional_inheritance | fallback_inheritance>
     actual_routing: <explicit_spawn_override | inherited_parent | unknown | unavailable>
@@ -52,6 +54,12 @@ role_routing_records:
     inheritance_exception: <none, or parent runtime-confirmation, equal-or-higher comparison, concrete reason explicit routing must not be used, and pre-spawn decision evidence>
     evidence: <spawn parameters plus runtime/session metadata, or explicit absence of metadata>
     handoff_context: <none or fork_turns none/smallest bounded value and packet reference>
+reviewer_strength_check:
+  implementation_profiles: <every contributing implementation/rework model and effort, including coordinator edits, with requested/actual distinction and evidence>
+  selected_reviewer: <requested model/effort and actual values when runtime-confirmed, or none before selected>
+  comparisons: <for each implementation profile, evidenced higher model or identical model with strictly higher supported effort; unknown remains explicit>
+  result: <pass | pending_runtime_verification | blocked | not_applicable>
+  evidence: <live supported controls, capability/effort ordering, spawn parameters, and runtime metadata or its absence; not_applicable only when no independent review is required>
 approved_scope:
   - <files, components, systems, and outcomes allowed>
 non_goals:
@@ -72,6 +80,7 @@ Field meanings:
 - `authority_record` is valid only when it faithfully records a direct human instruction from the active conversation. Its exclusions remain effective even if another field recommends an excluded action.
 - `routing_runtime_inspection` is a live observation, not a policy assertion. Reinspect before every spawn because available overrides and controls can differ by session or turn.
 - `role_routing_records` has one entry per role that actually ran and `none` when no role ran. `requested_model` and `requested_reasoning_effort` always preserve the policy-selected target, including during inheritance; `routing_source` is limited to the listed values. Record actual model and effort only from runtime metadata; use `unknown` or `unavailable` otherwise. `inheritance_exception` is `none` unless the pre-spawn gates in the routing policy are satisfied.
+- `reviewer_strength_check` applies the [routing policy](routing-policy.md) to every profile that contributed implementation or rework to the reviewed diff. Recompute after escalation or rework. `pass` requires runtime-confirmed compliant profiles; qualifying explicit requests without actual metadata remain `pending_runtime_verification`. Equal/weaker profiles or unknown inherited settings are `blocked`. Before selection, record the pending decision explicitly; `not_applicable` cannot waive a required independent review.
 - scope, non-goals, and open questions make drift visible.
 - `next_allowed_transition` describes what current authority permits; `stop_condition` prevents a role from silently entering a later phase.
 
@@ -261,6 +270,7 @@ implementer_to_reviewer:
     - check: <check not run, or none>
       residual_risk: <claim left unverified>
   downstream_action_confirmation: <confirm no merge, auto-merge, default-branch push, tag, Release, deploy, production mutation, remediation, issue closure, or acceptance closure occurred>
+  implementation_routing_profiles: <copy every contributing implementation/rework profile from reviewer_strength_check, with current runtime evidence>
   reviewer_scope:
     base_branch: <base branch>
     reviewed_base_tip_sha: <full SHA that must match the live base tip immediately before review>
@@ -301,6 +311,8 @@ Use this report shape:
 ## Routing Telemetry
 
 For each role that ran, report requested capability/model/effort, routing source, actual model/effort, and evidence from the common packet. State `unknown` or `unavailable` for actual values when runtime metadata did not expose them; never infer actual values from a policy or prompt.
+
+Report `reviewer_strength_check` against all contributing implementation/rework profiles. A known equal/weaker actual reviewer invalidates the verdict. Missing actual metadata after qualifying explicit overrides is a named limitation and permits at most `READY WITH NOTES`; unknown inherited settings block a verdict until verified. Rework requires a fresh comparison as well as fresh review at the exact SHA.
 
 ## Binding Semantic Version Assessment
 

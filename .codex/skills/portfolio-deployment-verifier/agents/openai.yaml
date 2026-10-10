@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Deployment Verifier"
+  short_description: "Verify exact portfolio deployment evidence"
+  default_prompt: "Use $portfolio-deployment-verifier to verify the production provenance and live evidence for this exact merge SHA."

@@ -2,10 +2,18 @@
 
 This repository keeps two independent release records:
 
-- `deploy-YYYYMMDDTHHMMSSZ-<short-sha>` releases are immutable production-deployment provenance. A successful `main` commit creates one only when Netlify reports a ready production deploy for that exact commit, and they are never retagged, deleted, or made Latest.
+- `deploy-YYYYMMDDTHHMMSSZ-<short-sha>` releases are immutable production-deployment provenance. A successful `main` commit creates one only when Netlify's site-level `published_deploy` identifies the selected ready production deployment for that exact commit. These releases record the deployment ID and immutable Netlify URL and are never retagged, deleted, or made Latest.
 - `vMAJOR.MINOR.PATCH` releases are deliberately curated milestones. They point to an already-ready Netlify production commit and are marked Latest.
 
 The deployment-release workflow exits successfully without creating a GitHub release when Netlify marks the exact commit's production deploy with `skipped: true` or returns the exact no-content cancellation signal. This covers non-deployable commits without weakening the exact-commit gate: other terminal deploy failures, malformed responses, and polling timeouts still fail closed.
+
+The automatic deployment-release resolver validates each candidate's site ID, deployment ID, full lowercase 40-character commit SHA, production context, state, and skipped status. It searches the latest 100 production attempts for the exact target commit, selects the first matching attempt, and retains that deployment ID through subsequent polls of `GET /api/v1/deploys/{deploy_id}`. A newer unrelated or skipped attempt cannot replace it. If the target is outside this window, the resolver times out without a release.
+
+Attempt readiness alone is insufficient. For a ready target, the resolver reads `GET /api/v1/sites/{site_id}` and requires the expected site identity plus a ready, production, non-skipped `published_deploy` with the same deployment ID and exact target SHA. A well-formed different published deployment can wait within the existing 45-poll budget, with 20 seconds between polls. Missing or malformed identity, wrong-site responses, and API errors fail closed. API reads have a five-second connection timeout and a 15-second total timeout; the resolver job is capped at 40 minutes including API time and checkout.
+
+The resolver constructs `https://<deploy-id>--<site-name>.netlify.app` from validated deployment and site-name metadata. It does not use provider alias URL fields, which can identify a mutable branch. The existing route, header, and nine public-artifact HTTP contracts run against this immutable URL as well as the production domain, and the legacy-domain redirect check remains required. Public-artifact equality is content evidence for those files only: different frontend JS/CSS can still share all nine files, so it never substitutes for the published-pointer identity gate.
+
+Immediately before `Create GitHub release`, the workflow reads the site pointer again and requires the same site, deployment ID, ready production state, non-skipped status, exact SHA, and constructed immutable URL. A rollback, advance, same-SHA replacement deployment, or changed site name blocks release creation without another polling wait. This final check reduces the race window; the Netlify read and GitHub release write are not atomic, and publication can change between them. The recorded immutable URL and ID preserve the identity that was verified, not a guarantee that it remains the current production deployment.
 
 The semantic-release workflow resolves production from `GET /api/v1/sites/{site_id}` and its `published_deploy` object. It does not select the newest deploy attempt, so a newer pending, failed, skipped, or unpublished ready deploy cannot displace the deployment currently serving production. Before publication, the workflow requires that pointer to be ready, match the requested lowercase 40-character commit SHA, and expose a safe nonempty deploy ID and HTTPS URL. Missing or malformed site and deployment metadata fails closed.
 
@@ -46,9 +54,13 @@ The workflow is idempotent only when the requested semantic tag and published no
 Run the deterministic workflow fixtures and existing release checks from the repository root:
 
 ```bash
-python3 scripts/test_semantic_release_workflow.py
-python3 scripts/test_netlify_deploy_state.py
-npm run test:release
+rtk proxy python3 scripts/test_semantic_release_workflow.py
+rtk proxy python3 scripts/test_netlify_deploy_state.py
+rtk proxy python3 scripts/test_netlify_published_deploy.py
+rtk proxy python3 scripts/test_release_on_deploy_workflow.py
+rtk npm run test:release
 ```
 
 The semantic-release fixture suite executes the workflow's embedded Netlify lookup with synthetic responses and the deployment-provenance JavaScript with synthetic GitHub release data. It makes no provider requests and performs no release or deployment writes.
+
+The automatic-release fixtures run in the automatic workflow's verification job and the PR workflow-lint job. They execute the actual resolver and final-guard shell with fake curl and sleep, enforce bounded API options and retained identity, and execute the release JavaScript with a fake GitHub client. The artifact counterexample passes all nine public-artifact comparisons with deliberately different frontend JS/CSS while both identity gates reject the other deployment. These are offline source and synthetic regression checks; they do not prove provider state, a live deployment, or a published release. Real deployment evidence and issue closure remain separate authorized work.

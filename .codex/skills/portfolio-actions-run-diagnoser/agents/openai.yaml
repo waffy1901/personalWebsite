@@ -1,0 +1,4 @@
+interface:
+  display_name: "Portfolio Actions Diagnoser"
+  short_description: "Diagnose portfolio workflow failures and delays"
+  default_prompt: "Use $portfolio-actions-run-diagnoser to diagnose this portfolio workflow run or delayed schedule."
