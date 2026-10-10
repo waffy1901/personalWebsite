@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Execute the real automatic-release shell with synthetic, offline providers."""
 import importlib.util
+import copy
 import json
 import os
 import subprocess
@@ -246,26 +247,108 @@ class ReleaseWorkflowTest(unittest.TestCase):
         for variable, output in (('NETLIFY_DEPLOY_URL', 'deploy_url'), ('NETLIFY_DEPLOY_ID', 'deploy_id')):
             self.assertEqual(source.count(f'{variable}: ${{{{ needs.resolve_deploy.outputs.{output} }}}}'), 2)
 
-    def test_actual_release_script_records_id_and_immutable_url(self):
+    def create_release(self, deploy_url=URL, deploy_id=DEPLOY):
         harness = r'''
 const fs = require('node:fs');
 const source = fs.readFileSync(0, 'utf8');
 const context = { sha: process.env.EXPECTED_COMMIT, ref: 'refs/heads/main',
-  serverUrl: 'https://github.example', repo: {owner: 'owner', repo: 'repo'}, runId: 42 };
+  serverUrl: 'https://github.com', repo: {owner: 'waffy1901', repo: 'personalWebsite'}, runId: 42 };
 const github = {rest: {repos: {createRelease: async (args) => process.stdout.write(JSON.stringify(args))}}};
 new Function('github', 'context', `return (async () => {${source}})();`)(github, context)
   .catch((error) => {console.error(error); process.exitCode = 1;});
 '''
         result = subprocess.run(['node', '-e', harness], input=RELEASE, capture_output=True,
                                 text=True, check=False, env={**os.environ, 'EXPECTED_COMMIT': COMMIT,
-                                'NETLIFY_DEPLOY_ID': DEPLOY, 'NETLIFY_DEPLOY_URL': URL})
+                                'NETLIFY_DEPLOY_ID': deploy_id, 'NETLIFY_DEPLOY_URL': deploy_url})
         self.assertEqual(result.returncode, 0, result.stderr)
-        release = json.loads(result.stdout)
+        return json.loads(result.stdout)
+
+    def test_actual_release_script_records_id_and_immutable_url(self):
+        release = self.create_release()
         self.assertEqual(release['target_commitish'], COMMIT)
         self.assertIn(f'- Netlify deploy: {URL}', release['body'])
         self.assertIn(f'- Netlify deploy ID: {DEPLOY}', release['body'])
         self.assertFalse(release['draft'])
         self.assertEqual(release['make_latest'], 'false')
+
+    def evidence_cli(self, packet):
+        script = ROOT / '.codex/skills/portfolio-deployment-verifier/scripts/verify_deployment_evidence.py'
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'packet.json'
+            path.write_text(json.dumps(packet))
+            return subprocess.run([sys.executable, '-B', str(script), '--packet', str(path)],
+                                  capture_output=True, text=True, check=False,
+                                  env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'})
+
+    def producer_evidence(self, raw_fields):
+        attempt = deployment(**raw_fields)
+        capture = site(published_deploy=attempt)
+        process, output, _, _ = self.resolve(published=[capture], attempts=[[attempt]])
+        self.assertEqual(process.returncode, 0, process.stdout + process.stderr)
+        outputs = dict(line.split('=', 1) for line in output.splitlines())
+        self.assertEqual(outputs, {'deployed': 'true', 'deploy_id': DEPLOY, 'deploy_url': URL})
+        final, _, _, _ = self.guard(capture, overrides={
+            'NETLIFY_DEPLOY_URL': outputs['deploy_url'], 'NETLIFY_DEPLOY_ID': outputs['deploy_id']})
+        self.assertEqual(final.returncode, 0, final.stdout + final.stderr)
+        release = self.create_release(outputs['deploy_url'], outputs['deploy_id'])
+        repository = 'waffy1901/personalWebsite'
+        release['html_url'] = f"https://github.com/{repository}/releases/tag/{release['tag_name']}"
+        return {'target_sha': COMMIT, 'site_id': SITE,
+                'site_before': {'captured_at': '2026-10-10T00:00:00Z', 'site': copy.deepcopy(capture)},
+                'site_after': {'captured_at': '2026-10-10T00:01:00Z', 'site': copy.deepcopy(capture)},
+                'target_attempt': copy.deepcopy(attempt),
+                'workflow': {'id': 42, 'run_attempt': 1,
+                             'path': '.github/workflows/release-on-deploy.yml',
+                             'repository': {'full_name': repository}, 'head_sha': COMMIT,
+                             'head_branch': 'main', 'event': 'push', 'status': 'completed',
+                             'conclusion': 'success',
+                             'html_url': f'https://github.com/{repository}/actions/runs/42'},
+                'release': release,
+                'resolved_tag': {'tag_name': release['tag_name'], 'commit_sha': COMMIT}}
+
+    def test_actual_producer_to_evidence_cli_accepts_alias_and_missing_raw_urls(self):
+        alias = 'https://main--portfolio.netlify.app'
+        for raw_fields in ({'deploy_ssl_url': URL}, {'deploy_ssl_url': alias}, {},
+                           {'deploy_ssl_url': None, 'ssl_url': None},
+                           {'ssl_url': 'https://portfolio.netlify.app'}):
+            with self.subTest(raw_fields=raw_fields):
+                packet = self.producer_evidence(raw_fields)
+                result = self.evidence_cli(packet)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                evidence = json.loads(result.stdout)
+                self.assertEqual(evidence['classification'], 'exact_target')
+                self.assertTrue(evidence['provenance_verified'])
+                self.assertFalse(evidence['live_behavior_verified'])
+                self.assertEqual(evidence['published_after']['immutable_url'], URL)
+
+    def test_actual_release_evidence_cli_rejects_altered_urls_and_identity(self):
+        original = self.producer_evidence({'deploy_ssl_url': 'https://main--portfolio.netlify.app'})
+        cases = []
+        for suffix in ('.attacker.test', ':443', ':8443', '/other', '?preview=1', '#other'):
+            packet = copy.deepcopy(original)
+            packet['release']['body'] = packet['release']['body'].replace(URL, URL + suffix)
+            cases.append((f'release-url-{suffix}', packet))
+        for field, value in (('site_id', 'other-site'), ('id', OTHER), ('context', 'deploy-preview')):
+            packet = copy.deepcopy(original)
+            for key in ('site_before', 'site_after'):
+                packet[key]['site']['published_deploy'][field] = value
+            cases.append((f'published-{field}', packet))
+        for field, value in (('id', 'other-site'), ('name', 'other-site'), ('name', None)):
+            packet = copy.deepcopy(original)
+            for key in ('site_before', 'site_after'):
+                packet[key]['site'][field] = value
+            cases.append((f'site-{field}-{value}', packet))
+        # The producer deliberately ignores raw URLs; the evidence consumer must
+        # still reject malformed captured values instead of hiding them behind
+        # the valid canonical URL emitted by those actual producer steps.
+        for field in ('deploy_ssl_url', 'ssl_url'):
+            cases.append((f'malformed-{field}', self.producer_evidence({field: 'https://bad/path'})))
+        for label, packet in cases:
+            with self.subTest(case=label):
+                result = self.evidence_cli(packet)
+                self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+                self.assertEqual(result.stdout, '')
+                self.assertIn('Invalid deployment evidence:', result.stderr)
 
     def test_identical_nine_public_artifacts_do_not_establish_frontend_identity(self):
         path = ROOT / 'scripts/check-deployed-artifacts.py'

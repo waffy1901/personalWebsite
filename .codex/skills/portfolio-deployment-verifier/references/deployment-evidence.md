@@ -22,7 +22,8 @@ rtk proxy gh api --paginate --slurp 'repos/waffy1901/personalWebsite/actions/run
 Use the authenticated Netlify connector/API to read `GET /api/v1/sites/{site_id}`.
 Confirm the site's identity and custom domain from provider metadata. Retain the
 site object's `published_deploy`, its ready state, exact `commit_ref`, safe ID,
-and HTTPS `deploy_ssl_url` or `ssl_url`. Record capture time. No tokens or
+and site `name`, deployment `site_id`/`context`, and any supplied HTTPS
+`deploy_ssl_url` or `ssl_url`. Record capture time. No tokens or
 authorization headers belong in evidence files or user-facing output.
 
 Read production-filtered deploy attempts only to diagnose pending/failure/skip
@@ -43,6 +44,15 @@ been found, complete pagination before claiming absence.
 The helper compares complete standalone URL tokens, as emitted by the release
 workflow. A longer run ID, lookalike host, port, path, query, or fragment cannot
 substitute for the expected workflow or published-deploy URL.
+With complete validated site/deploy identity, the helper also accepts the exact
+immutable `https://<deploy-id>--<site-name>.netlify.app` URL emitted by the current
+workflow, even when optional raw URL fields are absent or null. It reports this
+as `immutable_url`; `url` retains the captured URL when supplied, otherwise the
+derived URL. Historical releases retain exact
+matching against the captured `deploy_ssl_url` (or `ssl_url` fallback), including
+branch aliases; an alias does not become immutable evidence. Supplied URL values
+must be HTTPS hostnames without credentials, ports, paths, queries, or fragments.
+Malformed supplied metadata is rejected even when canonical derivation is possible.
 
 ## Snapshot classification helper
 

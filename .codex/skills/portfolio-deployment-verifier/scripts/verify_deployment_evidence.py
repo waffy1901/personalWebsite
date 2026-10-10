@@ -14,12 +14,16 @@ WORKFLOW = ".github/workflows/release-on-deploy.yml"
 SHA = re.compile(r"[0-9a-f]{40}")
 
 
-def load_classifier():
+def load_deploy_helpers():
     source = Path(__file__).resolve().parents[4] / "scripts/check_netlify_deploy_state.py"
     spec = importlib.util.spec_from_file_location("portfolio_deploy_classifier", source)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.classify_deploys
+    return module
+
+
+def load_classifier():
+    return load_deploy_helpers().classify_deploys
 
 
 def timestamp(value):
@@ -32,12 +36,14 @@ def timestamp(value):
 
 
 def https_url(value):
-    if not isinstance(value, str) or any(char.isspace() or ord(char) < 32 for char in value) or "\\" in value:
+    if not isinstance(value, str) or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in value) or "\\" in value:
         raise ValueError("deploy URL must be a safe HTTPS URL")
     parsed = urlsplit(value)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username is not None or parsed.password is not None:
         raise ValueError("deploy URL must use HTTPS without credentials")
-    parsed.port  # Validate malformed port syntax as well.
+    if (parsed.port is not None or value != f"https://{parsed.netloc}"
+            or not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)*", parsed.netloc)):
+        raise ValueError("deploy URL must be an HTTPS hostname without port, path, query, or fragment")
     return value
 
 
@@ -57,8 +63,35 @@ def published(snapshot, site_id):
         raise ValueError("published commit_ref must be an exact lowercase SHA")
     if not isinstance(deploy.get("id"), str) or not re.fullmatch(r"[A-Za-z0-9_-]+", deploy["id"]):
         raise ValueError("published deploy id is missing or unsafe")
-    return {"id": deploy["id"], "sha": deploy["commit_ref"],
-            "url": https_url(deploy.get("deploy_ssl_url") or deploy.get("ssl_url"))}
+    # Historical captures can lack these fields; present contradictory metadata
+    # must never fall back to the legacy raw-link compatibility path.
+    for field, expected in (("site_id", site_id), ("context", "production")):
+        if field in deploy and deploy[field] != expected:
+            raise ValueError(f"published deploy {field} does not match the expected identity")
+    if deploy.get("skipped") is not None and not isinstance(deploy["skipped"], bool):
+        raise ValueError("published skipped must be a boolean or null")
+    helpers = load_deploy_helpers()
+    if "name" in site:
+        helpers.require_pattern(site["name"], r"[a-z0-9]+(?:-[a-z0-9]+)*", "site name")
+    immutable_url = None
+    if "name" in site and "site_id" in deploy and "context" in deploy:
+        helpers.validate_inputs(deploy["commit_ref"], site_id)
+        helpers.validate_deploy(deploy, site_id)
+        label = f"{deploy['id']}--{site['name']}"
+        if len(label) > 63:
+            raise ValueError("immutable deployment hostname exceeds DNS label limit")
+        immutable_url = f"https://{label}.netlify.app"
+    # Validate both supplied URL fields, including an unused fallback. Missing
+    # optional URLs are supported by the producer when identity is complete.
+    urls = [https_url(deploy[field]) for field in ("deploy_ssl_url", "ssl_url")
+            if field in deploy and deploy[field] is not None]
+    if not urls and immutable_url is None:
+        raise ValueError("published deploy requires a URL or complete immutable identity")
+    result = {"id": deploy["id"], "sha": deploy["commit_ref"],
+              "url": urls[0] if urls else immutable_url}
+    if immutable_url is not None:
+        result["immutable_url"] = immutable_url
+    return result
 
 
 def verify(packet):
@@ -128,8 +161,9 @@ def verify(packet):
             or tag.get("tag_name") != tag_name or tag.get("commit_sha") != target):
         raise ValueError("deployment release/tag does not resolve to the exact target")
     body = release.get("body")
-    if (not isinstance(body, str) or target not in body
-            or not {run_url, after["url"]}.issubset(body.split())):
+    deploy_urls = {after["url"], after.get("immutable_url")} - {None}
+    if (not isinstance(body, str) or target not in body or run_url not in body.split()
+            or not deploy_urls.intersection(body.split())):
         raise ValueError("release body does not link the exact commit, workflow, and published deploy URL")
     result["release_url"] = release["html_url"]
     result["resolved_tag"] = tag
