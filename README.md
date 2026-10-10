@@ -133,6 +133,7 @@ Run these commands from the repository root:
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the Vitest test suite |
 | `npm run test:release` | Run semantic-release version validator tests |
+| `npm run test:e2e:a11y` | Build and run the focused local Chromium accessibility suite |
 | `npm run test:e2e:premerge` | Build and smoke-test a local production-equivalent Vite preview |
 | `npm run test:e2e:production` | Run telemetry-safe Chromium smoke tests against production |
 | `npm run test:e2e:webkit` | Build and run the local-only desktop/mobile WebKit smoke lane |
@@ -166,6 +167,8 @@ Scheduled full-route performance evidence, compatibility rules, and reproducible
 The weekly advisory external-link inventory, HTTP policy, classifications, and evidence limits are documented in [`docs/external-link-reporting.md`](docs/external-link-reporting.md).
 
 The weekly/manual WebKit smoke lane, mocked side-effect boundaries, report fields, and Safari evidence limits are documented in [`docs/webkit-smoke.md`](docs/webkit-smoke.md).
+
+The blocking Axe policy, generated route coverage, dynamic-state matrix, telemetry controls, and evidence limits are documented in [`docs/accessibility-scanning.md`](docs/accessibility-scanning.md).
 
 Provide the Formspree and analytics values through a local `.env` file or Netlify environment variables. Do not commit secrets or private credentials.
 
@@ -231,14 +234,16 @@ manually after intentional production-policy or public-artifact changes have
 deployed.
 
 `npm run test:e2e:premerge` builds the app with a synthetic, non-secret
-Formspree key and opens only a local Vite preview. `npm run
+Formspree key and opens only a local Vite preview. It includes blocking Axe
+scans of every canonical route and mocked contact form states; mocked requests
+are fulfilled inside Playwright and never reach Formspree. `npm run
 test:e2e:production` defaults to the live production site; callers can set
-`PLAYWRIGHT_PRODUCTION_BASE_URL` to an explicit deployed target. Both commands
-use fresh desktop and mobile Chromium contexts. The suite blocks GA4, Google
-Tag Manager, DoubleClick, and Formspree requests, and it never submits the
-contact form. It therefore validates hydration, navigation, responsive
-overflow, lazy chunks, resume rendering, and browser errors without validating
-analytics delivery or form submission.
+`PLAYWRIGHT_PRODUCTION_BASE_URL` to an explicit deployed target. Production
+browser checks remain navigation-only and do not load the accessibility spec
+or submit the contact form. Both modes use fresh desktop and mobile Chromium
+contexts and block GA4, Google Tag Manager, DoubleClick, and real Formspree
+requests. They validate browser behavior without proving analytics delivery or
+real form delivery.
 
 `npm run test:e2e:webkit` builds with synthetic client configuration and serves
 only `127.0.0.1`. Its desktop and mobile WebKit projects reuse the shared route

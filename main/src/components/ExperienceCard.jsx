@@ -289,7 +289,12 @@ const ExperienceCard = ({
             Experience Details
           </h3>
 
-          <div className="mt-4 flex-1 overflow-y-auto pr-2">
+          <div
+            role="group"
+            aria-label={`${title} accomplishments at ${company}`}
+            tabIndex={isFlipped ? 0 : -1}
+            className="mt-4 flex-1 overflow-y-auto pr-2 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+          >
             <ul className="space-y-3">
               {bullets.map((bullet, index) => (
                 <li key={index} className="flex gap-3 text-sm leading-relaxed text-slate-200">

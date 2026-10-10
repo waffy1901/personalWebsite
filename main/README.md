@@ -55,6 +55,7 @@ npm run audit:ci                         # Run the repository npm-audit policy
 npm run lint                             # Run ESLint
 npm test                                 # Run Vitest
 npm run test:release                     # Run semantic-release version-validator tests
+npm run test:e2e:a11y                    # Build and run focused local Chromium accessibility scans
 npm run test:e2e:premerge                # Build and smoke-test a local production-equivalent preview
 npm run test:e2e:production              # Run telemetry-safe production browser smoke tests
 npm run performance:baseline             # Measure route performance against the baseline workflow
@@ -86,3 +87,4 @@ Set `VITE_GA_MEASUREMENT_ID` to enable Google Analytics. The app sends manual SP
 - `public/sitemap.xml`, `public/robots.txt`, `public/llms.txt`, `public/ai-summary.txt`, and `public/portfolio.json` support search and AI-agent discovery.
 - The resume route provides an optimized WebP preview with a PNG fallback, direct PDF open/download links, and a semantic HTML alternative that mirrors the resume content for reading, copying, and assistive technology.
 - `_redirects` rewrites canonical React Router routes on Netlify while unknown paths fall through to a real `404.html` response.
+- Accessibility scanning policy and coverage are documented in `../docs/accessibility-scanning.md`.

@@ -75,7 +75,7 @@ jobs:
         working-directory: main
         run: npx playwright install --with-deps chromium
 
-      - name: Run local pre-merge browser smoke tests
+      - name: Run local pre-merge browser and accessibility tests
         run: npm run test:e2e:premerge
 
       - name: Upload browser failure evidence

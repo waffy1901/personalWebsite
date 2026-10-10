@@ -15,6 +15,7 @@
     "check:operations": "npm --prefix operations run check",
     "prototype:operations": "npm --prefix operations run prototype",
     "test:release": "npm --prefix main run test:release --",
+    "test:e2e:a11y": "npm --prefix main run test:e2e:a11y --",
     "test:e2e:premerge": "npm --prefix main run test:e2e:premerge --",
     "test:e2e:production": "npm --prefix main run test:e2e:production --",
     "test:e2e:webkit": "npm --prefix main run test:e2e:webkit --",

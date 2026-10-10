@@ -23,6 +23,8 @@
     "preview": "vite preview",
     "test": "vitest run --exclude=e2e/**",
     "test:release": "vitest run scripts/release-version.test.mjs",
+    "pretest:e2e:a11y": "VITE_FORMSPREE_KEY=synthetic-premerge-test-key npm run build",
+    "test:e2e:a11y": "PLAYWRIGHT_LOCAL_PREVIEW=1 playwright test accessibility.spec.js --config=playwright.production.config.js",
     "pretest:e2e:premerge": "VITE_FORMSPREE_KEY=synthetic-premerge-test-key npm run build",
     "test:e2e:premerge": "PLAYWRIGHT_LOCAL_PREVIEW=1 playwright test --config=playwright.production.config.js",
     "test:e2e:production": "playwright test --config=playwright.production.config.js",
@@ -48,6 +50,7 @@
     ]
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
