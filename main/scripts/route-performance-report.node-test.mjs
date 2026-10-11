@@ -564,3 +564,4 @@ test("baseline acquisition reports missing credentials as unavailable evidence",
   assert.equal(result.status, "unavailable")
   assert.equal(result.candidates[0].status, "unavailable")
 })
+import "./configured-contact-performance.node-test.mjs"

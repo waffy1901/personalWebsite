@@ -319,6 +319,11 @@ export async function validateArtifactDirectory(artifactDir) {
   if (!manifestPaths.has("summary.json") || !manifestPaths.has("report.md")) errors.push("manifest must include summary.json and report.md")
   try {
     summary = JSON.parse(await readFile(path.join(artifactDir, "summary.json"), "utf8"))
+    if (summary?.schemaVersion === "configured-contact-performance-v1") {
+      const { validateConfiguredContactArtifact } = await import("./configured-contact-performance-lib.mjs")
+      errors.push(...await validateConfiguredContactArtifact({ summary, artifactDir, manifestPaths }))
+      return { valid: errors.length === 0, errors, summary, manifest }
+    }
     errors.push(...summaryValidationErrors(summary))
   } catch (error) {
     errors.push(`summary.json is missing or invalid: ${error.message}`)
