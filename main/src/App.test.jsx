@@ -17,6 +17,7 @@ import { SubmissionError } from "@formspree/core"
 import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
+import { currentRoleHighlights, workExperiences } from "./data/experience.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { portfolioUrls, resume, socialLinks } from "./data/profile.js"
 import { resumeDocument } from "./data/resume.mjs"
@@ -191,7 +192,7 @@ describe("App routes", () => {
       screen.getByRole("link", { name: /download resume/i })
     ).toHaveAttribute("href", "/waffyAhmedResume.pdf")
     expect(
-      screen.getByText(/^software engineer ii focused on kubernetes/i)
+      screen.getByText(/^software engineer ii at the home depot, focused on kubernetes/i)
     ).toBeInTheDocument()
     const profileImage = screen.getByRole("img", { name: /waffy ahmed/i })
     const profileWebpSource = profileImage
@@ -843,6 +844,38 @@ describe("App routes", () => {
     )
   })
 
+  it("shows the current employer and recent engineering outcomes beside the Home actions", async () => {
+    renderRoute("/")
+    await screen.findByRole("heading", { name: "Waffy Ahmed", level: 1 })
+
+    expect(screen.getByText(/Software Engineer II at The Home Depot, focused on/)).toBeVisible()
+    const outcomes = screen.getByRole("list", { name: "Recent engineering outcomes" })
+    expect(within(outcomes).getAllByRole("listitem")).toHaveLength(2)
+    expect(outcomes).toHaveTextContent(/Led 4 engineers through stakeholder validation and handoff.*7 payment applications/)
+    expect(outcomes).toHaveTextContent(/Replaced shared CI credentials.*JFrog OIDC.*2 teams and 20 repositories/)
+    currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
+    const hero = outcomes.closest("section")
+    expect(within(hero).getByRole("link", { name: "Download Resume" })).toHaveAttribute("href", resume.pdf)
+    expect(within(hero).getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact/")
+  })
+
+  it("shows each project purpose, distinctive result or capability, and source before details open", async () => {
+    renderRoute("/projects/")
+    await screen.findByRole("heading", { name: /practical builds for real workflows/i })
+
+    for (const project of projects) {
+      const card = screen.getByRole("article", { name: `${project.title} project` })
+      expect(within(card).getByText(project.summary)).toBeVisible()
+      expect(within(card).getByText(project.outcome)).toBeVisible()
+      expect(within(card).getByRole("link", { name: "Source Code" })).toHaveAttribute("href", project.github)
+      expect(within(card).getByRole("button", { name: `View details for ${project.title}` })).toHaveAttribute("aria-expanded", "false")
+      expect(within(card).queryByRole("region")).not.toBeInTheDocument()
+    }
+    expect(screen.getByText("Saved 5000+ hours of manual reconciliation annually.")).toBeVisible()
+    expect(screen.getByText("Fetches Adzuna jobs by preferred title, location, and search radius.")).toBeVisible()
+    expect(screen.getByText("Gives students access to event capacities, details, and waitlists.")).toBeVisible()
+  })
+
   it("tracks project source and details interactions", async () => {
     const user = userEvent.setup()
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
@@ -862,6 +895,8 @@ describe("App routes", () => {
     expect(
       screen.getAllByRole("button", { name: /view details/i })
     ).toHaveLength(3)
+    const cdcCard = screen.getByRole("article", { name: "CDC Data Reconciliation project" })
+    expect(cdcCard.querySelector('button[aria-label^="Hide details for "]')).toHaveAttribute("tabindex", "-1")
 
     await clickWithoutNavigation(user, sourceCodeLink)
     await user.click(
@@ -877,6 +912,8 @@ describe("App routes", () => {
         })
       ).toHaveFocus()
     )
+    expect(sourceCodeLink).toHaveAttribute("tabindex", "-1")
+    expect(cdcCard.querySelector('button[aria-label^="View details for "]')).toHaveAttribute("tabindex", "-1")
 
     expect(getAnalyticsEvents("project_source_click")).toEqual([
       [
@@ -910,6 +947,7 @@ describe("App routes", () => {
         })
       ).toHaveFocus()
     )
+    expect(sourceCodeLink).toHaveAttribute("tabindex", "0")
   })
 
   it("tracks resume and social link interactions", async () => {
@@ -1639,6 +1677,11 @@ describe("App routes", () => {
     const detailsButton = screen.getByRole("button", {
       name: /view details for software engineer ii at the home depot/i,
     })
+    const currentCard = detailsButton.closest("article")
+    const outcomes = within(currentCard).getByRole("list", { name: "Recent engineering outcomes" })
+    currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
+    expect(within(outcomes).getAllByRole("listitem")).toHaveLength(2)
+    expect(currentCard.querySelector('button[aria-label="Copy Software Engineer II details"]')).toHaveAttribute("tabindex", "-1")
     await user.click(detailsButton)
 
     const detailsRegion = screen.getByRole("region", {
@@ -1669,9 +1712,7 @@ describe("App routes", () => {
 
     await user.click(copyButton)
 
-    expect(clipboardWriteMock).toHaveBeenCalledWith(
-      expect.stringContaining("Productionized daily order reconciliation")
-    )
+    expect(clipboardWriteMock).toHaveBeenCalledWith(workExperiences[0].bullets.join("\n"))
     expect(screen.getByRole("status")).toHaveTextContent(
       /software engineer ii details copied/i
     )

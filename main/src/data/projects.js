@@ -39,6 +39,7 @@ export const projects = [
     techStack: "Python, FastAPI, SQLite, React, Tailwind CSS",
     summary:
       "Automated infectious-disease case-count reconciliation between state health departments and CDC datasets.",
+    outcome: "Saved 5000+ hours of manual reconciliation annually.",
     bullets: [
       "Oversaw a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health departments and the CDC, alongside doubling as a full-stack software developer.",
       "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the two datasets, saving 5000+ hours of manual reconciliation annually.",
@@ -48,6 +49,8 @@ export const projects = [
     github: "https://github.com/waffy1901/CDC-Data-Reconciliation",
     logo: cdcLogo,
     logoWebp: cdcLogoWebp,
+    logoWidth: 275,
+    logoHeight: 183,
   },
   {
     id: "job-search-aid",
@@ -55,6 +58,7 @@ export const projects = [
     techStack: "Kotlin, Google Firebase, Cloud Firestore, XML, Adzuna API",
     summary:
       "Android job-search support application with FAQs, resume templates, FirebaseAuth sign-in, Firestore-backed profile metadata, saved jobs, user preferences, and Adzuna job search.",
+    outcome: "Fetches Adzuna jobs by preferred title, location, and search radius.",
     bullets: [
       "Engineered an Android application to aid job seekers with FAQs, resume templates, saved job tracking, and preference-based job discovery.",
       "Integrated the Adzuna API using Kotlin to fetch jobs based on user preferences of job title, location, and radius.",
@@ -63,6 +67,8 @@ export const projects = [
     github: "https://github.com/waffy1901/jobSearchAid",
     logo: jobSearchLogo,
     logoWebp: jobSearchLogoWebp,
+    logoWidth: 259,
+    logoHeight: 194,
   },
   {
     id: "campus-discovery-service",
@@ -70,6 +76,7 @@ export const projects = [
     techStack: "Node.js, MongoDB, Java, XML",
     summary:
       "Campus event discovery and registration application for Georgia Tech students and organizers.",
+    outcome: "Gives students access to event capacities, details, and waitlists.",
     bullets: [
       "Developed an Android application for students to explore and register for on-campus events at Georgia Tech, offering access to event capacities, details, and waitlists, in collaboration with 5 classmates.",
       "Constructed various technical diagrams (DCD, Domain Model, SD, SSD) to plan/design iterations of the application.",
@@ -78,5 +85,7 @@ export const projects = [
     github: "https://github.com/waffy1901/campusDiscoveryService",
     logo: campusDiscoveryServiceLogo,
     logoWebp: campusDiscoveryServiceLogoWebp,
+    logoWidth: 300,
+    logoHeight: 168,
   },
 ]

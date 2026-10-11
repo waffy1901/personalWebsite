@@ -243,6 +243,7 @@ const buildStructuredPortfolio = (model) => {
       title: project.title,
       techStack: splitCsv(project.techStack),
       summary: project.summary,
+      outcome: project.outcome,
       source: project.github,
     })),
     analyticsEvents: publicPortfolio.analyticsEvents,
@@ -491,6 +492,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
     add(...bullet(`Repository: ${project.github}`))
     add(...bullet(`Stack: ${project.techStack}`))
     add(...bullet(`Purpose: ${project.summary}`))
+    add(...bullet(`Result / capability: ${project.outcome}`))
     for (const item of project.bullets) add(...bullet(item))
     add("")
   }
