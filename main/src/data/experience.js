@@ -9,6 +9,9 @@ import hdLogoWebp from "../images/hdLogo.webp"
 import landisGyrLogo from "../images/landisGyrLogo.png"
 import landisGyrLogoWebp from "../images/landisGyrLogo.webp"
 import { currentEmployment } from "./siteIdentity.js"
+import { currentRoleHighlights } from "./currentRoleHighlights.js"
+
+export { currentRoleHighlights } from "./currentRoleHighlights.js"
 
 export const experiencePage = {
   workHeading: "Work Experience",
@@ -25,6 +28,7 @@ export const workExperiences = [
     company: currentEmployment.organization,
     location: currentEmployment.location,
     date: currentEmployment.roleHistory[0].date,
+    highlights: currentRoleHighlights,
     bullets: [
       "Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent spanning 7 payment applications; unified code/config tracing, BigQuery, and store telemetry with historical baselines and coverage checks, delivering cited diagnoses and suggested fixes while suppressing false findings.",
       "Drove JFrog OIDC adoption across 2 teams and 20 repositories, replacing shared Maven/Docker credentials with short-lived, job-scoped tokens; resolved 1,100+ security findings tied to plaintext token exposure in CI logs.",
@@ -34,6 +38,8 @@ export const workExperiences = [
     ],
     logo: hdLogo,
     logoWebp: hdLogoWebp,
+    logoWidth: 225,
+    logoHeight: 225,
   },
   {
     id: "home-depot-software-engineer-i",

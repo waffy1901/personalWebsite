@@ -22,6 +22,7 @@ import {
 import SocialLinks from "../components/SocialLinks";
 import { profile, resume } from "../data/profile";
 import { currentEmployment } from "../data/siteIdentity.js";
+import { currentRoleHighlights } from "../data/currentRoleHighlights.js";
 import { trackEvent } from "../utils/analytics";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 
@@ -133,16 +134,24 @@ function Home() {
                 </p>
                 <div className="mc-line-reveal mt-4 h-px w-40 bg-[#F96302]" aria-hidden="true" />
 
-                <h1 className="mt-8 max-w-4xl text-5xl font-black leading-none sm:text-7xl">
+                <h1 className="mt-8 max-w-4xl break-words text-5xl font-black leading-none sm:text-7xl">
                   {profile.name}
                 </h1>
-                <p className="mt-5 max-w-3xl text-2xl font-black leading-tight text-white sm:text-3xl">
+                <p className="mt-5 max-w-3xl break-words text-2xl font-black leading-tight text-white sm:text-3xl">
                   I build production systems that stay reliable under pressure.
                 </p>
                 <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                  {currentEmployment.currentTitle} focused on Kubernetes, deployment
+                  {currentEmployment.currentTitle} at {currentEmployment.organization}, focused on Kubernetes, deployment
                   automation, observability, and high-throughput backend systems.
                 </p>
+                <ul aria-label="Recent engineering outcomes" className="mt-5 max-w-2xl space-y-3 text-sm leading-relaxed text-slate-200 sm:text-base">
+                  {currentRoleHighlights.map((highlight) => (
+                    <li key={highlight} className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#F96302]" aria-hidden="true" />
+                      <span className="min-w-0 break-words">{highlight}</span>
+                    </li>
+                  ))}
+                </ul>
                 <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
                   <FaMapMarkerAlt className="h-3 w-3 text-[#F96302]" aria-hidden="true" />
                   Atlanta, GA

@@ -28,7 +28,7 @@ function usePrefersReducedMotion() {
   return prefersReducedMotion;
 }
 
-function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) {
+function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, logo, logoWebp, logoWidth, logoHeight }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const detailsButtonRef = useRef(null);
   const backButtonRef = useRef(null);
@@ -102,11 +102,11 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
   return (
     <article
       aria-label={`${title} project`}
-      className="w-full min-h-[29rem] mc-perspective"
+      className="w-full min-w-0 mc-perspective"
       onKeyDown={handleKeyDown}
     >
       <div
-        className="relative min-h-[29rem] w-full mc-transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none"
+        className="relative w-full mc-transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none"
         style={{
           WebkitTransform: cardTransform,
           WebkitTransformStyle: "preserve-3d",
@@ -116,7 +116,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
       >
         <div
           aria-hidden={isFlipped}
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#2563EB]/25 bg-[#111827] p-5 text-white shadow-[0_22px_60px_rgba(11,18,32,0.20)] mc-backface-hidden ${
+          className={`${isFlipped ? "absolute inset-0" : "relative"} flex min-h-[29rem] flex-col overflow-hidden rounded-2xl border border-[#2563EB]/25 bg-[#111827] p-5 text-white shadow-[0_22px_60px_rgba(11,18,32,0.20)] mc-backface-hidden ${
             isFlipped ? "pointer-events-none" : ""
           }`}
           style={frontFaceStyle}
@@ -127,8 +127,8 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
             aria-hidden="true"
           />
 
-          <div className="relative z-10 flex items-start justify-between gap-4">
-            <div>
+          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1 basis-40">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#FFB077]">
                 Build record
               </p>
@@ -150,12 +150,15 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
                   project_title: title,
                 })
               }
-              className="inline-flex shrink-0 items-center rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm font-black text-white transition hover:border-[#F96302]/60 hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#111827]"
+              className="inline-flex max-w-full items-center rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm font-black text-white transition hover:border-[#F96302]/60 hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#111827]"
             >
               <FaGithub className="mr-2" aria-hidden="true" />
               Source Code
             </a>
           </div>
+
+          <p className="relative z-10 mt-5 min-w-0 break-words text-sm leading-relaxed text-slate-200">{summary}</p>
+          <p className="relative z-10 mt-3 min-w-0 break-words text-sm font-bold leading-relaxed text-[#FFB077]">{outcome}</p>
 
           <StackChips items={stackItems} className="relative z-10 mt-4" />
 
@@ -164,6 +167,8 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
               <source srcSet={logoWebp} type="image/webp" />
               <img
                 src={logo}
+                width={logoWidth}
+                height={logoHeight}
                 alt=""
                 aria-hidden="true"
                 loading="lazy"
@@ -195,20 +200,20 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
           role="region"
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
-          className={`absolute inset-0 flex flex-col overflow-hidden rounded-lg border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white shadow-[0_20px_70px_rgba(11,18,32,0.35)] mc-backface-hidden mc-rotate-y-180 ${
+          className={`${isFlipped ? "relative" : "absolute inset-0"} flex flex-col overflow-hidden rounded-lg border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white shadow-[0_20px_70px_rgba(11,18,32,0.35)] mc-backface-hidden mc-rotate-y-180 ${
             isFlipped ? "" : "pointer-events-none"
           }`}
           style={backFaceStyle}
         >
           <p className="text-xs font-black uppercase text-[#93B4FF]">Technical notes</p>
-          <h3 id={`${detailsId}-heading`} className="mt-2 text-xl font-black">
+          <h3 id={`${detailsId}-heading`} className="mt-2 break-words text-xl font-black">
             {title} details
           </h3>
           <div
             role="group"
             aria-label={`${title} technical details`}
             tabIndex={isFlipped ? 0 : -1}
-            className="mt-4 grow overflow-y-auto pr-2 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+            className="mt-4 max-h-64 overflow-y-auto pr-2 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
           >
             <ul className="space-y-3">
               {bullets.map((bullet, index) => (
@@ -219,6 +224,7 @@ function ProjectCard({ id, title, techStack, bullets, github, logo, logoWebp }) 
               ))}
             </ul>
           </div>
+          <p className="mt-3 text-xs text-slate-400">Scroll for all technical notes.</p>
           <button
             ref={backButtonRef}
             type="button"

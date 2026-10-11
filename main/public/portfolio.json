@@ -21,6 +21,10 @@
       "title": "Software Engineer II",
       "organization": "The Home Depot",
       "startDate": "2026-07",
+      "highlights": [
+        "Led 4 engineers through stakeholder validation and handoff of an AI triage agent spanning 7 payment applications.",
+        "Replaced shared CI credentials with short-lived JFrog OIDC tokens across 2 teams and 20 repositories."
+      ],
       "focus": [
         "Production workflow automation",
         "Kubernetes CronJobs",
@@ -255,6 +259,7 @@
         "Tailwind CSS"
       ],
       "summary": "Automated infectious-disease case-count reconciliation between state health departments and CDC datasets.",
+      "outcome": "Saved 5000+ hours of manual reconciliation annually.",
       "source": "https://github.com/waffy1901/CDC-Data-Reconciliation"
     },
     {
@@ -268,6 +273,7 @@
         "Adzuna API"
       ],
       "summary": "Android job-search support application with FAQs, resume templates, FirebaseAuth sign-in, Firestore-backed profile metadata, saved jobs, user preferences, and Adzuna job search.",
+      "outcome": "Fetches Adzuna jobs by preferred title, location, and search radius.",
       "source": "https://github.com/waffy1901/jobSearchAid"
     },
     {
@@ -280,6 +286,7 @@
         "XML"
       ],
       "summary": "Campus event discovery and registration application for Georgia Tech students and organizers.",
+      "outcome": "Gives students access to event capacities, details, and waitlists.",
       "source": "https://github.com/waffy1901/campusDiscoveryService"
     }
   ],

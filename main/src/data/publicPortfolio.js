@@ -1,4 +1,5 @@
 import { currentEmployment } from "./siteIdentity.js"
+import { currentRoleHighlights } from "./currentRoleHighlights.js"
 
 export const publicPortfolio = {
   schemaVersion: "1.1",
@@ -12,6 +13,7 @@ export const publicPortfolio = {
       title: currentEmployment.currentTitle,
       organization: currentEmployment.organization,
       startDate: currentEmployment.roleHistory[0].startDate,
+      highlights: currentRoleHighlights,
       focus: [
         "Production workflow automation",
         "Kubernetes CronJobs",
