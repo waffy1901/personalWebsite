@@ -237,6 +237,22 @@ const buildStructuredPortfolio = (model) => {
       url: toCanonicalRouteUrl(`/case-studies/${caseStudy.slug}`),
       metrics: caseStudy.metrics.map(metricLabel),
       stack: caseStudy.stack,
+      ...(caseStudy.causalDiagram ? {
+        engineeringPath: caseStudy.flow,
+        sections: caseStudy.sections,
+        metricDetails: caseStudy.metrics,
+        causalDiagram: {
+          title: caseStudy.causalDiagram.title,
+          description: caseStudy.causalDiagram.description,
+          steps: caseStudy.causalDiagram.steps,
+          feedback: caseStudy.causalDiagram.feedback,
+        },
+        configurationExample: {
+          title: caseStudy.configurationExample.title,
+          description: caseStudy.configurationExample.description,
+          examples: caseStudy.configurationExample.examples,
+        },
+      } : {}),
     })),
     projects: projects.map((project) => ({
       id: project.id,
@@ -483,6 +499,30 @@ const buildAiSummary = (model, portfolio, packageJson) => {
     add(...bullet(`Summary: ${caseStudy.summary}`))
     add(...bullet(`Metrics: ${caseStudy.metrics.map(metricLabel).join("; ")}`))
     add(...bullet(`Stack: ${caseStudy.stack.join(", ")}`))
+    if (caseStudy.causalDiagram) {
+      for (const section of caseStudy.sections) {
+        add(...bullet(`${section.heading}:`))
+        for (const paragraph of section.paragraphs) add(...wrapText(paragraph), "")
+        if (caseStudy.causalDiagram.afterSection === section.heading) {
+          const diagram = caseStudy.causalDiagram
+          add(...bullet(`${diagram.title}: ${diagram.description}`))
+          diagram.steps.forEach((step, index) => {
+            add(...numbered(index, `${step.title}: ${step.detail}`))
+            if (step.relationship) {
+              add(...wrapText(`${step.relationship}: ${step.title} to ${diagram.steps[index + 1].title}.`))
+            }
+          })
+          add(...wrapText(diagram.feedback), "")
+        }
+        if (caseStudy.configurationExample?.afterSection === section.heading) {
+          const example = caseStudy.configurationExample
+          add(...bullet(`${example.title}: ${example.description}`))
+          for (const snippet of example.examples) {
+            add(snippet.title, snippet.code, "")
+          }
+        }
+      }
+    }
     add("")
   }
 
