@@ -49,7 +49,7 @@ export const caseStudies = [
       {
         value: "89%",
         label: "fewer errors",
-        detail: "Error volume dropped while request volume increased.",
+        detail: "Reported 89% reduction; error count versus rate remains unconfirmed.",
       },
       {
         value: "34.8M",
@@ -66,41 +66,112 @@ export const caseStudies = [
       {
         title: "Baseline bottleneck",
         detail:
-          "A core service was pinned to static pod capacity and needed room to absorb high-volume transaction traffic without overprovisioning.",
+          "Equal minimum and maximum replica counts kept the service at fixed capacity, leaving no room for HPA to respond to demand.",
       },
       {
         title: "Autoscaling rollout",
         detail:
-          "Autoscaling thresholds were deployed and validated with production observability, Kubernetes behavior checks, and staged comparison against the previous baseline.",
+          "After urgent direction from a reliability engineering director, I tested over a weekend, then deployed and validated HPA using CPU first and memory later.",
       },
       {
-        title: "Measured recovery",
+        title: "Production comparison",
         detail:
-          "Dynamic scaling between 50 and 100 pods improved responsiveness while reducing resource pressure and error rates.",
+          "Grafana averages over approximately 30-day baseline and comparison periods showed improved service behavior with a 50-100 pod range; exact dates are unconfirmed.",
       },
     ],
     sections: [
       {
         heading: "Problem",
         paragraphs: [
-          "The service supported transaction-critical traffic but was constrained by a static deployment shape. Capacity changes required manual attention, and the old ceiling made traffic growth harder to absorb cleanly.",
-          "The goal was not only to add pods. The work needed to prove that autoscaling improved real service behavior without introducing instability during production load.",
+          "The service supported transaction-critical traffic with a fixed 20-pod deployment. HPA had not actually been enabled: its minimum and maximum replica counts were equal, so it could not change capacity in response to demand.",
+          "The failure mode was capacity exhaustion. When demand exceeded what those replicas could serve, the fixed ceiling prevented HPA from adding capacity; latency and errors were the service signals to examine alongside resource pressure.",
         ],
       },
       {
-        heading: "Approach",
+        heading: "Ownership and validation",
         paragraphs: [
-          "I deployed and validated Kubernetes Horizontal Pod Autoscaling for the service, compared baseline and post-rollout metrics, and watched latency, error rate, throughput, and CPU behavior together instead of treating any single graph as the truth.",
-          "The rollout was validated around production health: scaling behavior, traffic shape, response times, and operational signals that would matter during an incident or demand spike.",
+          "A reliability engineering director asked for HPA to be enabled urgently. I tested over a weekend and concluded from those tests that enabling HPA could have avoided an outage. That is a test-informed counterfactual, not proof that a production outage was prevented.",
+          "I deployed and validated the change, using CPU as the initial scaling signal and adding memory later. I compared the baseline with subsequent production observations in Grafana, looking at latency, errors, request throughput, and average CPU together.",
+        ],
+      },
+      {
+        heading: "Decision and tradeoff",
+        paragraphs: [
+          "Keeping equal replica bounds makes capacity predictable, but leaves demand spikes dependent on manual capacity changes. Allowing HPA to vary replicas gives the service room to respond to resource pressure, at the cost of a larger and changing resource footprint. The production range moved to 50-100 pods rather than the previous fixed 20.",
+          "This was a bounded capacity decision: even dynamic scaling cannot add replicas beyond its maximum. Demand that exceeds the capacity available at that bound can still exhaust the service. Scaling adds headroom; it does not guarantee that every bottleneck or outage cause is removed.",
         ],
       },
       {
         heading: "Outcome",
         paragraphs: [
-          "The service moved from a fixed 20-pod deployment to dynamic production scaling between 50 and 100 pods. Mean latency dropped from 121 ms to 72 ms, errors fell 89%, throughput rose from 24.9M to 34.8M weekly requests, and average CPU usage decreased 26%.",
+          "After rollout, mean latency moved from 121 ms to 72 ms (reported as 40% lower), weekly requests increased from 24.9M to 34.8M, and average CPU usage decreased 26%. The existing result also reports 89% fewer errors, but whether that measure is an error count or a normalized rate remains unconfirmed.",
+          "These are observed baseline-versus-comparison results alongside the capacity change. Request volume also changed, so the comparison does not isolate HPA as the sole cause of every improvement.",
+        ],
+      },
+      {
+        heading: "Evidence and limits",
+        paragraphs: [
+          "The measurements came from Grafana. I recall averages over approximately 30-day baseline and comparison periods; exact dates and the error measure's denominator are not confirmed. The weekly request figures describe throughput and should not be treated as those periods' total request counts.",
+          "I do not have confirmed stabilization settings, rollback checks, or team handoff details to share. This account therefore supports the testing, deployment, and observed comparison, but does not establish a complete recovery procedure or independently verified outage prevention.",
+        ],
+      },
+      {
+        heading: "Lesson",
+        paragraphs: [
+          "The first check is whether autoscaling has room to act: a configured HPA with equal bounds still leaves the service at fixed capacity. The next check is service behavior across multiple signals and changing traffic, with measurement limits stated alongside the results.",
         ],
       },
     ],
+    causalDiagram: {
+      afterSection: "Decision and tradeoff",
+      title: "How bounded autoscaling changes capacity",
+      description:
+        "Workload demand creates resource pressure. CPU, with memory added later, informs HPA's replica decision within minimum and maximum bounds. The resulting service capacity affects latency, errors, and throughput, which I compared in Grafana.",
+      steps: [
+        {
+          title: "Workload demand",
+          detail: "Transaction requests place demand on the available service capacity.",
+          relationship: "Demand creates resource pressure",
+        },
+        {
+          title: "Resource signals",
+          detail: "CPU was the initial scaling signal; memory was added later.",
+          relationship: "Resource signals inform the replica decision",
+        },
+        {
+          title: "HPA decision within bounds",
+          detail: "Equal bounds prevent capacity changes. A 50-100 range permits replica changes within that limit.",
+          relationship: "Replica bounds constrain capacity changes",
+        },
+        {
+          title: "Service replicas",
+          detail: "The number of replicas determines the capacity available to serve demand.",
+          relationship: "Available capacity affects service behavior",
+        },
+        {
+          title: "Observed service behavior",
+          detail: "Grafana provided the latency, error, throughput, and CPU observations used for comparison.",
+        },
+      ],
+      feedback:
+        "As replica capacity changes, the resource pressure from ongoing demand can change too, informing subsequent scaling decisions. Grafana is the observation tool in this account; this diagram does not identify the HPA metrics source or ingestion path.",
+    },
+    configurationExample: {
+      afterSection: "Decision and tradeoff",
+      title: "Replica bounds illustration",
+      description:
+        "Sanitized, incomplete illustration using the already-public fixed capacity and later range. These bounds alone are not a deployable HPA manifest; metric targets and other configuration are omitted.",
+      examples: [
+        {
+          title: "Before: fixed capacity",
+          code: "minReplicas: 20\nmaxReplicas: 20",
+        },
+        {
+          title: "After: room to scale",
+          code: "minReplicas: 50\nmaxReplicas: 100",
+        },
+      ],
+    },
     stack: [
       "Kubernetes",
       "Horizontal Pod Autoscaling",

@@ -658,6 +658,61 @@ describe("App routes", () => {
     ).toBeInTheDocument()
   })
 
+  it("explains the selected autoscaling tradeoff, failure mode, and evidence limits", async () => {
+    renderRoute("/case-studies/kubernetes-autoscaling")
+    await screen.findByRole("heading", { name: /ownership and validation/i })
+
+    expect(screen.getByText(/failure mode was capacity exhaustion/)).toBeInTheDocument()
+    expect(screen.getByText(/test-informed counterfactual, not proof/)).toBeInTheDocument()
+    expect(screen.getByText(/at the cost of a larger and changing resource footprint/)).toBeInTheDocument()
+    expect(screen.getByText(/does not isolate HPA as the sole cause/)).toBeInTheDocument()
+    expect(screen.getByText(/exact dates and the error measure's denominator are not confirmed/)).toBeInTheDocument()
+    expect(screen.getByText(/stabilization settings, rollback checks, or team handoff details/)).toBeInTheDocument()
+    expect(screen.getByText(/minReplicas: 20\s+maxReplicas: 20/)).toBeInTheDocument()
+    expect(screen.getByText(/minReplicas: 50\s+maxReplicas: 100/)).toBeInTheDocument()
+    expect(screen.getByText(/not a deployable HPA manifest/)).toBeInTheDocument()
+  })
+
+  it("keeps the causal mechanism and named edges in semantic document order", async () => {
+    renderRoute("/case-studies/kubernetes-autoscaling")
+    const diagram = await screen.findByRole("figure", { name: /how bounded autoscaling changes capacity/i })
+    const sequence = within(diagram).getByRole("list", { name: /autoscaling causal sequence/i })
+    const steps = within(sequence).getAllByRole("listitem")
+    expect(steps.map((step) => within(step).getByRole("heading").textContent)).toEqual([
+      "Workload demand",
+      "Resource signals",
+      "HPA decision within bounds",
+      "Service replicas",
+      "Observed service behavior",
+    ])
+    const relationships = [
+      "Demand creates resource pressure: Workload demand to Resource signals.",
+      "Resource signals inform the replica decision: Resource signals to HPA decision within bounds.",
+      "Replica bounds constrain capacity changes: HPA decision within bounds to Service replicas.",
+      "Available capacity affects service behavior: Service replicas to Observed service behavior.",
+    ]
+    relationships.forEach((relationship, index) => {
+      expect(within(steps[index]).getByText(relationship)).toBeInTheDocument()
+    })
+    expect(within(diagram).getByText(/does not identify the HPA metrics source/)).toBeInTheDocument()
+    const headings = screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)
+    const decisionIndex = headings.indexOf("Decision and tradeoff")
+    expect(headings.slice(decisionIndex, decisionIndex + 4)).toEqual([
+      "Decision and tradeoff",
+      "How bounded autoscaling changes capacity",
+      "Replica bounds illustration",
+      "Outcome",
+    ])
+  })
+
+  it.each(["legacy-deployment-recovery", "cdc-data-reconciliation"])("preserves the generic diagram for %s", async (slug) => {
+    renderRoute(`/case-studies/${slug}`)
+    await screen.findByRole("heading", { name: /engineering path/i })
+    expect(screen.queryByRole("list", { name: /autoscaling causal sequence/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: /replica bounds illustration/i })).not.toBeInTheDocument()
+    expect(screen.getByText("The writeup keeps system context, rollout path, and measured evidence in the same frame.")).toBeInTheDocument()
+  })
+
   it("updates route-level SEO metadata", async () => {
     renderRoute("/case-studies/kubernetes-autoscaling")
 
@@ -1450,6 +1505,39 @@ describe("App routes", () => {
       expect(generatedDocs).toContain(
         `${label} ${packageMajor(packageJson, packageName)}`
       )
+    }
+  })
+
+  it("mirrors the deeper selected case and its qualifications in public discovery", () => {
+    const selected = caseStudies.find((caseStudy) => caseStudy.slug === "kubernetes-autoscaling")
+    const publicCases = readJsonFile("public/portfolio.json").caseStudies
+    const mirrored = publicCases.find((caseStudy) => caseStudy.slug === selected.slug)
+    const aiSummary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
+    expect(mirrored.engineeringPath).toEqual(selected.flow)
+    expect(mirrored.sections).toEqual(selected.sections)
+    expect(mirrored.metricDetails).toEqual(selected.metrics)
+    const { afterSection: diagramPlacement, ...publicDiagram } = selected.causalDiagram
+    const { afterSection: examplePlacement, ...publicExample } = selected.configurationExample
+    expect(diagramPlacement).toBe(examplePlacement)
+    expect(mirrored.causalDiagram).toEqual(publicDiagram)
+    expect(mirrored.configurationExample).toEqual(publicExample)
+    for (const section of selected.sections) {
+      for (const paragraph of section.paragraphs) expect(aiSummary).toContain(paragraph)
+    }
+    for (const step of selected.causalDiagram.steps) {
+      expect(aiSummary).toContain(step.detail)
+      if (step.relationship) expect(aiSummary).toContain(step.relationship)
+    }
+    expect(aiSummary).toContain(selected.causalDiagram.description)
+    expect(aiSummary).toContain(selected.causalDiagram.feedback)
+    expect(aiSummary).toContain(selected.configurationExample.description)
+    for (const snippet of selected.configurationExample.examples) {
+      expect(aiSummary).toContain(snippet.code.replace(/\s+/g, " "))
+    }
+    for (const otherCase of publicCases.filter((caseStudy) => caseStudy.slug !== selected.slug)) {
+      expect(otherCase).not.toHaveProperty("sections")
+      expect(otherCase).not.toHaveProperty("causalDiagram")
+      expect(otherCase).not.toHaveProperty("configurationExample")
     }
   })
 

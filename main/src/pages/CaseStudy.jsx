@@ -21,6 +21,7 @@ import { getCaseStudyBySlug } from "../data/caseStudies";
 import { trackLinkClick } from "../utils/analytics";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 import NotFound from "./NotFound";
+import CausalDiagram from "../components/CausalDiagram.jsx";
 
 const logoFrameClassByTheme = {
   "home-depot": "border-[#F96302] bg-[#F96302]",
@@ -67,15 +68,15 @@ function CaseStudy() {
         </Link>
 
         <PresentationPanel as="header" className="p-5 text-white sm:p-7">
-          <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,0.95fr)_minmax(22rem,1.05fr)] lg:items-start">
-            <div>
+          <div className={`relative z-10 grid gap-7 lg:items-start ${caseStudy.causalDiagram ? "lg:grid-cols-[minmax(0,1fr)_6rem]" : "lg:grid-cols-[minmax(0,0.95fr)_minmax(22rem,1.05fr)]"}`}>
+            <div className={caseStudy.causalDiagram ? "min-w-0" : undefined}>
               <StatusBadge
                 tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}
                 surface="dark"
               >
                 {caseStudy.category}
               </StatusBadge>
-              <h1 className="mt-5 max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl">
+              <h1 className={`mt-5 max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl ${caseStudy.causalDiagram ? "wrap-break-word" : ""}`}>
                 {caseStudy.title}
               </h1>
               <p className="mt-3 text-base font-bold text-[#93B4FF]">
@@ -102,12 +103,14 @@ function CaseStudy() {
                   />
                 </picture>
               </span>
-              <SystemDiagram
-                centerLabel={caseStudy.category}
-                centerDetail={caseStudy.organization}
-                nodes={buildDetailNodes(caseStudy)}
-                caption="The writeup keeps system context, rollout path, and measured evidence in the same frame."
-              />
+              {!caseStudy.causalDiagram && (
+                <SystemDiagram
+                  centerLabel={caseStudy.category}
+                  centerDetail={caseStudy.organization}
+                  nodes={buildDetailNodes(caseStudy)}
+                  caption="The writeup keeps system context, rollout path, and measured evidence in the same frame."
+                />
+              )}
             </div>
           </div>
         </PresentationPanel>
@@ -130,7 +133,7 @@ function CaseStudy() {
         </section>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="space-y-6">
+          <div className={caseStudy.causalDiagram ? "min-w-0 space-y-6 wrap-break-word" : "space-y-6"}>
             <section aria-labelledby="case-study-flow" className="mc-panel p-5">
               <h2 id="case-study-flow" className="text-2xl font-black text-[#0B1220]">
                 Engineering path
@@ -153,14 +156,37 @@ function CaseStudy() {
             </section>
 
             {caseStudy.sections.map((section) => (
-              <section key={section.heading} className="mc-panel p-5">
-                <h2 className="text-2xl font-black text-[#0B1220]">{section.heading}</h2>
-                <div className="mt-4 space-y-3 text-base leading-relaxed text-slate-700">
-                  {section.paragraphs.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
-                </div>
-              </section>
+              <React.Fragment key={section.heading}>
+                <section className="mc-panel p-5">
+                  <h2 className="text-2xl font-black text-[#0B1220]">{section.heading}</h2>
+                  <div className="mt-4 space-y-3 text-base leading-relaxed text-slate-700">
+                    {section.paragraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                </section>
+                {caseStudy.causalDiagram?.afterSection === section.heading && (
+                  <CausalDiagram diagram={caseStudy.causalDiagram} />
+                )}
+                {caseStudy.configurationExample?.afterSection === section.heading && (
+                  <section aria-labelledby="case-study-config-example" className="mc-panel min-w-0 px-[12px] py-5 sm:p-5">
+                    <h2 id="case-study-config-example" className="text-2xl font-black text-[#0B1220]">
+                      {caseStudy.configurationExample.title}
+                    </h2>
+                    <p className="mt-4 text-base leading-relaxed text-slate-700">
+                      {caseStudy.configurationExample.description}
+                    </p>
+                    <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2">
+                      {caseStudy.configurationExample.examples.map((example) => (
+                        <div key={example.title} className="min-w-0 rounded-lg border border-slate-200 bg-[#E8EDF2] px-[12px] py-4 sm:p-4">
+                          <h3 className="text-lg font-black text-[#0B1220]">{example.title}</h3>
+                          <pre className="mt-3 whitespace-pre-wrap wrap-break-word text-sm leading-relaxed text-slate-700"><code>{example.code}</code></pre>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </React.Fragment>
             ))}
           </div>
 
