@@ -213,7 +213,7 @@ describe("App routes", () => {
     )
     expect(profileWebpSource).toHaveAttribute(
       "sizes",
-      "(min-width: 640px) 448px, calc(100vw - 5rem)"
+      "(min-width: 1024px) 20.875rem, (min-width: 640px) 16.875rem, 12.875rem"
     )
   })
 
@@ -912,6 +912,19 @@ describe("App routes", () => {
     const hero = outcomes.closest("section")
     expect(within(hero).getByRole("link", { name: "Download Resume" })).toHaveAttribute("href", resume.pdf)
     expect(within(hero).getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact/")
+  })
+
+  it("opens the flagship Kubernetes case from the Home hero and preloads on focus", async () => {
+    const user = userEvent.setup()
+    renderRoute("/")
+    const proofLink = await screen.findByRole("link", { name: "Kubernetes autoscaling: 40% lower latency" })
+
+    expect(proofLink).toHaveAttribute("href", "/case-studies/kubernetes-autoscaling/")
+    expect(routePreloadMock).not.toHaveBeenCalled()
+    fireEvent.focus(proofLink)
+    expect(routePreloadMock).toHaveBeenLastCalledWith("/case-studies/kubernetes-autoscaling/")
+    await user.click(proofLink)
+    expect(await screen.findByRole("heading", { name: /kubernetes autoscaling for transaction-critical services/i, level: 1 })).toBeVisible()
   })
 
   it("shows each project purpose, distinctive result or capability, and source before details open", async () => {
