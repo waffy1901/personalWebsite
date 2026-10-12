@@ -74,6 +74,7 @@ function parseArgs(argv) {
     measurementBudgetMs: TOTAL_MEASUREMENT_BUDGET_MS,
     outputDir: null,
     serve: false,
+    scenario: "fallback",
   }
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index]
@@ -84,12 +85,14 @@ function parseArgs(argv) {
     else if (argument === "--measurement-budget-ms") options.measurementBudgetMs = Number(argv[++index])
     else if (argument === "--output-dir") options.outputDir = argv[++index]
     else if (argument === "--serve") options.serve = true
+    else if (argument === "--scenario") options.scenario = argv[++index]
     else throw new Error(`Unknown option: ${argument}`)
   }
   if (!Number.isInteger(options.measurementBudgetMs) || options.measurementBudgetMs < 1 || options.measurementBudgetMs > TOTAL_MEASUREMENT_BUDGET_MS) {
     throw new Error(`--measurement-budget-ms must be an integer from 1 to ${TOTAL_MEASUREMENT_BUDGET_MS}`)
   }
   const target = new URL(options.baseUrl)
+  if (!["fallback", "configured-contact"].includes(options.scenario)) throw new Error("--scenario must be fallback or configured-contact")
   if (target.href !== `${DEFAULT_BASE_URL}/`) throw new Error(`Performance reports must use ${DEFAULT_BASE_URL}; received ${options.baseUrl}`)
   return options
 }
@@ -358,6 +361,10 @@ function createSummary({ run, plan, environment, config, provenance, measurement
 
 async function main() {
   const options = parseArgs(process.argv.slice(2))
+  if (options.scenario === "configured-contact") {
+    const { runConfiguredContactReport } = await import("./configured-contact-performance.mjs")
+    return runConfiguredContactReport(options)
+  }
   const routes = discoverCanonicalRoutes(routeMetadata)
   const plan = createReportPlan({ routes, profiles: PROFILES, samplesPerGroup: SAMPLES_PER_GROUP })
   const chromePath = process.env.CHROME_PATH ?? undefined
