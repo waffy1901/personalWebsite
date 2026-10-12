@@ -23,6 +23,8 @@ import SocialLinks from "../components/SocialLinks";
 import { profile, resume } from "../data/profile";
 import { currentEmployment } from "../data/siteIdentity.js";
 import { currentRoleHighlights } from "../data/currentRoleHighlights.js";
+import { homeContent } from "../data/home.js";
+import { kubernetesAutoscalingSeo } from "../data/caseStudySeo.js";
 import { trackEvent } from "../utils/analytics";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 
@@ -121,43 +123,32 @@ const routeCards = [
   },
 ];
 
+const featuredCasePath = `/case-studies/${kubernetesAutoscalingSeo.slug}/`;
+
 function Home() {
   return (
     <PageShell>
       <section className="mc-dark-field px-3 py-4 text-white sm:px-5 sm:py-7">
         <PageContainer className="max-w-7xl py-0 sm:py-0">
-          <PresentationPanel className="p-5 sm:p-8 lg:p-10">
-            <div className="relative z-10 grid min-h-[calc(100dvh-8rem)] gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(20rem,0.95fr)] lg:items-center">
+          <PresentationPanel className="p-4 sm:p-6 lg:p-8">
+            <div className="relative z-10 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:items-center">
               <div className="mc-rise">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFB077]">
                   Platform & Reliability Engineering
                 </p>
-                <div className="mc-line-reveal mt-4 h-px w-40 bg-[#F96302]" aria-hidden="true" />
+                <div className="mc-line-reveal mt-3 h-px w-40 bg-[#F96302]" aria-hidden="true" />
 
-                <h1 className="mt-8 max-w-4xl break-words text-5xl font-black leading-none sm:text-7xl">
+                <h1 className="mt-5 max-w-4xl break-words text-5xl font-black leading-none sm:text-7xl">
                   {profile.name}
                 </h1>
-                <p className="mt-5 max-w-3xl break-words text-2xl font-black leading-tight text-white sm:text-3xl">
+                <p className="mt-4 max-w-3xl break-words text-2xl font-black leading-tight text-white sm:text-3xl">
                   I build production systems that stay reliable under pressure.
                 </p>
-                <p className="mt-5 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
                   {currentEmployment.currentTitle} at {currentEmployment.organization}, focused on Kubernetes, deployment
                   automation, observability, and high-throughput backend systems.
                 </p>
-                <ul aria-label="Recent engineering outcomes" className="mt-5 max-w-2xl space-y-3 text-sm leading-relaxed text-slate-200 sm:text-base">
-                  {currentRoleHighlights.map((highlight) => (
-                    <li key={highlight} className="flex gap-3">
-                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#F96302]" aria-hidden="true" />
-                      <span className="min-w-0 break-words">{highlight}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
-                  <FaMapMarkerAlt className="h-3 w-3 text-[#F96302]" aria-hidden="true" />
-                  Atlanta, GA
-                </p>
-
-                <div className="mt-8 flex flex-wrap gap-3">
+                <div className="mt-5 flex flex-wrap gap-3">
                   <a
                     href={resume.pdf}
                     download
@@ -177,10 +168,31 @@ function Home() {
                   </Link>
                 </div>
 
-                <StackChips items={focusAreas} className="mt-8" />
+                <Link
+                  to={featuredCasePath}
+                  {...createRouteIntentHandlers(featuredCasePath)}
+                  className="mt-4 inline-flex max-w-full scroll-mt-48 items-center gap-2 rounded-sm text-sm font-bold leading-relaxed text-[#FFB077] underline underline-offset-4 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
+                >
+                  <span className="min-w-0 break-words">{homeContent.proofLink}</span>
+                  <FaArrowRight className="shrink-0" aria-hidden="true" />
+                </Link>
+
+                <ul aria-label="Recent engineering outcomes" className="mt-5 max-w-2xl space-y-3 text-sm leading-relaxed text-slate-200 sm:text-base">
+                  {currentRoleHighlights.map((highlight) => (
+                    <li key={highlight} className="flex gap-3">
+                      <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#F96302]" aria-hidden="true" />
+                      <span className="min-w-0 break-words">{highlight}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 flex items-center gap-2 text-sm text-slate-400">
+                  <FaMapMarkerAlt className="h-3 w-3 text-[#F96302]" aria-hidden="true" />
+                  Atlanta, GA
+                </p>
+                <StackChips items={focusAreas} className="mt-5" />
               </div>
 
-              <aside className="relative mx-auto w-full max-w-md lg:mr-0">
+              <aside className="relative mx-auto w-full max-w-[14rem] sm:max-w-[18rem] lg:mr-0 lg:max-w-[22rem]">
                 <div className="absolute -right-3 -top-3 h-28 w-28 border-r-4 border-t-4 border-[#B3A369]" aria-hidden="true" />
                 <div className="absolute -bottom-3 -left-3 h-28 w-28 border-b-4 border-l-4 border-[#F96302]" aria-hidden="true" />
 
@@ -189,7 +201,7 @@ function Home() {
                     <source
                       type="image/webp"
                       srcSet={profile.profilePictureSources.webp}
-                      sizes="(min-width: 640px) 448px, calc(100vw - 5rem)"
+                      sizes="(min-width: 1024px) 20.875rem, (min-width: 640px) 16.875rem, 12.875rem"
                     />
                     <img
                       src={profile.profilePicture}
@@ -199,7 +211,7 @@ function Home() {
                       loading="eager"
                       fetchPriority="high"
                       decoding="async"
-                      className="h-[30rem] w-full rounded-2xl object-cover object-center"
+                      className="h-64 w-full rounded-2xl object-cover object-center sm:h-80 lg:h-[26rem]"
                     />
                   </picture>
                 </div>
@@ -219,9 +231,9 @@ function Home() {
 
           <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
             <div>
-              <p className="mc-eyebrow">Engineering signal</p>
-              <h2 className="text-4xl font-black leading-tight text-[#0B1220]">
-                Reliable systems first. Technical depth immediately after the scan.
+              <p className="mc-eyebrow">Platform engineering</p>
+              <h2 className="break-words text-4xl font-black leading-tight text-[#0B1220]">
+                {homeContent.reliabilityHeading}
               </h2>
             </div>
             <p className="text-lg leading-relaxed text-slate-600">
@@ -244,8 +256,8 @@ function Home() {
               under production traffic.
             </p>
             <Link
-              to="/case-studies/kubernetes-autoscaling/"
-              {...createRouteIntentHandlers("/case-studies/kubernetes-autoscaling/")}
+              to={featuredCasePath}
+              {...createRouteIntentHandlers(featuredCasePath)}
               className="mc-button-primary mt-7"
             >
               Read the case study
@@ -278,8 +290,8 @@ function Home() {
         <PageContainer className="space-y-8">
           <div>
             <p className="mc-eyebrow">Explore</p>
-            <h2 className="max-w-3xl text-4xl font-black leading-tight text-[#0B1220]">
-              Inspect the portfolio through outcomes, ownership, or builds.
+            <h2 className="max-w-3xl break-words text-4xl font-black leading-tight text-[#0B1220]">
+              {homeContent.exploreHeading}
             </h2>
           </div>
 
