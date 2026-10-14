@@ -22,4 +22,13 @@ rtk proxy python3 .codex/skills/portfolio-deployment-verifier/scripts/verify_dep
 
 The helper validates snapshot consistency and exact workflow/tag/deploy links. It does not fetch providers or verify live behavior. Missing evidence stays incomplete.
 
-Report target merge SHA, workflow/run/attempt, serving SHA and deploy ID, release/tag and resolved SHA, target URL, capture times, evidence classes, and residual gaps. When closeout is separately authorized, hand the packet to `$portfolio-audit-maintainer`.
+Report target merge SHA, workflow/run/attempt, serving SHA and deploy ID, release/tag and resolved SHA, target URL, capture times, evidence classes, and residual gaps.
+
+When this validation belongs to a named issue in the active workflow, use
+`$portfolio-audit-maintainer` to read the issue's closure contract and prepare a
+criterion-by-criterion closeout packet before ending the validation handoff.
+Include the issue's closeout readiness, the packet, and any remaining evidence
+or authority gap. Do not leave this preparation dependent on another user prompt.
+If a matching direct closeout grant is already present, continue through that
+skill without asking again; otherwise keep the packet local and leave issue and
+project writes pending. Validation alone does not authorize closeout.

@@ -79,8 +79,12 @@ node .codex/skills/portfolio-change-impact/scripts/check_change_impact.mjs --sou
 - Use `$csp-security-header-maintainer` when changing JSON-LD, Google Analytics, Formspree, external assets, security headers, CSP hashes, redirects, or frame/object/base policies.
 - Use `$ga4-portfolio-analytics` when adding, removing, auditing, testing, or documenting GA4 events.
 - Use `$portfolio-audit-maintainer` when creating, updating, validating, or
-  closing quality findings; maintaining the GitHub quality project; recording
-  deployed evidence; or consulting the archived audit snapshot.
+  closing quality findings or implementation issues; preparing issue closeout
+  after linked deployment validation; maintaining the GitHub quality project;
+  recording deployed evidence; or consulting the archived audit snapshot. A direct
+  "close out the issue" request applies to the unambiguous current issue and
+  includes its evidence, supported checklist updates, and Project 2 reconciliation;
+  reuse that grant without another confirmation. Validation alone remains read-only.
 - Use `$git-pr-publisher` when asked to stage files, commit changes, push the current or dev branch, create or update a PR against `main`, or safely ship local changes after implementation.
 
 Before any merge, inspect `.github/workflows/release-on-deploy.yml`. While a push to `main` automatically verifies the app, waits for the Netlify production deployment, validates production, creates a deploy tag and GitHub Release, and runs advisory browser checks, merge authorization must name the PR and reviewed SHA and acknowledge that compound consequence. Merge authorization does not authorize issue closure or post-merge remediation.

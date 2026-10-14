@@ -1,4 +1,4 @@
 interface:
   display_name: "Portfolio Audit Maintainer"
-  short_description: "Maintain quality issues and evidence"
-  default_prompt: "Use $portfolio-audit-maintainer to reconcile portfolio quality issues and project fields with exact evidence."
+  short_description: "Close out issues with evidence and project readback"
+  default_prompt: "Use $portfolio-audit-maintainer to prepare or complete closeout for the current issue, reconcile its Project 2 item, and independently verify persistence within the active human grant."
