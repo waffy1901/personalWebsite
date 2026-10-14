@@ -4,6 +4,7 @@ import { readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { createServer } from "vite"
+import { buildSitemap, validateSitemap } from "./sitemap.mjs"
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const appRoot = path.resolve(scriptDir, "..")
@@ -39,14 +40,6 @@ const packageMajor = (packageJson, packageName) =>
 
 const titleWithoutSuffix = (title) =>
   title.replace(" | Waffy Ahmed", "").replace("Waffy Ahmed | ", "")
-
-const escapeXml = (value) =>
-  String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;")
 
 const wrapText = (
   text,
@@ -133,16 +126,6 @@ const updateCspHash = (toml, hashToken) => {
 }
 
 const metricLabel = (metric) => `${metric.value} ${metric.label}`
-
-const routePriority = (routePath) => {
-  if (routePath === "/") return "1.0"
-  if (routePath === "/case-studies") return "0.9"
-  if (routePath === "/resume") return "0.7"
-  if (routePath === "/contact") return "0.6"
-  return "0.8"
-}
-
-const publicResourcePriority = () => "0.5"
 
 const loadCanonicalModules = async () => {
   const server = await createServer({
@@ -337,34 +320,6 @@ const buildJsonLd = (model, portfolio) => {
       },
     ],
   }
-}
-
-const buildSitemap = (model) => {
-  const { routeMetadata, toAbsoluteUrl, toCanonicalRouteUrl } = model
-  const publicResources = ["/llms.txt", "/ai-summary.txt", "/portfolio.json"]
-  const urlEntries = [
-    ...routeMetadata.map((route) => ({
-      url: toCanonicalRouteUrl(route.path),
-      priority: routePriority(route.path),
-    })),
-    ...publicResources.map((resourcePath) => ({
-      url: toAbsoluteUrl(resourcePath),
-      priority: publicResourcePriority(resourcePath),
-    })),
-  ]
-
-  return `${[
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urlEntries.flatMap((entry) => [
-      "  <url>",
-      `    <loc>${escapeXml(entry.url)}</loc>`,
-      "    <changefreq>monthly</changefreq>",
-      `    <priority>${entry.priority}</priority>`,
-      "  </url>",
-    ]),
-    "</urlset>",
-  ].join("\n")}\n`
 }
 
 const buildLlms = (model, portfolio) => {
@@ -711,6 +666,7 @@ const buildOutputs = async () => {
     {
       relPath: "main/public/sitemap.xml",
       content: buildSitemap(model),
+      validate: (xml) => validateSitemap(xml, model),
     },
     {
       relPath: "main/index.html",
@@ -747,6 +703,8 @@ const run = async () => {
   for (const output of outputs) {
     const absolutePath = path.join(repoRoot, output.relPath)
     const current = await readFile(absolutePath, "utf8")
+
+    if (checkOnly && output.validate) output.validate(current)
 
     if (current === output.content) continue
 
