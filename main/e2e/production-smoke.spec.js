@@ -94,8 +94,8 @@ for (const width of [320, 390]) {
 
       if (route !== "/projects/") {
         const proof = highlights.locator("li > span:last-child")
-        await expect(proof).toHaveCount(2)
-        for (let index = 0; index < 2; index += 1) {
+        await expect(proof).toHaveCount(3)
+        for (let index = 0; index < 3; index += 1) {
           await expectProofTextWithinClippingPanel(proof.nth(index), route === "/" ? ".mc-presentation-panel" : '[aria-hidden="false"]')
         }
         if (route === "/experience/") await expect(buttons).toHaveAttribute("aria-expanded", "false")
@@ -680,7 +680,10 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
   ).toBeFocused()
   await page.keyboard.press(focusTraversalKey)
   await expect(
-    page.getByRole("link", { name: "Waffy Ahmed home" })
+    page.getByRole("link", {
+      name: "WA Waffy Ahmed Platform reliability engineer",
+      exact: true,
+    })
   ).toBeFocused()
   await page.keyboard.press(focusTraversalKey)
 

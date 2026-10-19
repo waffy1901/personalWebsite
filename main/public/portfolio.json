@@ -1,11 +1,11 @@
 {
   "schemaVersion": "1.1",
-  "contentLastReviewed": "2026-09-29",
+  "contentLastReviewed": "2026-10-19",
   "person": {
     "name": "Waffy Ahmed",
     "title": "Software Engineer II",
     "tagline": "Software Engineer II | Georgia Tech",
-    "summary": "Software Engineer II focused on platform reliability, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.",
+    "summary": "Software Engineer II focused on platform reliability, security and CI/CD remediation, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.",
     "location": "United States",
     "education": {
       "institution": "Georgia Institute of Technology",
@@ -22,10 +22,12 @@
       "organization": "The Home Depot",
       "startDate": "2026-07",
       "highlights": [
+        "Led security and CI/CD remediation across 15 services, eliminating 66 unique critical/high CVEs from production workloads and raising build-gate pass rates from 33% to 100%.",
         "Led 4 engineers through stakeholder validation and handoff of an AI triage agent spanning 7 payment applications.",
         "Replaced shared CI credentials with short-lived JFrog OIDC tokens across 2 teams and 20 repositories."
       ],
       "focus": [
+        "Security and CI/CD remediation",
         "Production workflow automation",
         "Kubernetes CronJobs",
         "Cloud Spanner migrations",
@@ -160,6 +162,8 @@
     "Service-to-service communication",
     "Credential rotation",
     "CVE remediation",
+    "Framework upgrades",
+    "Build pipeline remediation",
     "Container build hardening",
     "Kubernetes CronJobs",
     "Workload Identity",

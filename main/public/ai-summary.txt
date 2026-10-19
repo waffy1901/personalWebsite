@@ -84,6 +84,9 @@ Application development:
 Professional Experience:
 
 Software Engineer II, The Home Depot, Atlanta, GA (July 2026 - Present):
+* Led security and CI/CD remediation across 15 services, upgrading frameworks
+  and fixing pipelines to eliminate 66 unique critical/high CVEs from
+  production workloads and raise build-gate pass rates from 33% to 100%.
 * Led a team of 4 engineers from design through stakeholder validation and
   handoff of an AI triage agent spanning 7 payment applications; unified
   code/config tracing, BigQuery, and store telemetry with historical baselines
@@ -199,6 +202,9 @@ Impact" and frames Waffy's production role beyond individual tickets.
 * Release Governance: Gate production releases by reviewing deployment changes
   before they reach shared environments, connecting Spinnaker, Kubernetes, and
   rollout standards to safer launches.
+  - Led framework upgrades and CI/CD pipeline remediation across 15 services,
+    eliminating 66 unique critical/high CVEs from production workloads and
+    raising build-gate pass rates from 33% to 100%.
   - Prevent misconfigurations across multi-service rollouts by reviewing
     Spinnaker pipelines and Kubernetes manifests.
   - Enforce deployment safety standards across 15+ microservices spanning
@@ -469,7 +475,7 @@ This portfolio is a Vite React application under the main/ directory. It uses
 React Router and publishes the following primary routes:
 
 * / - Home: Software engineering portfolio for Waffy Ahmed, focused on
-  reliability, Kubernetes, deployment automation, observability, and
+  platform reliability, Kubernetes, CI/CD security, observability, and
   high-throughput systems.
 * /case-studies/ - Case Studies: Engineering case studies covering Kubernetes
   autoscaling, legacy deployment recovery, and CDC data reconciliation work.
@@ -486,14 +492,15 @@ React Router and publishes the following primary routes:
   Led a team of six building a full-stack reconciliation platform for
   infectious disease case-count discrepancies between state health departments
   and CDC datasets.
-* /experience/ - Experience: Professional experience across platform
-  reliability, production operations, infrastructure, deployment automation,
-  and full-stack engineering.
+* /experience/ - Experience: Professional experience in platform reliability,
+  security and CI/CD remediation, infrastructure, deployment automation, and
+  production operations.
 * /projects/ - Projects: Selected software projects spanning public health
   data reconciliation, mobile job search tooling, and campus discovery
   workflows.
-* /resume/ - Resume: Resume preview and PDF download for Waffy Ahmed, software
-  engineer focused on reliability and production systems.
+* /resume/ - Resume: Resume preview, accessible HTML, and PDF download for
+  Waffy Ahmed, covering platform reliability, security remediation, and
+  production engineering.
 * /contact/ - Contact: Contact Waffy Ahmed by form, email, LinkedIn, or GitHub
   for engineering opportunities and professional conversations.
 * /ai-summary.txt - this AI-readable portfolio summary.
@@ -541,6 +548,8 @@ High-signal topics:
 * Service-to-service communication
 * Credential rotation
 * CVE remediation
+* Framework upgrades
+* Build pipeline remediation
 * Container build hardening
 * Kubernetes CronJobs
 * Workload Identity
