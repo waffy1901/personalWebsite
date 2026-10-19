@@ -3,18 +3,19 @@ import { currentRoleHighlights } from "./currentRoleHighlights.js"
 
 export const publicPortfolio = {
   schemaVersion: "1.1",
-  contentLastReviewed: "2026-09-29",
+  contentLastReviewed: "2026-10-19",
   person: {
     title: currentEmployment.currentTitle,
     location: "United States",
     summary:
-      "Software Engineer II focused on platform reliability, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.",
+      "Software Engineer II focused on platform reliability, security and CI/CD remediation, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.",
     currentRole: {
       title: currentEmployment.currentTitle,
       organization: currentEmployment.organization,
       startDate: currentEmployment.roleHistory[0].startDate,
       highlights: currentRoleHighlights,
       focus: [
+        "Security and CI/CD remediation",
         "Production workflow automation",
         "Kubernetes CronJobs",
         "Cloud Spanner migrations",
@@ -139,6 +140,8 @@ export const publicPortfolio = {
     "Service-to-service communication",
     "Credential rotation",
     "CVE remediation",
+    "Framework upgrades",
+    "Build pipeline remediation",
     "Container build hardening",
     "Kubernetes CronJobs",
     "Workload Identity",

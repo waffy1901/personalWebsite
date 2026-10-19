@@ -905,7 +905,8 @@ describe("App routes", () => {
 
     expect(screen.getByText(/Software Engineer II at The Home Depot, focused on/)).toBeVisible()
     const outcomes = screen.getByRole("list", { name: "Recent engineering outcomes" })
-    expect(within(outcomes).getAllByRole("listitem")).toHaveLength(2)
+    expect(within(outcomes).getAllByRole("listitem")).toHaveLength(3)
+    expect(outcomes).toHaveTextContent(/15 services.*66 unique critical\/high CVEs from production workloads.*33% to 100%/)
     expect(outcomes).toHaveTextContent(/Led 4 engineers through stakeholder validation and handoff.*7 payment applications/)
     expect(outcomes).toHaveTextContent(/Replaced shared CI credentials.*JFrog OIDC.*2 teams and 20 repositories/)
     currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
@@ -1469,6 +1470,9 @@ describe("App routes", () => {
     expect(aiSummary).toContain(
       "Led a team of 4 engineers from design through stakeholder validation"
     )
+    expect(aiSummary.replace(/\s+/g, " ")).toContain(
+      "Led security and CI/CD remediation across 15 services, upgrading frameworks and fixing pipelines to eliminate 66 unique critical/high CVEs from production workloads and raise build-gate pass rates from 33% to 100%."
+    )
     expect(aiSummary).toMatch(
       /Drove JFrog OIDC adoption across\s+2 teams and 20 repositories/
     )
@@ -1585,6 +1589,7 @@ describe("App routes", () => {
     expect(screen.getByRole("heading", { name: "Experience" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Skills" })).toBeInTheDocument()
+    expect(screen.getByText(/Led security and CI\/CD remediation across 15 services, upgrading frameworks and fixing pipelines/)).toHaveTextContent(/66 unique critical\/high CVEs from production workloads.*33% to 100%/)
     expect(screen.getByText(/Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent/)).toBeInTheDocument()
     expect(screen.getByText(/Drove JFrog OIDC adoption across 2 teams and 20 repositories/)).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: /^CDC Data Reconciliation/ })).toBeInTheDocument()
@@ -1781,7 +1786,7 @@ describe("App routes", () => {
     const currentCard = detailsButton.closest("article")
     const outcomes = within(currentCard).getByRole("list", { name: "Recent engineering outcomes" })
     currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
-    expect(within(outcomes).getAllByRole("listitem")).toHaveLength(2)
+    expect(within(outcomes).getAllByRole("listitem")).toHaveLength(3)
     expect(currentCard.querySelector('button[aria-label="Copy Software Engineer II details"]')).toHaveAttribute("tabindex", "-1")
     await user.click(detailsButton)
 

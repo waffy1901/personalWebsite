@@ -1,6 +1,6 @@
 {
   "sourceFile": "fixtures/resume-layout-source.pdf",
-  "sourceSha256": "de6495eaf4f3ad951e6c3dcdaf5b913bf81e3a4a9e0069b53ed713f2710d0678",
+  "sourceSha256": "f01694e43a5bdfea62e5b44f2f2486b0ddd7de759e37c6c0e40e87bef373dbbf",
   "page": {
     "width": 612,
     "height": 792
@@ -8,75 +8,89 @@
   "paragraphs": {
     "experience.0.roles.0.bullets.0": [
       {
+        "text": "Led security and CI/CD remediation across 15 services, upgrading frameworks and fixing pipelines to eliminate 66",
+        "x": 70.8,
+        "top": 172.223,
+        "width": 500.097
+      },
+      {
+        "text": "unique critical/high CVEs from production workloads and raise build-gate pass rates from 33% to 100%.",
+        "x": 70.8,
+        "top": 184.178,
+        "width": 458.113
+      }
+    ],
+    "experience.0.roles.0.bullets.1": [
+      {
         "text": "Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent spanning 7",
         "x": 70.8,
-        "top": 181.173,
+        "top": 195.159,
         "width": 503.062
       },
       {
         "text": "payment applications; unified code/config tracing, BigQuery, and store telemetry with historical baselines and",
         "x": 70.8,
-        "top": 193.128,
+        "top": 207.114,
         "width": 480.416
       },
       {
         "text": "coverage checks, delivering cited diagnoses and suggested fixes while suppressing false findings.",
         "x": 70.8,
-        "top": 205.083,
+        "top": 219.069,
         "width": 413.036
       }
     ],
-    "experience.0.roles.0.bullets.1": [
+    "experience.0.roles.0.bullets.2": [
       {
         "text": "Drove JFrog OIDC adoption across 2 teams and 20 repositories, replacing shared Maven/Docker credentials with",
         "x": 70.8,
-        "top": 216.565,
+        "top": 230.049,
         "width": 493.646
       },
       {
         "text": "short-lived, job-scoped tokens; resolved 1,100+ security findings tied to plaintext token exposure in CI logs.",
         "x": 70.8,
-        "top": 228.52,
+        "top": 242.004,
         "width": 469.626
       }
     ],
-    "experience.0.roles.0.bullets.2": [
+    "experience.0.roles.0.bullets.3": [
       {
         "text": "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials",
         "x": 70.8,
-        "top": 240.002,
+        "top": 252.985,
         "width": 495.069
       },
       {
         "text": "with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege",
         "x": 70.8,
-        "top": 251.957,
+        "top": 264.94,
         "width": 494.64
       },
       {
         "text": "IAM, and Secret Manager/External Secrets, eliminating human production access.",
         "x": 70.8,
-        "top": 263.912,
+        "top": 276.895,
         "width": 360.478
       }
     ],
-    "experience.0.roles.0.bullets.3": [
+    "experience.0.roles.0.bullets.4": [
       {
         "text": "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container",
         "x": 70.8,
-        "top": 275.394,
+        "top": 287.875,
         "width": 496.169
       },
       {
         "text": "PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation;",
         "x": 70.8,
-        "top": 287.349,
+        "top": 299.831,
         "width": 488.929
       },
       {
         "text": "automated 7 weekly runs via Kubernetes CronJob, eliminating ∼120 engineer-hours of recurring toil annually.",
         "x": 70.8,
-        "top": 299.305,
+        "top": 311.786,
         "width": 480.675
       }
     ],
@@ -84,19 +98,19 @@
       {
         "text": "Increased system resilience by implementing Kubernetes Horizontal Pod Autoscaling (HPA) for a core service",
         "x": 70.8,
-        "top": 327.897,
+        "top": 338.372,
         "width": 478.506
       },
       {
         "text": "previously capped at 20 static pods, reducing mean latency from 121 to 72 ms and error rates by 89% while",
         "x": 70.8,
-        "top": 339.852,
+        "top": 350.327,
         "width": 471.762
       },
       {
         "text": "increasing throughput from 24.9M to 34.8M requests/week and enabling dynamic scaling up to 100 pods.",
         "x": 70.8,
-        "top": 351.807,
+        "top": 362.282,
         "width": 460.054
       }
     ],
@@ -104,19 +118,19 @@
       {
         "text": "Reconstructed deployment workflows for legacy Java 1.8 Tomcat services lacking operational ownership by",
         "x": 70.8,
-        "top": 363.289,
+        "top": 373.263,
         "width": 465.093
       },
       {
         "text": "rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation, eliminating a platform",
         "x": 70.8,
-        "top": 375.244,
+        "top": 385.218,
         "width": 480.61
       },
       {
         "text": "outage risk capable of halting all transaction capture.",
         "x": 70.8,
-        "top": 387.2,
+        "top": 397.173,
         "width": 233.762
       }
     ],
@@ -124,19 +138,19 @@
       {
         "text": "Remediated ∼330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a",
         "x": 70.8,
-        "top": 398.681,
+        "top": 408.153,
         "width": 496.555
       },
       {
         "text": "minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD",
         "x": 70.8,
-        "top": 410.637,
+        "top": 420.108,
         "width": 494.399
       },
       {
         "text": "401 authentication failures to enable secure, reproducible container builds.",
         "x": 70.8,
-        "top": 422.592,
+        "top": 432.064,
         "width": 324.639
       }
     ],
@@ -144,13 +158,13 @@
       {
         "text": "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (14.5 million",
         "x": 70.8,
-        "top": 434.074,
+        "top": 443.044,
         "width": 505.201
       },
       {
         "text": "daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
         "x": 70.8,
-        "top": 446.029,
+        "top": 454.999,
         "width": 491.922
       }
     ],
@@ -158,13 +172,13 @@
       {
         "text": "Reduced mean time to recovery ∼50% by implementing an automated Kubernetes rolling-restart job for 20+",
         "x": 70.8,
-        "top": 457.511,
+        "top": 465.979,
         "width": 476.434
       },
       {
         "text": "microservices, replacing slow Argo Rollouts and accelerating recovery from memory-leak/state-drift issues.",
         "x": 70.8,
-        "top": 469.466,
+        "top": 477.935,
         "width": 464.395
       }
     ],
@@ -172,13 +186,13 @@
       {
         "text": "Developed an internal product information page for cashiers, streamlining self-checkout processes and reducing",
         "x": 70.8,
-        "top": 498.058,
+        "top": 504.521,
         "width": 483.934
       },
       {
         "text": "customer wait times for associate interventions by ∼25%.",
         "x": 70.8,
-        "top": 510.013,
+        "top": 516.476,
         "width": 250.253
       }
     ],
@@ -186,13 +200,13 @@
       {
         "text": "Leveraged Java, React, and TypeScript to retrieve and surface validated product data across all self-checkout",
         "x": 70.8,
-        "top": 521.495,
+        "top": 527.456,
         "width": 477.649
       },
       {
         "text": "registers, mitigating customer theft by ∼$750,000 annually.",
         "x": 70.8,
-        "top": 531.517,
+        "top": 537.479,
         "width": 258.725
       }
     ],
@@ -200,7 +214,7 @@
       {
         "text": "Optimized the efficiency of configuring 40,000+ registers across 2,300 stores by 90%, in collaboration with 2 interns.",
         "x": 70.8,
-        "top": 544.932,
+        "top": 550.392,
         "width": 505.198
       }
     ],
@@ -208,13 +222,13 @@
       {
         "text": "Truncated maximum deployment time for register updates from 24+ hours to 30 minutes by using Java HttpClient",
         "x": 70.8,
-        "top": 556.414,
+        "top": 561.372,
         "width": 503.137
       },
       {
         "text": "and Flow APIs to streamline retrieval of polymorphic external configurations.",
         "x": 70.8,
-        "top": 568.369,
+        "top": 573.327,
         "width": 339.615
       }
     ],
@@ -222,13 +236,13 @@
       {
         "text": "Led a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health",
         "x": 70.8,
-        "top": 622.799,
+        "top": 625.278,
         "width": 471.596
       },
       {
         "text": "departments and the CDC, alongside doubling as a full-stack software developer.",
         "x": 70.8,
-        "top": 634.754,
+        "top": 637.233,
         "width": 352.789
       }
     ],
@@ -236,13 +250,13 @@
       {
         "text": "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the",
         "x": 70.8,
-        "top": 646.236,
+        "top": 648.213,
         "width": 489.247
       },
       {
         "text": "two datasets, saving 5000+ hours of manual reconciliation annually.",
         "x": 70.8,
-        "top": 658.191,
+        "top": 660.168,
         "width": 296.111
       }
     ],
@@ -250,7 +264,7 @@
       {
         "text": "Programming Languages: Java, Python, JavaScript, TypeScript, SQL",
         "x": 46.8,
-        "top": 693.549,
+        "top": 694.051,
         "width": 321.012
       }
     ],
@@ -258,13 +272,13 @@
       {
         "text": "Technologies/Frameworks: Kubernetes, Google Cloud Platform (GCP), Terraform, cdk8s, Docker, Cloud Spanner,",
         "x": 46.8,
-        "top": 706.301,
+        "top": 706.803,
         "width": 516.593
       },
       {
         "text": "Cassandra, Elasticsearch, BigQuery, Grafana, Prometheus, OpenTelemetry, React, FastAPI, Node.js, JUnit, Git",
         "x": 46.8,
-        "top": 718.257,
+        "top": 718.758,
         "width": 489.557
       }
     ],
@@ -272,13 +286,13 @@
       {
         "text": "Concepts: Object-Oriented Programming & Design, Test-Driven Development, NoSQL, Data Structures & Algorithms,",
         "x": 46.8,
-        "top": 731.009,
+        "top": 731.51,
         "width": 527.168
       },
       {
         "text": "Full-Stack, CI/CD, Infrastructure, Distributed Systems, Cloud Computing, Microservices Architecture",
         "x": 46.8,
-        "top": 742.964,
+        "top": 743.465,
         "width": 447.623
       }
     ]
@@ -300,384 +314,398 @@
     },
     {
       "text": "Education",
-      "top": 82.27210880000007,
+      "top": 75.80110880000007,
       "x": 36.0,
-      "baseline": 91.90800000000002,
+      "baseline": 85.43700000000001,
       "width": 59.45081856
     },
     {
       "text": "Georgia Institute of Technology | Atlanta, GA December 2024",
-      "top": 101.01226539999993,
+      "top": 94.54126539999993,
       "x": 46.8,
-      "baseline": 109.80499999999995,
+      "baseline": 103.33399999999995,
       "width": 523.80261832
     },
     {
       "text": "Bachelor of Science in Computer Science Faculty Honors, Dean’s List, Zell Miller Scholar",
-      "top": 115.32414439999991,
+      "top": 108.8531443999999,
       "x": 50.12,
-      "baseline": 123.35399999999993,
+      "baseline": 116.88299999999992,
       "width": 520.4791005799998
     },
     {
       "text": "Experience",
-      "top": 133.60110880000002,
+      "top": 126.15610879999997,
       "x": 36.0,
-      "baseline": 143.23699999999997,
+      "baseline": 135.79199999999992,
       "width": 64.85696
     },
     {
       "text": "The Home Depot Atlanta, GA",
-      "top": 152.34026540000002,
+      "top": 144.89526539999997,
       "x": 46.8,
-      "baseline": 161.13300000000004,
+      "baseline": 153.688,
       "width": 523.80314047
     },
     {
       "text": "Software Engineer II July 2026 – Present",
-      "top": 167.67414440000005,
+      "top": 159.72714439999993,
       "x": 46.80000000000001,
-      "baseline": 175.70400000000006,
+      "baseline": 167.75699999999995,
       "width": 522.8534816199999
     },
     {
-      "text": "Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent spanning 7",
-      "top": 181.17314440000007,
+      "text": "Led security and CI/CD remediation across 15 services, upgrading frameworks and fixing pipelines to eliminate 66",
+      "top": 172.2231443999999,
       "x": 70.80000000000001,
-      "baseline": 189.2030000000001,
+      "baseline": 180.25299999999993,
+      "width": 500.09661724000017
+    },
+    {
+      "text": "unique critical/high CVEs from production workloads and raise build-gate pass rates from 33% to 100%.",
+      "top": 184.17814439999995,
+      "x": 70.80000000000001,
+      "baseline": 192.20799999999997,
+      "width": 458.1132245799998
+    },
+    {
+      "text": "Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent spanning 7",
+      "top": 195.15914439999995,
+      "x": 70.80000000000001,
+      "baseline": 203.18899999999996,
       "width": 503.0624832600001
     },
     {
       "text": "payment applications; unified code/config tracing, BigQuery, and store telemetry with historical baselines and",
-      "top": 193.1281444000001,
+      "top": 207.1141444,
       "x": 70.80000000000001,
-      "baseline": 201.15800000000013,
+      "baseline": 215.144,
       "width": 480.41649720000004
     },
     {
       "text": "coverage checks, delivering cited diagnoses and suggested fixes while suppressing false findings.",
-      "top": 205.08314440000015,
+      "top": 219.06914440000003,
       "x": 70.80000000000001,
-      "baseline": 213.11300000000017,
+      "baseline": 227.09900000000005,
       "width": 413.03644462000005
     },
     {
       "text": "Drove JFrog OIDC adoption across 2 teams and 20 repositories, replacing shared Maven/Docker credentials with",
-      "top": 216.56514440000024,
+      "top": 230.04914440000005,
       "x": 70.80000000000001,
-      "baseline": 224.59500000000025,
+      "baseline": 238.07900000000006,
       "width": 493.6458337399998
     },
     {
       "text": "short-lived, job-scoped tokens; resolved 1,100+ security findings tied to plaintext token exposure in CI logs.",
-      "top": 228.52014440000028,
+      "top": 242.0041444000001,
       "x": 70.80000000000001,
-      "baseline": 236.5500000000003,
+      "baseline": 250.0340000000001,
       "width": 469.62600514
     },
     {
       "text": "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials",
-      "top": 240.00214440000036,
+      "top": 252.98514440000008,
       "x": 70.80000000000001,
-      "baseline": 248.03200000000038,
+      "baseline": 261.0150000000001,
       "width": 495.06948928000025
     },
     {
       "text": "with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege",
-      "top": 251.9571444000004,
+      "top": 264.9401444000001,
       "x": 70.80000000000001,
-      "baseline": 259.9870000000004,
+      "baseline": 272.97000000000014,
       "width": 494.64010121999996
     },
     {
       "text": "IAM, and Secret Manager/External Secrets, eliminating human production access.",
-      "top": 263.91214440000044,
+      "top": 276.89514440000016,
       "x": 70.80000000000001,
-      "baseline": 271.94200000000046,
+      "baseline": 284.9250000000001,
       "width": 360.4777520600001
     },
     {
       "text": "Re-architected order reconciliation from Cloud SQL to Cloud Spanner mid-migration, engineering an in-container",
-      "top": 275.3941444000004,
+      "top": 287.8751444000001,
       "x": 70.80000000000001,
-      "baseline": 283.42400000000043,
+      "baseline": 295.90500000000014,
       "width": 496.16936032000007
     },
     {
       "text": "PGAdapter, resolving cross-project IAM blockers, and hardening failure paths via staged production validation;",
-      "top": 287.3491444000004,
+      "top": 299.83114440000014,
       "x": 70.80000000000001,
-      "baseline": 295.3790000000004,
+      "baseline": 307.86100000000016,
       "width": 488.92854264
     },
     {
       "text": "automated 7 weekly runs via Kubernetes CronJob, eliminating ∼120 engineer-hours of recurring toil annually.",
-      "top": 299.3051444000004,
+      "top": 311.7861444000001,
       "x": 70.80000000000001,
-      "baseline": 307.33500000000043,
+      "baseline": 319.81600000000014,
       "width": 480.67452854000004
     },
     {
       "text": "Software Engineer I January 2025 – July 2026",
-      "top": 314.39814440000043,
+      "top": 325.8761444000001,
       "x": 46.80000000000001,
-      "baseline": 322.42800000000045,
+      "baseline": 333.9060000000001,
       "width": 522.45269164
     },
     {
       "text": "Increased system resilience by implementing Kubernetes Horizontal Pod Autoscaling (HPA) for a core service",
-      "top": 327.89714440000046,
+      "top": 338.37214440000014,
       "x": 70.80000000000001,
-      "baseline": 335.9270000000005,
+      "baseline": 346.40200000000016,
       "width": 478.5056705199998
     },
     {
       "text": "previously capped at 20 static pods, reducing mean latency from 121 to 72 ms and error rates by 89% while",
-      "top": 339.85214440000044,
+      "top": 350.3271444000001,
       "x": 70.80000000000001,
-      "baseline": 347.88200000000046,
+      "baseline": 358.35700000000014,
       "width": 471.7619865799999
     },
     {
       "text": "increasing throughput from 24.9M to 34.8M requests/week and enabling dynamic scaling up to 100 pods.",
-      "top": 351.8071444000004,
+      "top": 362.2821444000001,
       "x": 70.80000000000001,
-      "baseline": 359.83700000000044,
+      "baseline": 370.3120000000001,
       "width": 460.05393906
     },
     {
       "text": "Reconstructed deployment workflows for legacy Java 1.8 Tomcat services lacking operational ownership by",
-      "top": 363.2891444000004,
+      "top": 373.2631444000001,
       "x": 70.80000000000001,
-      "baseline": 371.3190000000004,
+      "baseline": 381.2930000000001,
       "width": 465.09302213999973
     },
     {
       "text": "rebuilding CI/CD pipelines and enabling zero-downtime Cassandra credential rotation, eliminating a platform",
-      "top": 375.2441444000004,
+      "top": 385.2181444000001,
       "x": 70.80000000000001,
-      "baseline": 383.2740000000004,
+      "baseline": 393.2480000000001,
       "width": 480.6097716399998
     },
     {
       "text": "outage risk capable of halting all transaction capture.",
-      "top": 387.2001444000004,
+      "top": 397.17314440000007,
       "x": 70.80000000000001,
-      "baseline": 395.2300000000004,
+      "baseline": 405.2030000000001,
       "width": 233.7624464000001
     },
     {
       "text": "Remediated ∼330 OS-level and Python CVEs across 13 microservices by migrating Docker builds from UBI8 to a",
-      "top": 398.6811444000004,
+      "top": 408.1531444000001,
       "x": 70.80000000000001,
-      "baseline": 406.7110000000004,
+      "baseline": 416.1830000000001,
       "width": 496.55491293999984
     },
     {
       "text": "minimal internal Artifactory base image, reverse-engineering undocumented build processes and resolving CI/CD",
-      "top": 410.6371444000004,
+      "top": 420.10814440000007,
       "x": 70.80000000000001,
-      "baseline": 418.6670000000004,
+      "baseline": 428.1380000000001,
       "width": 494.39900630000017
     },
     {
       "text": "401 authentication failures to enable secure, reproducible container builds.",
-      "top": 422.5921444000004,
+      "top": 432.0641444000001,
       "x": 70.80000000000001,
-      "baseline": 430.6220000000004,
+      "baseline": 440.0940000000001,
       "width": 324.6392910800002
     },
     {
       "text": "Led testing and validation to disable a legacy service component handling ∼27% of transaction volume (14.5 million",
-      "top": 434.07414440000036,
+      "top": 443.04414440000005,
       "x": 70.80000000000001,
-      "baseline": 442.1040000000004,
+      "baseline": 451.07400000000007,
       "width": 505.20145347999977
     },
     {
       "text": "daily captures/lookups) using BigQuery and Postman, supporting a phased retirement effort involving 12 teams.",
-      "top": 446.02914440000035,
+      "top": 454.99914440000003,
       "x": 70.80000000000001,
-      "baseline": 454.05900000000037,
+      "baseline": 463.02900000000005,
       "width": 491.92230393999995
     },
     {
       "text": "Reduced mean time to recovery ∼50% by implementing an automated Kubernetes rolling-restart job for 20+",
-      "top": 457.5111444000003,
+      "top": 465.97914440000005,
       "x": 70.80000000000001,
-      "baseline": 465.54100000000034,
+      "baseline": 474.00900000000007,
       "width": 476.43444598
     },
     {
       "text": "microservices, replacing slow Argo Rollouts and accelerating recovery from memory-leak/state-drift issues.",
-      "top": 469.4661444000003,
+      "top": 477.93514440000007,
       "x": 70.80000000000001,
-      "baseline": 477.4960000000003,
+      "baseline": 485.9650000000001,
       "width": 464.39464387999993
     },
     {
       "text": "Software Engineer Intern May 2023 – July 2023, May 2024 – July 2024",
-      "top": 484.5591444000003,
+      "top": 492.02514440000004,
       "x": 46.80000000000001,
-      "baseline": 492.58900000000034,
+      "baseline": 500.05500000000006,
       "width": 522.4506991199999
     },
     {
       "text": "Developed an internal product information page for cashiers, streamlining self-checkout processes and reducing",
-      "top": 498.05814440000034,
+      "top": 504.5211444000001,
       "x": 70.80000000000001,
-      "baseline": 506.08800000000036,
+      "baseline": 512.5510000000002,
       "width": 483.93429125999995
     },
     {
       "text": "customer wait times for associate interventions by ∼25%.",
-      "top": 510.01314440000033,
+      "top": 516.4761444000001,
       "x": 70.80000000000001,
-      "baseline": 518.0430000000003,
+      "baseline": 524.5060000000001,
       "width": 250.2525419200001
     },
     {
       "text": "Leveraged Java, React, and TypeScript to retrieve and surface validated product data across all self-checkout",
-      "top": 521.4951444000003,
+      "top": 527.4561444000001,
       "x": 70.80000000000001,
-      "baseline": 529.5250000000003,
+      "baseline": 535.4860000000001,
       "width": 477.6488869199998
     },
     {
       "text": "registers, mitigating customer theft by ∼$750,000 annually.",
-      "top": 531.5174000000004,
+      "top": 537.4794,
       "x": 70.80000000000001,
-      "baseline": 541.4800000000004,
+      "baseline": 547.4420000000001,
       "width": 258.7247369600001
     },
     {
       "text": "Optimized the efficiency of configuring 40,000+ registers across 2,300 stores by 90%, in collaboration with 2 interns.",
-      "top": 544.9321444000003,
+      "top": 550.3921444000001,
       "x": 70.80000000000001,
-      "baseline": 552.9620000000003,
+      "baseline": 558.422,
       "width": 505.19846469999976
     },
     {
       "text": "Truncated maximum deployment time for register updates from 24+ hours to 30 minutes by using Java HttpClient",
-      "top": 556.4141444000004,
+      "top": 561.3721444,
       "x": 70.80000000000001,
-      "baseline": 564.4440000000003,
+      "baseline": 569.402,
       "width": 503.13720276
     },
     {
       "text": "and Flow APIs to streamline retrieval of polymorphic external configurations.",
-      "top": 568.3691444000003,
+      "top": 573.3271444000001,
       "x": 70.80000000000001,
-      "baseline": 576.3990000000003,
+      "baseline": 581.3570000000001,
       "width": 339.61507140000015
     },
     {
       "text": "Projects",
-      "top": 584.7981088000004,
+      "top": 588.2811088000001,
       "x": 36.000000000000014,
-      "baseline": 594.4340000000003,
+      "baseline": 597.9170000000001,
       "width": 48.91828736000001
     },
     {
       "text": "CDC Data Reconciliation | Python, FastAPI, SQLite, React, Tailwind CSS",
-      "top": 606.2931444000001,
+      "top": 609.7751444,
       "x": 46.8,
-      "baseline": 614.323,
+      "baseline": 617.8050000000001,
       "width": 344.6959974
     },
     {
       "text": "Led a team of 6 to automate the reconciliation of case counts for infectious diseases between 50 state health",
-      "top": 622.7991444,
+      "top": 625.2781444,
       "x": 70.8,
-      "baseline": 630.829,
+      "baseline": 633.308,
       "width": 471.5956111599999
     },
     {
       "text": "departments and the CDC, alongside doubling as a full-stack software developer.",
-      "top": 634.7541444000001,
+      "top": 637.2331444,
       "x": 70.8,
-      "baseline": 642.784,
+      "baseline": 645.263,
       "width": 352.78861738
     },
     {
       "text": "Utilized Python to compare state health department and CDC data, highlighting any discrepancies between the",
-      "top": 646.2361444000001,
+      "top": 648.2131444,
       "x": 70.8,
-      "baseline": 654.2660000000001,
+      "baseline": 656.2429999999999,
       "width": 489.24734584000004
     },
     {
       "text": "two datasets, saving 5000+ hours of manual reconciliation annually.",
-      "top": 658.1911444,
+      "top": 660.1681444,
       "x": 70.8,
-      "baseline": 666.221,
+      "baseline": 668.198,
       "width": 296.11138598000014
     },
     {
       "text": "Skills",
-      "top": 674.6201088,
+      "top": 675.1221088,
       "x": 36.0,
-      "baseline": 684.256,
+      "baseline": 684.758,
       "width": 31.083519999999993
     },
     {
       "text": "Programming Languages: Java, Python, JavaScript, TypeScript, SQL",
-      "top": 693.5491443999999,
+      "top": 694.0511444,
       "x": 46.8,
-      "baseline": 701.579,
+      "baseline": 702.081,
       "width": 321.0119084200001
     },
     {
       "text": "Technologies/Frameworks: Kubernetes, Google Cloud Platform (GCP), Terraform, cdk8s, Docker, Cloud Spanner,",
-      "top": 706.3011444,
+      "top": 706.8031444,
       "x": 46.8,
-      "baseline": 714.331,
+      "baseline": 714.833,
       "width": 516.5926903200001
     },
     {
       "text": "Cassandra, Elasticsearch, BigQuery, Grafana, Prometheus, OpenTelemetry, React, FastAPI, Node.js, JUnit, Git",
-      "top": 718.2571444,
+      "top": 718.7581444,
       "x": 46.8,
-      "baseline": 726.287,
+      "baseline": 726.788,
       "width": 489.55718269999994
     },
     {
       "text": "Concepts: Object-Oriented Programming & Design, Test-Driven Development, NoSQL, Data Structures & Algorithms,",
-      "top": 731.0091444,
+      "top": 731.5101444,
       "x": 46.8,
-      "baseline": 739.039,
+      "baseline": 739.54,
       "width": 527.16799022
     },
     {
       "text": "Full-Stack, CI/CD, Infrastructure, Distributed Systems, Cloud Computing, Microservices Architecture",
-      "top": 742.9641444,
+      "top": 743.4651444,
       "x": 46.8,
-      "baseline": 750.994,
+      "baseline": 751.495,
       "width": 447.62260678000007
     }
   ],
   "rules": [
     {
       "x": 36.0,
-      "top": 96.29200000000003,
+      "top": 89.82100000000003,
       "width": 540.0,
       "height": 0.398
     },
     {
       "x": 36.0,
-      "top": 147.62099999999998,
+      "top": 140.17499999999995,
       "width": 540.0,
       "height": 0.398
     },
     {
       "x": 36.0,
-      "top": 598.818,
+      "top": 602.3,
       "width": 540.0,
       "height": 0.398
     },
     {
       "x": 36.0,
-      "top": 688.64,
+      "top": 689.141,
       "width": 540.0,
       "height": 0.398
     }

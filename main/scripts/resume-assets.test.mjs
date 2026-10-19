@@ -12,17 +12,17 @@ describe("resume print layout contract", () => {
 
   it("requires explicit layout review after a word is removed or added", () => {
     const changed = structuredClone(resumeDocument)
-    const productionBullet = changed.experience[0].roles[0].bullets[2]
+    const productionBullet = changed.experience[0].roles[0].bullets[3]
     expect(productionBullet).toContain("daily order")
-    changed.experience[0].roles[0].bullets[2] = productionBullet.replace("daily ", "")
+    changed.experience[0].roles[0].bullets[3] = productionBullet.replace("daily ", "")
     expect(() => validateResumeLayout(changed)).toThrow(/Resume content changed/)
   })
 
   it("preserves word boundaries as well as characters", () => {
     const changed = structuredClone(resumeDocument)
-    const productionBullet = changed.experience[0].roles[0].bullets[2]
+    const productionBullet = changed.experience[0].roles[0].bullets[3]
     expect(productionBullet).toContain("daily order")
-    changed.experience[0].roles[0].bullets[2] = productionBullet.replace("daily order", "dailyorder")
+    changed.experience[0].roles[0].bullets[3] = productionBullet.replace("daily order", "dailyorder")
     expect(() => validateResumeLayout(changed)).toThrow(/Resume content changed/)
   })
 
