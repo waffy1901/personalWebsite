@@ -26,6 +26,7 @@ export const resumeDocument = {
           title: "Software Engineer II",
           date: "July 2026 - Present",
           bullets: [
+            "Led security and CI/CD remediation across 15 services, upgrading frameworks and fixing pipelines to eliminate 66 unique critical/high CVEs from production workloads and raise build-gate pass rates from 33% to 100%.",
             "Led a team of 4 engineers from design through stakeholder validation and handoff of an AI triage agent spanning 7 payment applications; unified code/config tracing, BigQuery, and store telemetry with historical baselines and coverage checks, delivering cited diagnoses and suggested fixes while suppressing false findings.",
             "Drove JFrog OIDC adoption across 2 teams and 20 repositories, replacing shared Maven/Docker credentials with short-lived, job-scoped tokens; resolved 1,100+ security findings tied to plaintext token exposure in CI logs.",
             "Productionized daily order reconciliation, replacing laptop scripts, database tunnels, and human GCP credentials with a Kubernetes workflow via cdk8s, Terraform, and Spinnaker; implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets, eliminating human production access.",

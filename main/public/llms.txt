@@ -1,6 +1,6 @@
 # Waffy Ahmed
 
-> Software Engineer II focused on platform reliability, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.
+> Software Engineer II focused on platform reliability, security and CI/CD remediation, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.
 
 This site is the professional portfolio for Waffy Ahmed, a Software Engineer II at The Home Depot and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.
 
@@ -39,6 +39,8 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer II 
 - Service-to-service communication
 - Credential rotation
 - CVE remediation
+- Framework upgrades
+- Build pipeline remediation
 - Container build hardening
 - Kubernetes CronJobs
 - Workload Identity

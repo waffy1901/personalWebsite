@@ -2,7 +2,7 @@ import { caseStudySeoItems } from "./caseStudySeo.js"
 import { portfolioUrls, profileIdentity } from "./siteIdentity.js"
 
 const defaultDescription =
-  "Software engineering portfolio for Waffy Ahmed, focused on reliability, Kubernetes, deployment automation, observability, and high-throughput systems."
+  "Software engineering portfolio for Waffy Ahmed, focused on platform reliability, Kubernetes, CI/CD security, observability, and high-throughput systems."
 
 export const siteMetadata = {
   siteUrl: portfolioUrls.site,
@@ -51,7 +51,7 @@ export const routeMetadata = [
     path: "/experience",
     title: "Experience | Waffy Ahmed",
     description:
-      "Professional experience across platform reliability, production operations, infrastructure, deployment automation, and full-stack engineering.",
+      "Professional experience in platform reliability, security and CI/CD remediation, infrastructure, deployment automation, and production operations.",
   },
   {
     path: "/projects",
@@ -63,7 +63,7 @@ export const routeMetadata = [
     path: "/resume",
     title: "Resume | Waffy Ahmed",
     description:
-      "Resume preview and PDF download for Waffy Ahmed, software engineer focused on reliability and production systems.",
+      "Resume preview, accessible HTML, and PDF download for Waffy Ahmed, covering platform reliability, security remediation, and production engineering.",
   },
   {
     path: "/contact",
