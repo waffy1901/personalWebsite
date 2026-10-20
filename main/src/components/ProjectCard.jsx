@@ -230,7 +230,7 @@ function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, 
             type="button"
             onClick={hideDetails}
             tabIndex={isFlipped ? 0 : -1}
-            aria-label={`Hide details for ${title}`}
+            aria-label={`Back to summary for ${title}`}
             className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
           >
             <FaArrowLeft className="mr-2" aria-hidden="true" />

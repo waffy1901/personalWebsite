@@ -150,7 +150,7 @@ test("expanded project details remain accessible", async ({ page }, testInfo) =>
     await expect(button).toHaveAttribute("aria-expanded", "true")
   }
 
-  const backButtons = page.locator('button[aria-label^="Hide details for "]')
+  const backButtons = page.getByRole("button", { name: /^Back to summary for / })
   await expect(backButtons).toHaveCount(detailCount)
   for (let index = 0; index < detailCount; index += 1) {
     await expect(backButtons.nth(index)).toBeVisible()
