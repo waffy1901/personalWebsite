@@ -965,7 +965,7 @@ describe("App routes", () => {
       screen.getAllByRole("button", { name: /view details/i })
     ).toHaveLength(3)
     const cdcCard = screen.getByRole("article", { name: "CDC Data Reconciliation project" })
-    expect(cdcCard.querySelector('button[aria-label^="Hide details for "]')).toHaveAttribute("tabindex", "-1")
+    expect(cdcCard.querySelector('button[aria-label^="Back to summary for "]')).toHaveAttribute("tabindex", "-1")
 
     await clickWithoutNavigation(user, sourceCodeLink)
     await user.click(
@@ -977,7 +977,7 @@ describe("App routes", () => {
     await waitFor(() =>
       expect(
         screen.getByRole("button", {
-          name: /hide details for cdc data reconciliation/i,
+          name: /back to summary for cdc data reconciliation/i,
         })
       ).toHaveFocus()
     )
@@ -1794,7 +1794,7 @@ describe("App routes", () => {
       name: /experience details/i,
     })
     const backButton = screen.getByRole("button", {
-      name: /hide details for software engineer ii at the home depot/i,
+      name: /back to summary for software engineer ii at the home depot/i,
     })
     const copyButton = screen.getByRole("button", {
       name: /copy software engineer ii details/i,

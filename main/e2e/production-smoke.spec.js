@@ -197,7 +197,7 @@ for (const width of [320, 390]) {
           const button = buttons.nth(index)
           if (index > 0) await button.click()
           await expect(button).toHaveAttribute("aria-expanded", "true")
-          const back = cards[index].getByRole("button", { name: /Hide details for/ })
+          const back = cards[index].getByRole("button", { name: /^Back to summary for / })
           await expect(back).toBeFocused()
           await back.click()
           await expect(button).toHaveAttribute("aria-expanded", "false")
@@ -259,7 +259,7 @@ for (const width of [320, 390, 640, 1024, 1440]) {
             await expect(card.getByRole("link", { name: "Source Code" })).toBeVisible()
           }
           await button.click()
-          const back = card.getByRole("button", { name: /Hide details for/ })
+          const back = card.getByRole("button", { name: /^Back to summary for / })
           await expect(back).toBeFocused()
           await expectContentContained(card.getByRole("region"))
           await expect(button).toHaveAttribute("tabindex", "-1")
