@@ -28,6 +28,8 @@
     "links:inventory": "node scripts/check-external-links.mjs --inventory-only",
     "links:report": "node scripts/check-external-links.mjs",
     "test:links": "node --test scripts/check-external-links.node-test.mjs",
+    "test:deployed-headers": "python3 scripts/test_deployed_security_headers.py",
+    "test:deployed-artifacts": "python3 scripts/test_deployed_artifacts.py",
     "preview": "npm --prefix main run preview --"
   }
 }

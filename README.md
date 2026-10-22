@@ -147,8 +147,22 @@ Run these commands from the repository root:
 | `npm run links:inventory` | Build the bounded current external-link inventory without network requests |
 | `npm run links:report` | Run the advisory external-link report with pinned Lychee 0.24.2 |
 | `npm run test:links` | Run deterministic external-link inventory and loopback fixture tests |
+| `npm run test:deployed-headers` | Run mocked deployed security header checker fixtures |
+| `npm run test:deployed-artifacts` | Run mocked deployed artifact checker fixtures |
 | `npm run build` | Create the production build |
 | `npm run preview` | Preview the production build locally |
+
+The blocking `Portfolio integrity / Validate portfolio surfaces` PR lane runs `test:deployed-headers`, `test:deployed-artifacts`, `test:links`, and `test:performance:first-navigation` as separate failing-on-error steps. To run the same fixtures locally, use Node `22.22.3` and Python `3.11` or newer, install app dependencies with `npm ci --prefix main`, and install the checksum-verified Lychee `0.24.2` binary:
+
+```bash
+bash scripts/install-lychee.sh /tmp/personalWebsite-lychee
+npm run test:deployed-headers
+npm run test:deployed-artifacts
+LYCHEE_BIN=/tmp/personalWebsite-lychee/lychee npm run test:links
+npm run test:performance:first-navigation
+```
+
+These suites use mocked responses, controlled data, and a loopback-only HTTP server. They do not launch a browser or Lighthouse, sweep real links, or validate production headers, artifacts, or providers. Scheduled reports and post-merge production checks retain that separate evidence role.
 
 ## Environment Variables
 
