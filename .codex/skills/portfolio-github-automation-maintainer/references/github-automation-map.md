@@ -17,7 +17,7 @@ Use this reference for workflow, Dependabot, security automation, and GitHub run
 | Production health | `.github/workflows/deployed-security-headers.yml` | Resolves Netlify's current ready production commit, checks out that exact revision, and validates live routes, security headers, CSP, and public artifacts daily at 14:37 UTC or by manual dispatch. | GitHub schedules can be delayed, so this periodic contract coverage is not continuous uptime monitoring. Keep the historical file path, the independent header-policy allowlist, exact `netlify.toml` comparison, and read-only Netlify access. |
 | Netlify token reminder | `.github/workflows/netlify-token-rotation-reminder.yml` | Opens or updates one issue when the Netlify auth token approaches expiration. | `NETLIFY_AUTH_TOKEN_EXPIRES_AT` repository variable is the source of truth; `workflow_dispatch.expiration_date` intentionally overrides it for testing. |
 | Auto assign PRs | `.github/workflows/auto-assign-prs.yml` | Assigns PRs to `waffy1901`. | Runs on `pull_request_target`; do not execute untrusted branch code here. |
-| CodeQL | `.github/workflows/codeql.yml` | Runs JavaScript/TypeScript CodeQL analysis if checked in. | Check GitHub-managed code scanning/default setup before adding or changing duplicate CodeQL automation. |
+| CodeQL | `.github/workflows/codeql.yml` | Runs JavaScript/TypeScript and GitHub Actions CodeQL analysis on PRs to `main`, pushes to `main`, and Thursdays at 21:23 UTC. | Both languages use `build-mode: none` and distinct stable upload categories, `/language:javascript-typescript` and `/language:actions`. Check GitHub-managed code scanning/default setup before adding duplicate automation. |
 | Dependabot | `.github/dependabot.yml` | Groups npm and GitHub Actions dependency updates. | The root GitHub Actions updater recognizes immutable action SHAs with adjacent version comments; keep schedules timezone-aware and PR limits modest. |
 
 ## Safety Rules
@@ -51,6 +51,10 @@ gh issue view <issue_number>
   - A PR can contain a fix while the check still uses stale base-branch YAML until merged.
 
 ## Verification Guidance
+
+- CodeQL's `actions` language analyzes GitHub Actions workflows with the default query suite; it complements workflow lint. See GitHub's [advanced setup documentation](https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning) and [Actions query reference](https://codeql.github.com/codeql-query-help/actions/).
+- Native CodeQL protection and required status contexts are separate settings. Adding a language matrix job does not itself make that job a required status context. Recheck default setup, CodeQL protection, and required contexts when assessing hosted results; this workflow change does not modify them.
+- Local workflow lint and configuration comparisons do not prove hosted CodeQL execution or uploads. Before claiming hosted coverage, verify a representative PR run with successful analysis for both languages and authenticated code-scanning readback confirming both categories for the analyzed revision. Record new alerts, validate them, and give confirmed findings separate ownership; do not suppress alerts or weaken queries or protection to make the new lane pass.
 
 - For `.github/workflows/dev-ci.yml` or release verification changes, run the same root scripts locally when practical:
 
