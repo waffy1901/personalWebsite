@@ -36,6 +36,9 @@ jobs:
         working-directory: main
         run: npm ci
 
+      - name: Install pinned Lychee
+        run: bash scripts/install-lychee.sh "$RUNNER_TEMP/lychee"
+
       - name: Check generated public artifacts
         run: npm run generate:public -- --check
 
@@ -50,6 +53,17 @@ jobs:
 
       - name: Test deployed route checker
         run: python3 scripts/test_deployed_routes.py
+
+      - name: Test deployed security header checker fixtures
+        run: npm run test:deployed-headers
+
+      - name: Test deployed artifact checker fixtures
+        run: npm run test:deployed-artifacts
+
+      - name: Test external-link checker fixtures
+        env:
+          LYCHEE_BIN: ${{ runner.temp }}/lychee/lychee
+        run: npm run test:links
 
       - name: Test Netlify deploy-state classifier
         run: python3 scripts/test_netlify_deploy_state.py
@@ -71,6 +85,9 @@ jobs:
 
       - name: Test historical Issue 174 performance contract
         run: npm run test:performance:baseline
+
+      - name: Test first-navigation performance fixtures
+        run: npm run test:performance:first-navigation
 
       - name: Test route performance reporting
         run: npm run test:performance:report
