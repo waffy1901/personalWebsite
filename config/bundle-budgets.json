@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "startup": {
+    "js": {
+      "raw": 380000,
+      "gzip": 120000
+    },
+    "css": {
+      "raw": 95000,
+      "gzip": 16000
+    }
+  },
+  "lazy": {
+    "src/pages/CaseStudies.jsx": {
+      "js": {
+        "raw": 19000,
+        "gzip": 7600
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
+    "src/pages/CaseStudy.jsx": {
+      "js": {
+        "raw": 25000,
+        "gzip": 9000
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
+    "src/pages/Contact.jsx": {
+      "js": {
+        "raw": 43000,
+        "gzip": 14500
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
+    "src/pages/Experience.jsx": {
+      "js": {
+        "raw": 34000,
+        "gzip": 12500
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
+    "src/pages/NotFound.jsx": {
+      "js": {
+        "raw": 1000,
+        "gzip": 600
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
+    "src/pages/Projects.jsx": {
+      "js": {
+        "raw": 16000,
+        "gzip": 6000
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
+    "src/pages/Resume.jsx": {
+      "js": {
+        "raw": 14000,
+        "gzip": 5300
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    }
+  }
+}

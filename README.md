@@ -149,6 +149,8 @@ Run these commands from the repository root:
 | `npm run test:links` | Run deterministic external-link inventory and loopback fixture tests |
 | `npm run test:deployed-headers` | Run mocked deployed security header checker fixtures |
 | `npm run test:deployed-artifacts` | Run mocked deployed artifact checker fixtures |
+| `npm run test:bundle-budgets` | Run synthetic JS/CSS byte-budget checker fixtures |
+| `npm run check:bundle-budgets` | Enforce JS/CSS raw and gzip limits after a production build |
 | `npm run build` | Create the production build |
 | `npm run preview` | Preview the production build locally |
 
@@ -163,6 +165,12 @@ npm run test:performance:first-navigation
 ```
 
 These suites use mocked responses, controlled data, and a loopback-only HTTP server. They do not launch a browser or Lighthouse, sweep real links, or validate production headers, artifacts, or providers. Scheduled reports and post-merge production checks retain that separate evidence role.
+
+The blocking `Main PR CI / Verify app` lane also runs bundle-budget fixtures and
+checks JavaScript/CSS raw and per-file gzip bytes after its normal production
+build. See [byte budgets](docs/bundle-budgets.md) for the exact baseline, limits,
+manifest membership, synthetic build environment, and intentional-increase review
+procedure. Lighthouse timing stays advisory; images remain separate scope.
 
 ## Environment Variables
 

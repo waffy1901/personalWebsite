@@ -30,6 +30,8 @@
     "test:links": "node --test scripts/check-external-links.node-test.mjs",
     "test:deployed-headers": "python3 scripts/test_deployed_security_headers.py",
     "test:deployed-artifacts": "python3 scripts/test_deployed_artifacts.py",
-    "preview": "npm --prefix main run preview --"
+    "preview": "npm --prefix main run preview --",
+    "check:bundle-budgets": "node scripts/check-bundle-budgets.mjs",
+    "test:bundle-budgets": "node --test scripts/check-bundle-budgets.node-test.mjs"
   }
 }
