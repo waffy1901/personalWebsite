@@ -1,6 +1,8 @@
 # Workflow linting
 
-Every pull request to `main` runs the required-check candidate named `Lint GitHub Actions workflows`. It checks every direct `.yml` and `.yaml` file in `.github/workflows` for workflow syntax, expressions, invalid job references, and embedded shell diagnostics. It does not use path filters, secrets, or publishing permissions.
+Every pull request to `main` runs the required check named `Lint GitHub Actions workflows`. It checks every direct `.yml` and `.yaml` file in `.github/workflows` for workflow syntax, expressions, invalid job references, and embedded shell diagnostics. It does not use path filters, secrets, or publishing permissions.
+
+Authenticated readback on 2026-10-23 verified this exact context as the fifth required status check in active default-branch ruleset `21251257`, pinned to `github-actions` integration `15368`. The existing strict checks, native CodeQL protection, and bypass policy are unchanged. See [main branch governance](main-branch-governance.md) for the dated settings and failing/restored canary proof requirements.
 
 Run the same check locally from the repository root:
 
