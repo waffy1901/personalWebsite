@@ -45,9 +45,18 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Test bundle budget checker
+        run: npm run test:bundle-budgets
+
       - name: Build
         working-directory: main
+        env:
+          VITE_GA_MEASUREMENT_ID: ''
+          VITE_FORMSPREE_KEY: synthetic-premerge-test-key
         run: npm run build
+
+      - name: Check JavaScript and CSS byte budgets
+        run: npm run check:bundle-budgets
 
   premerge-browser-smoke:
     name: Pre-merge browser smoke
