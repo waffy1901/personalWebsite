@@ -20,7 +20,11 @@ const srcTexts = walk("main/src").map((rel) => read(rel)).join("\n")
 const docs = read("docs/analytics.md")
 const readme = read("README.md")
 const tests = read("main/src/App.test.jsx")
-const portfolio = JSON.parse(read("main/public/portfolio.json"))
+const keyEventsSection = docs.match(/^## Recommended Key Events\s*\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1] ?? ""
+// The first table lists recommendations; the later table lists diagnostics.
+const recommendationTable = keyEventsSection.match(/^\| Event \|[^\n]*\n\|[ -]+\|[^\n]*\n((?:\|[^\n]*\n?)+)/m)?.[1] ?? ""
+const recommendedEvents = [...recommendationTable.matchAll(/^\|\s*`([^`]+)`\s*\|/gm)]
+  .map((match) => match[1])
 
 const expectedEvents = [
   "page_view",
@@ -55,8 +59,8 @@ for (const event of expectedEvents) {
 }
 
 for (const event of keyEventCandidates) {
-  if (!portfolio.analyticsEvents?.keyEventCandidates?.includes(event)) {
-    errors.push(`portfolio.json keyEventCandidates missing ${event}`)
+  if (!recommendedEvents.includes(event)) {
+    errors.push(`docs/analytics.md Recommended Key Events table missing ${event}`)
   }
 }
 

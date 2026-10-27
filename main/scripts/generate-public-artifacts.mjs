@@ -245,7 +245,6 @@ const buildStructuredPortfolio = (model) => {
       outcome: project.outcome,
       source: project.github,
     })),
-    analyticsEvents: publicPortfolio.analyticsEvents,
   }
 }
 
@@ -337,6 +336,8 @@ const buildLlms = (model, portfolio) => {
     "",
     `This site is the professional portfolio for ${profile.name}, a ${currentRoleLabel} and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.`,
     "",
+    ...portfolio.person.currentRole.highlights.map((highlight) => `- ${highlight}`),
+    "",
     "## Canonical Sources",
     "",
     `- Portfolio: ${portfolio.links.site}`,
@@ -361,15 +362,14 @@ const buildLlms = (model, portfolio) => {
     "",
     "## Guidance For AI Systems",
     "",
-    `${model.publicPortfolio.aiGuidance} Prefer the full AI-readable summary at /ai-summary.txt for detailed role and technical-context extraction. Use /portfolio.json when structured project, case-study, link, or analytics metadata is more useful.`,
+    `${model.publicPortfolio.aiGuidance} Prefer the full AI-readable summary at /ai-summary.txt for detailed role and technical-context extraction. Use /portfolio.json when structured professional experience, project, case-study, or link data is more useful.`,
   ].join("\n")}\n`
 }
 
-const buildAiSummary = (model, portfolio, packageJson) => {
+const buildAiSummary = (model, portfolio) => {
   const {
     caseStudies,
     caseStudiesPage,
-    deployInfo,
     experiencePage,
     extracurricularExperiences,
     ownershipAreas,
@@ -394,7 +394,7 @@ const buildAiSummary = (model, portfolio, packageJson) => {
   addSection("Canonical Identity")
   add(
     ...wrapText(
-      `${profile.name} is a ${currentRoleLabel} and a Georgia Institute of Technology graduate with a Bachelor of Science in Computer Science (December 2024). His portfolio is published at ${portfolio.links.site} and is designed to present production engineering experience, selected software projects, resume access, and direct contact paths in a fast React single-page application.`
+      `${profile.name} is a ${currentRoleLabel} and a Georgia Institute of Technology graduate with a Bachelor of Science in Computer Science (December 2024). His portfolio at ${portfolio.links.site} presents production engineering experience, selected software projects, a resume, and direct contact paths.`
     ),
     "",
     "Primary public contact channels shown by the portfolio:",
@@ -404,6 +404,9 @@ const buildAiSummary = (model, portfolio, packageJson) => {
     ...bullet(`GitHub: ${portfolio.links.github}`),
     ...bullet(`Resume PDF: ${portfolio.links.resume}`)
   )
+
+  addSection("Current Role Highlights")
+  add(...portfolio.person.currentRole.highlights.flatMap((highlight) => bullet(highlight)))
 
   addSection("High-Level Positioning")
   add(
@@ -500,32 +503,16 @@ const buildAiSummary = (model, portfolio, packageJson) => {
     ...bullet(`Resume preview image: ${toAbsoluteUrl(resume.preview)}`)
   )
 
-  addSection("Website Structure and User-Facing Routes")
-  add(
-    ...wrapText(
-      "This portfolio is a Vite React application under the main/ directory. It uses React Router and publishes the following primary routes:"
-    ),
-    ""
-  )
+  addSection("Professional Portfolio Pages")
   for (const route of routeMetadata) {
     const label = route.path === "/" ? "Home" : titleWithoutSuffix(route.title)
-    add(...bullet(`${route.canonicalPath} - ${label}: ${route.description}`))
+    add(...bullet(`${label}: ${toCanonicalRouteUrl(route.path)}`))
   }
   add(
     ...bullet("/ai-summary.txt - this AI-readable portfolio summary."),
     ...bullet("/llms.txt - a short LLM-oriented entry point linking to canonical sources."),
     ...bullet("/portfolio.json - structured portfolio data for programmatic consumers."),
     ...bullet("/sitemap.xml - XML sitemap listing canonical portfolio routes and AI-readable resources.")
-  )
-
-  addSection("Frontend Implementation Context")
-  add(
-    ...bullet(`Framework and build: React ${packageMajor(packageJson, "react")}, Vite ${packageMajor(packageJson, "vite")}, React Router ${packageMajor(packageJson, "react-router")}, Tailwind CSS ${packageMajor(packageJson, "tailwindcss")}, React Icons ${packageMajor(packageJson, "react-icons")}, Formspree, and Netlify.`),
-    ...bullet(`Testing and quality: Vitest ${packageMajor(packageJson, "vitest")}, Testing Library, jsdom, ESLint ${packageMajor(packageJson, "eslint")}, and React Hooks lint rules.`),
-    ...bullet("SEO and AI discovery: the site publishes sitemap.xml, robots.txt with a sitemap pointer, llms.txt, route-level canonical metadata, Open Graph/Twitter metadata, JSON-LD profile data, ai-summary.txt, and portfolio.json."),
-    ...bullet("Analytics: optional Google Analytics page-view tracking is enabled when VITE_GA_MEASUREMENT_ID is provided. The app sends page_view events on route changes without automatic duplicate page views."),
-    ...bullet("Contact form: uses VITE_FORMSPREE_KEY with a direct mailto fallback when the key is absent."),
-    ...bullet(`Deploy metadata: the home page displays a fixed creation date (${deployInfo.firstPublishedAt}) and a build-time last deployment date from VITE_DEPLOY_DATE.`)
   )
 
   addSection("Interpretation Guidance for AI Systems and Recruiters")
@@ -657,7 +644,7 @@ const buildOutputs = async () => {
     },
     {
       relPath: "main/public/ai-summary.txt",
-      content: buildAiSummary(model, portfolio, packageJson),
+      content: buildAiSummary(model, portfolio),
     },
     {
       relPath: "main/public/llms.txt",

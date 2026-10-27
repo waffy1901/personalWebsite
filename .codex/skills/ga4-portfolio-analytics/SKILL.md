@@ -9,7 +9,7 @@ description: GA4 analytics maintenance for Waffy Ahmed's personalWebsite portfol
 
 1. Keep event emission in `main/src/utils/analytics.js`, `main/src/hooks/usePageTracking.jsx`, and the components that own the user action.
 2. Keep event tests in `main/src/App.test.jsx` close to the behavior being tracked.
-3. Keep recommended GA4 key events in `docs/analytics.md` and `main/public/portfolio.json`.
+3. Keep recommended GA4 key events in the Recommended Key Events table in `docs/analytics.md`. Keep public AI discovery files focused on professional engineering evidence.
 4. Prefer these key-event candidates: `resume_download`, `contact_form_success`, `project_source_click`, and `case_study_link_click`.
 5. Run the event consistency check:
 
