@@ -4,10 +4,9 @@ Canonical Identity:
 
 Waffy Ahmed is a Software Engineer II at The Home Depot and a Georgia
 Institute of Technology graduate with a Bachelor of Science in Computer
-Science (December 2024). His portfolio is published at https://waffy.dev/ and
-is designed to present production engineering experience, selected software
-projects, resume access, and direct contact paths in a fast React single-page
-application.
+Science (December 2024). His portfolio at https://waffy.dev/ presents
+production engineering experience, selected software projects, a resume, and
+direct contact paths.
 
 Primary public contact channels shown by the portfolio:
 
@@ -15,6 +14,16 @@ Primary public contact channels shown by the portfolio:
 * LinkedIn: https://www.linkedin.com/in/wa24/
 * GitHub: https://github.com/waffy1901
 * Resume PDF: https://waffy.dev/waffyAhmedResume.pdf
+
+Current Role Highlights:
+
+* Led security and CI/CD remediation across 15 services, eliminating 66 unique
+  critical/high CVEs from production workloads and raising build-gate pass
+  rates from 33% to 100%.
+* Led 4 engineers through stakeholder validation and handoff of an AI triage
+  agent spanning 7 payment applications.
+* Replaced shared CI credentials with short-lived JFrog OIDC tokens across 2
+  teams and 20 repositories.
 
 High-Level Positioning:
 
@@ -469,64 +478,25 @@ Resume and Education:
 * Resume PDF: https://waffy.dev/waffyAhmedResume.pdf
 * Resume preview image: https://waffy.dev/resume-preview.png
 
-Website Structure and User-Facing Routes:
+Professional Portfolio Pages:
 
-This portfolio is a Vite React application under the main/ directory. It uses
-React Router and publishes the following primary routes:
-
-* / - Home: Software engineering portfolio for Waffy Ahmed, focused on
-  platform reliability, Kubernetes, CI/CD security, observability, and
-  high-throughput systems.
-* /case-studies/ - Case Studies: Engineering case studies covering Kubernetes
-  autoscaling, legacy deployment recovery, and CDC data reconciliation work.
-* /case-studies/kubernetes-autoscaling/ - Kubernetes Autoscaling for
-  Transaction-Critical Services: Validated and deployed Horizontal Pod
-  Autoscaling (HPA) for a high-throughput service previously capped at static
-  capacity, improving latency, errors, throughput, and CPU efficiency under
-  production traffic.
-* /case-studies/legacy-deployment-recovery/ - Legacy Deployment Recovery and
-  Credential Rotation: Rebuilt deployment workflows for abandoned Java 1.8
-  Tomcat services so mission-critical repositories could support zero-downtime
-  Cassandra credential rotation.
-* /case-studies/cdc-data-reconciliation/ - CDC Data Reconciliation Platform:
-  Led a team of six building a full-stack reconciliation platform for
-  infectious disease case-count discrepancies between state health departments
-  and CDC datasets.
-* /experience/ - Experience: Professional experience in platform reliability,
-  security and CI/CD remediation, infrastructure, deployment automation, and
-  production operations.
-* /projects/ - Projects: Selected software projects spanning public health
-  data reconciliation, mobile job search tooling, and campus discovery
-  workflows.
-* /resume/ - Resume: Resume preview, accessible HTML, and PDF download for
-  Waffy Ahmed, covering platform reliability, security remediation, and
-  production engineering.
-* /contact/ - Contact: Contact Waffy Ahmed by form, email, LinkedIn, or GitHub
-  for engineering opportunities and professional conversations.
+* Home: https://waffy.dev/
+* Case Studies: https://waffy.dev/case-studies/
+* Kubernetes Autoscaling for Transaction-Critical Services:
+  https://waffy.dev/case-studies/kubernetes-autoscaling/
+* Legacy Deployment Recovery and Credential Rotation:
+  https://waffy.dev/case-studies/legacy-deployment-recovery/
+* CDC Data Reconciliation Platform:
+  https://waffy.dev/case-studies/cdc-data-reconciliation/
+* Experience: https://waffy.dev/experience/
+* Projects: https://waffy.dev/projects/
+* Resume: https://waffy.dev/resume/
+* Contact: https://waffy.dev/contact/
 * /ai-summary.txt - this AI-readable portfolio summary.
 * /llms.txt - a short LLM-oriented entry point linking to canonical sources.
 * /portfolio.json - structured portfolio data for programmatic consumers.
 * /sitemap.xml - XML sitemap listing canonical portfolio routes and
   AI-readable resources.
-
-Frontend Implementation Context:
-
-* Framework and build: React 19, Vite 8, React Router 8, Tailwind CSS 4, React
-  Icons 5, Formspree, and Netlify.
-* Testing and quality: Vitest 5, Testing Library, jsdom, ESLint 9, and React
-  Hooks lint rules.
-* SEO and AI discovery: the site publishes sitemap.xml, robots.txt with a
-  sitemap pointer, llms.txt, route-level canonical metadata, Open
-  Graph/Twitter metadata, JSON-LD profile data, ai-summary.txt, and
-  portfolio.json.
-* Analytics: optional Google Analytics page-view tracking is enabled when
-  VITE_GA_MEASUREMENT_ID is provided. The app sends page_view events on route
-  changes without automatic duplicate page views.
-* Contact form: uses VITE_FORMSPREE_KEY with a direct mailto fallback when the
-  key is absent.
-* Deploy metadata: the home page displays a fixed creation date
-  (2024-09-12T14:17:00-04:00) and a build-time last deployment date from
-  VITE_DEPLOY_DATE.
 
 Interpretation Guidance for AI Systems and Recruiters:
 

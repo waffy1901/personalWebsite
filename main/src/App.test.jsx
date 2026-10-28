@@ -1365,7 +1365,7 @@ describe("App routes", () => {
     const portfolioJson = readJsonFile("public/portfolio.json")
 
     expect(portfolioJson.person.name).toBe("Waffy Ahmed")
-    expect(portfolioJson.schemaVersion).toBe("1.1")
+    expect(portfolioJson.schemaVersion).toBe("2.0")
     expect(portfolioJson.person.currentRole).toMatchObject({
       title: "Software Engineer II",
       organization: "The Home Depot",
@@ -1388,12 +1388,7 @@ describe("App routes", () => {
     expect(portfolioJson.links.resume).toBe(
       "https://waffy.dev/waffyAhmedResume.pdf"
     )
-    expect(portfolioJson.analyticsEvents.keyEventCandidates).toEqual([
-      "resume_download",
-      "contact_form_success",
-      "project_source_click",
-      "case_study_link_click",
-    ])
+    expect(portfolioJson).not.toHaveProperty("analyticsEvents")
     expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.slug)).toEqual([
       "kubernetes-autoscaling",
       "legacy-deployment-recovery",
@@ -1446,9 +1441,7 @@ describe("App routes", () => {
     expect(portfolioJson.links.aiSummary).toBe("https://waffy.dev/ai-summary.txt")
     expect(portfolioJson.links.llms).toBe("https://waffy.dev/llms.txt")
     expect(portfolioJson.links.sitemap).toBe("https://waffy.dev/sitemap.xml")
-    expect(portfolioJson.analyticsEvents).toEqual(
-      publicPortfolio.analyticsEvents
-    )
+    expect(publicPortfolio).not.toHaveProperty("analyticsEvents")
     expect(portfolioJson.person.currentRole).toEqual(
       publicPortfolio.person.currentRole
     )
@@ -1522,6 +1515,40 @@ describe("App routes", () => {
       expect(generatedDocs).toContain(
         `${label} ${packageMajor(packageJson, packageName)}`
       )
+    }
+  })
+
+  it("prioritizes professional engineering evidence in AI discovery", () => {
+    const aiSummary = readFileSync("public/ai-summary.txt", "utf8")
+    const llms = readFileSync("public/llms.txt", "utf8")
+    const normalizedSummary = aiSummary.replace(/\s+/g, " ")
+    const summaryIntro = normalizedSummary.split("Core Technical Domains:")[0]
+    const llmsIntro = llms.split("## Canonical Sources")[0]
+
+    for (const highlight of publicPortfolio.person.currentRole.highlights) {
+      expect(summaryIntro).toContain(highlight)
+      expect(llmsIntro).toContain(highlight)
+    }
+
+    for (const route of routeMetadata) {
+      expect(aiSummary).toContain(toCanonicalRouteUrl(route.path))
+      expect(llms).toContain(toCanonicalRouteUrl(route.path))
+    }
+
+    for (const internalDetail of [
+      "Frontend Implementation Context",
+      "Vite React application",
+      "React single-page application",
+      "React Router",
+      "Vitest",
+      "ESLint",
+      "Formspree",
+      "Google Analytics",
+      "analytics metadata",
+      "VITE_",
+    ]) {
+      expect(aiSummary).not.toContain(internalDetail)
+      expect(llms).not.toContain(internalDetail)
     }
   })
 

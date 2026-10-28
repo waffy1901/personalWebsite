@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.1",
+  "schemaVersion": "2.0",
   "contentLastReviewed": "2026-10-19",
   "person": {
     "name": "Waffy Ahmed",
@@ -417,22 +417,5 @@
       "outcome": "Gives students access to event capacities, details, and waitlists.",
       "source": "https://github.com/waffy1901/campusDiscoveryService"
     }
-  ],
-  "analyticsEvents": {
-    "keyEventCandidates": [
-      "resume_download",
-      "contact_form_success",
-      "project_source_click",
-      "case_study_link_click"
-    ],
-    "diagnostics": [
-      "page_view",
-      "resume_open",
-      "social_link_click",
-      "project_details_open",
-      "case_study_card_click",
-      "contact_form_submit",
-      "contact_email_click"
-    ]
-  }
+  ]
 }
