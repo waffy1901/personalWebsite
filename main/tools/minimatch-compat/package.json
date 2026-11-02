@@ -1,0 +1,16 @@
+{
+  "name": "@personal-website/minimatch-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Legacy module API adapter for the official patched minimatch implementation",
+  "main": "index.cjs",
+  "exports": {
+    ".": {
+      "require": "./index.cjs",
+      "import": "./index.mjs"
+    }
+  },
+  "dependencies": {
+    "minimatch-patched": "npm:minimatch@11.0.1"
+  }
+}
