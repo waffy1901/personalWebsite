@@ -51,7 +51,7 @@ export const routeMetadata = [
     path: "/experience",
     title: "Experience | Waffy Ahmed",
     description:
-      "Professional experience in platform reliability, security and CI/CD remediation, infrastructure, deployment automation, and production operations.",
+      "Professional experience in platform reliability, production recovery, security and CI/CD remediation, infrastructure, cross-team technical guidance, and engineering visibility.",
   },
   {
     path: "/projects",

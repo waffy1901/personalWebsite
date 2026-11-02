@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process"
-import { fileURLToPath } from "node:url"
+import { resolve } from "node:path"
+import { fileURLToPath, pathToFileURL } from "node:url"
 
 const severityRank = {
   info: 0,
@@ -25,6 +26,10 @@ function runAudit(extraArgs) {
     }
   )
 
+  return validateAuditResult(result)
+}
+
+export function validateAuditResult(result) {
   if (result.error) {
     throw new Error(`npm audit could not start: ${result.error.message}`)
   }
@@ -45,12 +50,23 @@ function runAudit(extraArgs) {
   }
 
   if (
+    !report ||
     report.auditReportVersion !== 2 ||
     !report.vulnerabilities ||
     typeof report.vulnerabilities !== "object" ||
     Array.isArray(report.vulnerabilities)
   ) {
     throw new Error("npm audit did not return a version 2 vulnerability report")
+  }
+
+  for (const [name, vulnerability] of Object.entries(report.vulnerabilities)) {
+    if (!vulnerability || typeof vulnerability !== "object" || Array.isArray(vulnerability) ||
+        !Object.hasOwn(severityRank, vulnerability.severity)) {
+      throw new Error(`npm audit returned an unknown vulnerability severity for ${name}`)
+    }
+    if (resolveAdvisories(report, name).length === 0) {
+      throw new Error(`npm audit returned an unresolved vulnerability chain at ${name}`)
+    }
   }
 
   const hasBlockingVulnerabilities =
@@ -77,9 +93,9 @@ function blockingVulnerabilities(report) {
 
 function resolveAdvisories(report, vulnerabilityName, visiting = new Set()) {
   if (visiting.has(vulnerabilityName)) {
-    throw new Error(
-      `npm audit returned a cyclic vulnerability chain at ${vulnerabilityName}`
-    )
+    // npm's metavulnerability graph can cycle; another edge can still reach
+    // the underlying advisory. Only stop revisiting this branch.
+    return []
   }
 
   const vulnerability = report.vulnerabilities[vulnerabilityName]
@@ -94,7 +110,7 @@ function resolveAdvisories(report, vulnerabilityName, visiting = new Set()) {
 
   return vulnerability.via.flatMap((via) => {
     if (typeof via === "string") {
-      if (!report.vulnerabilities[via]) {
+      if (!Object.hasOwn(report.vulnerabilities, via)) {
         throw new Error(
           `npm audit referenced unknown vulnerability ${via} from ${vulnerabilityName}`
         )
@@ -102,7 +118,10 @@ function resolveAdvisories(report, vulnerabilityName, visiting = new Set()) {
       return resolveAdvisories(report, via, nextVisiting)
     }
 
-    if (!via || typeof via !== "object") {
+    if (!via || typeof via !== "object" || Array.isArray(via) ||
+        typeof via.name !== "string" || !via.name ||
+        typeof via.url !== "string" || !via.url ||
+        !Object.hasOwn(severityRank, via.severity)) {
       throw new Error(
         `npm audit returned malformed advisory data for ${vulnerabilityName}`
       )
@@ -118,8 +137,8 @@ function resolveAdvisories(report, vulnerabilityName, visiting = new Set()) {
 }
 
 function describeVulnerability(report, [name, vulnerability]) {
-  const advisories = resolveAdvisories(report, name)
-    .map((advisory) => advisory.url ?? "unknown advisory")
+  const advisories = [...new Set(resolveAdvisories(report, name)
+    .map((advisory) => advisory.url))]
     .join(", ")
   return `${name} (${vulnerability.severity ?? "unknown"}): ${advisories}`
 }
@@ -131,8 +150,8 @@ function failWithVulnerabilities(message, report, vulnerabilities) {
   throw new Error(`${message}\n- ${details}`)
 }
 
-try {
-  const productionReport = runAudit([
+export function checkAudits(audit = runAudit, log = console.log) {
+  const productionReport = audit([
     "--omit=dev",
     "--include=optional",
     "--include=peer",
@@ -147,9 +166,9 @@ try {
     )
   }
 
-  console.log("Production dependency audit passed")
+  log("Production dependency audit passed")
 
-  const fullReport = runAudit([
+  const fullReport = audit([
     "--include=dev",
     "--include=optional",
     "--include=peer",
@@ -164,8 +183,14 @@ try {
     )
   }
 
-  console.log("Full dependency audit passed")
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error)
-  process.exitCode = 1
+  log("Full dependency audit passed")
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  try {
+    checkAudits()
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : error)
+    process.exitCode = 1
+  }
 }

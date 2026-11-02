@@ -67,6 +67,10 @@
     "lighthouse": "13.5.0",
     "tailwindcss": "^4.3.3",
     "vite": "^8.1.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "minimatch": "file:tools/minimatch-compat"
+  },
+  "overrides": {
+    "minimatch": "$minimatch"
   }
 }
