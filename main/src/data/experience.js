@@ -12,6 +12,7 @@ import { currentEmployment } from "./siteIdentity.js"
 import { currentRoleHighlights } from "./currentRoleHighlights.js"
 
 export { currentRoleHighlights } from "./currentRoleHighlights.js"
+export { currentRoleEvidence } from "./currentRoleEvidence.js"
 
 export const experiencePage = {
   workHeading: "Work Experience",

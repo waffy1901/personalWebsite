@@ -408,6 +408,23 @@ const buildAiSummary = (model, portfolio) => {
   addSection("Current Role Highlights")
   add(...portfolio.person.currentRole.highlights.flatMap((highlight) => bullet(highlight)))
 
+  const currentEvidence = portfolio.person.currentRole.evidence
+  addSection(currentEvidence.heading)
+  add(
+    currentEvidence.timeframe,
+    "",
+    ...wrapText(currentEvidence.introduction),
+    "",
+    ...bullet(`Experience: ${toCanonicalRouteUrl("/experience")}#${currentEvidence.id}`)
+  )
+  for (const group of currentEvidence.groups) {
+    add("", `${group.title}:`)
+    for (const entry of group.entries) {
+      add(...bullet(`${entry.title}: ${entry.summary}`))
+    }
+  }
+  add("", ...wrapText(currentEvidence.evidenceNote))
+
   addSection("High-Level Positioning")
   add(
     ...wrapText(

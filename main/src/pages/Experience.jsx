@@ -1,5 +1,6 @@
-import React, { useId, useState } from "react";
+import React, { useEffect, useId, useState } from "react";
 import { HiCog, HiLockClosed, HiServer, HiShieldCheck } from "react-icons/hi";
+import { useLocation } from "react-router";
 import ExperienceCard from "../components/ExperienceCard";
 import {
   ImpactBand,
@@ -9,6 +10,7 @@ import {
   SectionHeader,
 } from "../components/MissionControl.jsx";
 import {
+  currentRoleEvidence,
   experiencePage,
   extracurricularExperiences,
   ownershipAreas,
@@ -55,6 +57,14 @@ const timelineRankById = {
   "gt-undergraduate-teaching-assistant": 5,
   "landis-gyr-firmware-intern": 6,
 };
+
+const evidenceAnchorIds = new Set([
+  currentRoleEvidence.id,
+  ...currentRoleEvidence.groups.flatMap((group) => [
+    group.id,
+    ...group.entries.map((entry) => entry.id),
+  ]),
+]);
 
 function TimelineEntry({ experience }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -104,6 +114,30 @@ function TimelineEntry({ experience }) {
 }
 
 function Experience() {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    let targetId;
+    try {
+      targetId = decodeURIComponent(hash.slice(1));
+    } catch {
+      return;
+    }
+    if (!evidenceAnchorIds.has(targetId)) return;
+
+    // The lazy page mounts after native fragment scrolling. Wait for the route
+    // commit and its parent scroll reset before restoring these evidence anchors.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({
+          block: "start",
+          behavior: "instant",
+        });
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hash]);
+
   const [currentRole, ...earlierWork] = workExperiences;
   const timelineExperiences = [...earlierWork, ...extracurricularExperiences].sort(
     (a, b) => (timelineRankById[a.id] ?? 99) - (timelineRankById[b.id] ?? 99)
@@ -175,6 +209,72 @@ function Experience() {
             </div>
           </PresentationPanel>
         ) : null}
+
+        <section
+          id={currentRoleEvidence.id}
+          aria-labelledby="recent-engineering-work-heading"
+          className="scroll-mt-56 space-y-6"
+        >
+          <div className="max-w-3xl">
+            <p className="mc-eyebrow">{currentRoleEvidence.timeframe}</p>
+            <h2
+              id="recent-engineering-work-heading"
+              className="text-3xl font-black text-[#0B1220]"
+            >
+              {currentRoleEvidence.heading}
+            </h2>
+            <p className="mt-4 leading-relaxed text-slate-600">
+              {currentRoleEvidence.introduction}
+            </p>
+          </div>
+
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            {currentRoleEvidence.groups.map((group) => (
+              <section
+                key={group.id}
+                id={group.id}
+                aria-labelledby={`${group.id}-heading`}
+                className="mc-panel min-w-0 scroll-mt-56 p-5 sm:p-6"
+              >
+                <h3
+                  id={`${group.id}-heading`}
+                  className="text-xl font-black text-[#0B1220]"
+                >
+                  <a
+                    href={`#${group.id}`}
+                    className="rounded-sm underline decoration-[#2563EB]/30 underline-offset-4 hover:decoration-[#2563EB] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+                  >
+                    {group.title}
+                  </a>
+                </h3>
+                <div className="mt-5 space-y-5">
+                  {group.entries.map((entry) => (
+                    <article
+                      key={entry.id}
+                      id={entry.id}
+                      className="scroll-mt-56 border-l-2 border-[#2563EB]/20 pl-4"
+                    >
+                      <h4 className="font-black text-slate-800">
+                        <a
+                          href={`#${entry.id}`}
+                          className="rounded-sm hover:underline hover:underline-offset-4 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+                        >
+                          {entry.title}
+                        </a>
+                      </h4>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                        {entry.summary}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+          <p className="max-w-3xl text-sm leading-relaxed text-slate-500">
+            {currentRoleEvidence.evidenceNote}
+          </p>
+        </section>
 
         <section
           aria-labelledby="earlier-roles-heading"
