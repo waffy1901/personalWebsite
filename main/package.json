@@ -71,6 +71,9 @@
     "minimatch": "file:tools/minimatch-compat"
   },
   "overrides": {
-    "minimatch": "$minimatch"
+    "minimatch": "$minimatch",
+    "@sentry/bundler-plugins": {
+      "glob": "14.0.2"
+    }
   }
 }
