@@ -17,7 +17,7 @@ import { SubmissionError } from "@formspree/core"
 import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
-import { currentRoleHighlights, workExperiences } from "./data/experience.js"
+import { currentRoleEvidence, currentRoleHighlights, workExperiences } from "./data/experience.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { portfolioUrls, resume, socialLinks } from "./data/profile.js"
 import { resumeDocument } from "./data/resume.mjs"
@@ -1552,6 +1552,25 @@ describe("App routes", () => {
     }
   })
 
+  it("shares grouped current-role evidence with generated discovery", () => {
+    const portfolioJson = readJsonFile("public/portfolio.json")
+    const aiSummary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
+    const llms = readFileSync("public/llms.txt", "utf8")
+
+    expect(portfolioJson.schemaVersion).toBe("2.0")
+    expect(portfolioJson.person.currentRole.evidence).toEqual(currentRoleEvidence)
+    expect(aiSummary).toContain(currentRoleEvidence.evidenceNote)
+    expect(aiSummary).toContain(`https://waffy.dev/experience/#${currentRoleEvidence.id}`)
+    for (const group of currentRoleEvidence.groups) {
+      expect(aiSummary).toContain(group.title)
+      for (const entry of group.entries) {
+        expect(aiSummary).toContain(entry.summary)
+        // The short entry point remains navigational; detail lives in canonical sources.
+        expect(llms).not.toContain(entry.summary)
+      }
+    }
+  })
+
   it("mirrors the deeper selected case and its qualifications in public discovery", () => {
     const selected = caseStudies.find((caseStudy) => caseStudy.slug === "kubernetes-autoscaling")
     const publicCases = readJsonFile("public/portfolio.json").caseStudies
@@ -1786,6 +1805,101 @@ describe("App routes", () => {
     expect(notFoundHtml).toContain(
       '<link rel="canonical" href="https://waffy.dev/" />'
     )
+  })
+
+  it("restores cold evidence fragments after lazy mount and ignores invalid fragments", async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView
+    const scrollIntoViewMock = vi.fn()
+    const frames = new Map()
+    let frameId = 0
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback) => {
+      frames.set(++frameId, callback)
+      return frameId
+    }))
+    vi.stubGlobal("cancelAnimationFrame", vi.fn((id) => frames.delete(id)))
+    const flushFrame = () => act(() => {
+      const callbacks = [...frames.values()]
+      frames.clear()
+      callbacks.forEach((callback) => callback(0))
+    })
+
+    try {
+      Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+        configurable: true,
+        value: scrollIntoViewMock,
+      })
+      const group = currentRoleEvidence.groups[0]
+      for (const id of [currentRoleEvidence.id, group.id, group.entries[0].id]) {
+        const view = renderRoute(`/experience/#${id}`)
+        await screen.findByRole("heading", { name: currentRoleEvidence.heading })
+        expect(scrollIntoViewMock).not.toHaveBeenCalled()
+        flushFrame()
+        flushFrame()
+        expect(scrollIntoViewMock).toHaveBeenCalledExactlyOnceWith({
+          block: "start",
+          behavior: "instant",
+        })
+        expect(scrollIntoViewMock.mock.contexts[0]).toBe(document.getElementById(id))
+        view.unmount()
+        scrollIntoViewMock.mockClear()
+      }
+
+      for (const hash of ["#unknown-evidence", "#%E0%A4%A"]) {
+        const view = renderRoute(`/experience/${hash}`)
+        await screen.findByRole("heading", { name: currentRoleEvidence.heading })
+        expect(frames.size).toBe(0)
+        expect(scrollIntoViewMock).not.toHaveBeenCalled()
+        view.unmount()
+      }
+
+      const view = renderRoute(`/experience/#${group.id}`)
+      await screen.findByRole("heading", { name: currentRoleEvidence.heading })
+      expect(frames.size).toBe(1)
+      view.unmount()
+      expect(frames.size).toBe(0)
+    } finally {
+      if (originalScrollIntoView) {
+        Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+          configurable: true,
+          value: originalScrollIntoView,
+        })
+      } else {
+        delete HTMLElement.prototype.scrollIntoView
+      }
+    }
+  })
+
+  it("exposes recent engineering work without opening the current-role card", async () => {
+    const user = userEvent.setup()
+    renderRoute("/experience")
+
+    const evidence = await screen.findByRole("region", {
+      name: currentRoleEvidence.heading,
+    })
+    expect(screen.queryByRole("region", { name: /experience details/i })).not.toBeInTheDocument()
+    expect(within(evidence).getByText(currentRoleEvidence.evidenceNote)).toBeVisible()
+
+    const links = within(evidence).getAllByRole("link")
+    for (const link of links) {
+      const targetId = link.getAttribute("href").slice(1)
+      const target = document.getElementById(targetId)
+      expect(target).toBeVisible()
+      expect(evidence.contains(target)).toBe(true)
+      expect(document.querySelectorAll(`[id="${targetId}"]`)).toHaveLength(1)
+    }
+    for (const group of currentRoleEvidence.groups) {
+      const region = within(evidence).getByRole("region", { name: group.title })
+      expect(within(region).getAllByRole("article")).toHaveLength(group.entries.length)
+      expect(within(region).getByText(group.entries[0].summary)).toBeVisible()
+    }
+
+    links[0].focus()
+    expect(links[0]).toHaveFocus()
+    await user.tab()
+    expect(links[1]).toHaveFocus()
+    expect(evidence.compareDocumentPosition(screen.getByRole("heading", {
+      name: /foundation work, internships, and technical leadership/i,
+    })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it("reveals experience details with an accessible control", async () => {

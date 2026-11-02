@@ -25,6 +25,62 @@ Current Role Highlights:
 * Replaced shared CI credentials with short-lived JFrog OIDC tokens across 2
   teams and 20 repositories.
 
+Recent production work and technical guidance:
+
+July - October 2026
+
+Selected Software Engineer II work beyond the role highlights: application
+recovery, operational aftercare, infrastructure guidance, and engineering
+visibility.
+
+* Experience: https://waffy.dev/experience/#recent-engineering-work
+
+Production recovery:
+* Emergency certificate response: Coordinated application rebuilds and
+  redeployments within an emergency certificate response: 24 BookIt production
+  apps in approximately 1 hour within a 3-hour window, validating container
+  images and running workloads.
+* Post-rebuild service networking: Traced approximately 1-second service
+  failures after a cluster rebuild to stale node-level routing in internal
+  NodePort communication. Migrated that communication to ClusterIP; the
+  observed recovery signals were the end of 1-second Linkerd timeouts and
+  upstream internal HTTP timeouts. This removed the stale-node dependency in
+  this incident.
+
+Credentials and operational aftercare:
+* Production service-account rotations: Carried out CyberArk and Google Secret
+  Manager updates with rolling restarts, accounted for an overlooked PCF
+  dependency, validated new keys, and retired superseded keys across
+  production service-account rotations.
+* Order-reconciliation aftercare: Addressed a September sequencing race and an
+  October queue bug affecting batches of more than 100 items in the production
+  order-reconciliation workflow. Normal processing reprocessed the
+  approximately 2,200-item backlog once items were released from initial and
+  maxed_out states.
+* Ongoing operational support: Supported Astra token revocation, an identity
+  incident, Cassandra reconnect and Booking Feeder work, third-region
+  operations, rolling-restart runbooks, and PCF certificate and Conjur
+  maintenance.
+
+Infrastructure and technical guidance:
+* Capture infrastructure contact: Served as Capture's primary infrastructure
+  contact across GKE, Terraform, cdk8s, CI/CD, identity, deployments, and
+  incident support.
+* Cross-team PR review and knowledge transfer: Reviewed 201 unique pull
+  requests in October 2026 across about four teams. Paired that review work
+  with documented knowledge transfer on GKE, infrastructure as code,
+  authentication, secrets, production validation, and container
+  securityContext configuration.
+
+Engineering visibility:
+* Scheduled engineering dashboards: Built scheduled dashboards across Capture,
+  Interrupt, BookIt, Search, and PTM. The dashboards were used as the source
+  of truth for Q3 story points and engineers' PR review metrics at the Q4
+  kickoff all-hands. Those team metrics are separate from the personal October
+  review count.
+
+PR review volume describes activity; it does not measure review quality.
+
 High-Level Positioning:
 
 The strongest professional signal in this portfolio is backend, platform, and
