@@ -219,14 +219,18 @@ for (const width of [320, 390, 640, 1024, 1440]) {
       await page.setViewportSize({ width, height: 1000 })
       await page.emulateMedia({ reducedMotion: "reduce" })
 
+      const recentOutcomeProof = [
+        "security and CI/CD modernization across 15 booking services",
+        "daily order reconciliation on GKE and Cloud Spanner",
+        "Led 4 engineers from design through stakeholder validation and handoff",
+        "AI-assisted payment triage agent spanning 7 applications",
+      ]
       await page.goto("/", { waitUntil: "domcontentloaded" })
       const outcomes = page.getByRole("list", { name: "Recent engineering outcomes" })
       await expect(outcomes).toBeVisible()
       await page.evaluate(() => globalThis.document.fonts.ready)
       if (textScale === 2) await enlargeText(page)
-      await expect(outcomes).toContainText("Led 4 engineers through stakeholder validation and handoff")
-      await expect(outcomes).toContainText("7 payment applications")
-      await expect(outcomes).toContainText("JFrog OIDC tokens across 2 teams and 20 repositories")
+      for (const proof of recentOutcomeProof) await expect(outcomes).toContainText(proof)
       const hero = outcomes.locator("xpath=ancestor::section[1]")
       await expect(hero).toContainText("Software Engineer II at The Home Depot")
       await expectContentContained(hero)
@@ -247,8 +251,8 @@ for (const width of [320, 390, 640, 1024, 1440]) {
           await expectContentContained(face)
           await expect(button).toBeVisible()
           if (route === "/experience/") {
-            await expect(card.getByRole("list", { name: "Recent engineering outcomes" })).toContainText("7 payment applications")
-            await expect(card).toContainText("JFrog OIDC tokens across 2 teams and 20 repositories")
+            const experienceOutcomes = card.getByRole("list", { name: "Recent engineering outcomes" })
+            for (const proof of recentOutcomeProof) await expect(experienceOutcomes).toContainText(proof)
           } else {
             const projectProof = [
               ["Automated infectious-disease case-count reconciliation", "Saved 5000+ hours"],

@@ -17,7 +17,7 @@ export const currentRoleEvidence = {
         {
           id: "jira-to-gke-prototype-reference",
           title: hackathonPrototype.title,
-          summary: `${hackathonPrototype.timeframe}. Two-person hackathon: Waffy owned DevOps/infrastructure and deployment validation; his teammate focused on AI. Explore the demonstrated promotion path and human review boundary.`,
+          summary: `${hackathonPrototype.timeframe}. Built the deployment factory's Python poller, persistent run records, approval checks, and Slack notifications. A 112-minute live run reached a draft production PR after dev, qp, and qa; no production rollout.`,
           href: hackathonPrototype.path,
           linkLabel: "Explore the delivery prototype",
         },

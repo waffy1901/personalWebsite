@@ -19,6 +19,8 @@ import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
 import { hackathonPrototype } from "./data/hackathonPrototype.js"
 import { currentRoleEvidence, currentRoleHighlights, workExperiences } from "./data/experience.js"
+import { currentRoleSummary } from "./data/currentRoleHighlights.js"
+import { homeContent } from "./data/home.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { portfolioUrls, resume, socialLinks } from "./data/profile.js"
 import { resumeDocument } from "./data/resume.mjs"
@@ -200,7 +202,7 @@ describe("App routes", () => {
       screen.getByRole("link", { name: /download resume/i })
     ).toHaveAttribute("href", "/waffyAhmedResume.pdf")
     expect(
-      screen.getByText(/^software engineer ii at the home depot, focused on kubernetes/i)
+      screen.getByText(currentRoleSummary)
     ).toBeInTheDocument()
     const profileImage = screen.getByRole("img", { name: /waffy ahmed/i })
     const profileWebpSource = profileImage
@@ -916,26 +918,39 @@ describe("App routes", () => {
     expect(screen.getByText(/Software Engineer II at The Home Depot, focused on/)).toBeVisible()
     const outcomes = screen.getByRole("list", { name: "Recent engineering outcomes" })
     expect(within(outcomes).getAllByRole("listitem")).toHaveLength(3)
-    expect(outcomes).toHaveTextContent(/15 services.*66 unique critical\/high CVEs from production workloads.*33% to 100%/)
-    expect(outcomes).toHaveTextContent(/Led 4 engineers through stakeholder validation and handoff.*7 payment applications/)
-    expect(outcomes).toHaveTextContent(/Replaced shared CI credentials.*JFrog OIDC.*2 teams and 20 repositories/)
+    expect(outcomes).toHaveTextContent(/security and CI\/CD modernization across 15 booking services/)
+    expect(outcomes).toHaveTextContent(/productionized daily order reconciliation on GKE and Cloud Spanner/i)
+    expect(outcomes).toHaveTextContent(/Led 4 engineers from design through stakeholder validation and handoff.*7 applications/)
+    expect(outcomes).not.toHaveTextContent(/201|33%|100%/)
     currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
     const hero = outcomes.closest("section")
     expect(within(hero).getByRole("link", { name: "Download Resume" })).toHaveAttribute("href", resume.pdf)
     expect(within(hero).getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact/")
   })
 
-  it("opens the flagship Kubernetes case from the Home hero and preloads on focus", async () => {
+  it("opens current Experience from the Home hero and preloads on focus", async () => {
     const user = userEvent.setup()
     renderRoute("/")
-    const proofLink = await screen.findByRole("link", { name: "Kubernetes autoscaling: 40% lower latency" })
+    const proofLink = await screen.findByRole("link", { name: homeContent.proofLink })
 
-    expect(proofLink).toHaveAttribute("href", "/case-studies/kubernetes-autoscaling/")
+    expect(proofLink).toHaveAttribute("href", "/experience/")
     expect(routePreloadMock).not.toHaveBeenCalled()
     fireEvent.focus(proofLink)
-    expect(routePreloadMock).toHaveBeenLastCalledWith("/case-studies/kubernetes-autoscaling/")
+    expect(routePreloadMock).toHaveBeenLastCalledWith("/experience/")
     await user.click(proofLink)
-    expect(await screen.findByRole("heading", { name: /kubernetes autoscaling for transaction-critical services/i, level: 1 })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: /work experience/i, level: 1 })).toBeVisible()
+  })
+
+  it.each([
+    ["Production incident response and recovery", "Production recovery", "production-recovery"],
+    ["October hackathon: Jira-to-GKE Delivery Prototype", hackathonPrototype.title, hackathonPrototype.id],
+  ])("opens the Home evidence link %s at its existing fragment", async (label, heading, targetId) => {
+    const user = userEvent.setup()
+    renderRoute("/")
+    const navigation = await screen.findByRole("navigation", { name: "More recent engineering evidence" })
+    await user.click(within(navigation).getByRole("link", { name: label }))
+    expect(await screen.findByRole("heading", { name: heading, exact: true })).toBeVisible()
+    expect(document.getElementById(targetId)).toBeVisible()
   })
 
   it("shows each project purpose, distinctive result or capability, and source before details open", async () => {
@@ -1035,10 +1050,10 @@ describe("App routes", () => {
       "Preflight and discovery",
       "Repository analysis and planning",
       "Implementation and source PR",
-      "Draft production PR",
       "Docker build",
       "Google Artifact Registry publication",
       "GKE delivery validation",
+      "Draft production PR",
     ])
     expect(project).not.toHaveProperty("source")
     const summary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
@@ -1048,7 +1063,7 @@ describe("App routes", () => {
     expect(readme).toContain(`[${hackathonPrototype.title}](https://waffy.dev${hackathonPrototype.path})`)
     expect(readme).not.toContain("](undefined)")
     expect(summary).not.toContain("Repository: undefined")
-    expect(portfolio.contentLastReviewed).toBe("2026-11-02")
+    expect(portfolio.contentLastReviewed).toBe("2026-11-03")
   })
 
   it("tracks project source and details interactions", async () => {
@@ -2049,7 +2064,7 @@ describe("App routes", () => {
 
     expect(detailsRegion).toBeInTheDocument()
     expect(
-      screen.getByText(/productionized daily order reconciliation/i)
+      within(detailsRegion).getByText(/productionized daily order reconciliation/i)
     ).toBeInTheDocument()
     expect(
       screen.getByText(

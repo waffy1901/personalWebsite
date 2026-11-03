@@ -1,8 +1,8 @@
 import { caseStudySeoItems } from "./caseStudySeo.js"
 import { portfolioUrls, profileIdentity } from "./siteIdentity.js"
+import { currentRoleSummary } from "./currentRoleHighlights.js"
 
-const defaultDescription =
-  "Software engineering portfolio for Waffy Ahmed, focused on platform reliability, Kubernetes, CI/CD security, observability, and high-throughput systems."
+const defaultDescription = currentRoleSummary
 
 export const siteMetadata = {
   siteUrl: portfolioUrls.site,

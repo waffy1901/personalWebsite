@@ -21,8 +21,7 @@ import {
 } from "../components/MissionControl.jsx";
 import SocialLinks from "../components/SocialLinks";
 import { profile, resume } from "../data/profile";
-import { currentEmployment } from "../data/siteIdentity.js";
-import { currentRoleHighlights } from "../data/currentRoleHighlights.js";
+import { currentRoleHighlights, currentRoleSummary } from "../data/currentRoleHighlights.js";
 import { homeContent } from "../data/home.js";
 import { kubernetesAutoscalingSeo } from "../data/caseStudySeo.js";
 import { trackEvent } from "../utils/analytics";
@@ -47,8 +46,8 @@ const impactMetrics = [
   },
   {
     value: "5000+",
-    label: "hours saved annually",
-    detail: "Manual reconciliation converted into workflows.",
+    label: "estimated CDC hours saved annually",
+    detail: "Public health case-count reconciliation, separate from production order reconciliation.",
   },
 ];
 
@@ -119,7 +118,7 @@ const routeCards = [
     label: "Projects",
     to: "/projects/",
     title: "Build portfolio",
-    detail: "Full-stack and mobile projects shaped around practical workflows.",
+    detail: "Public health and mobile applications, plus a Jira-to-GKE hackathon prototype.",
   },
 ];
 
@@ -145,8 +144,7 @@ function Home() {
                   I build production systems that stay reliable under pressure.
                 </p>
                 <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
-                  {currentEmployment.currentTitle} at {currentEmployment.organization}, focused on Kubernetes, deployment
-                  automation, observability, and high-throughput backend systems.
+                  {currentRoleSummary}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <a
@@ -169,8 +167,8 @@ function Home() {
                 </div>
 
                 <Link
-                  to={featuredCasePath}
-                  {...createRouteIntentHandlers(featuredCasePath)}
+                  to={homeContent.proofPath}
+                  {...createRouteIntentHandlers(homeContent.proofPath)}
                   className="mt-4 inline-flex max-w-full scroll-mt-48 items-center gap-2 rounded-sm text-sm font-bold leading-relaxed text-[#FFB077] underline underline-offset-4 hover:text-white focus:outline-hidden focus:ring-2 focus:ring-[#F96302] focus:ring-offset-2 focus:ring-offset-[#0B1220]"
                 >
                   <span className="min-w-0 break-words">{homeContent.proofLink}</span>
@@ -260,7 +258,7 @@ function Home() {
               {...createRouteIntentHandlers(featuredCasePath)}
               className="mc-button-primary mt-7"
             >
-              Read the case study
+              Read the Kubernetes autoscaling case study
               <FaArrowRight className="ml-2" aria-hidden="true" />
             </Link>
           </div>
@@ -315,6 +313,24 @@ function Home() {
               </Link>
             ))}
           </div>
+
+          <nav aria-label="More recent engineering evidence" className="mc-panel p-5">
+            <p className="text-sm font-black uppercase text-slate-500">More recent evidence</p>
+            <ul className="mt-4 space-y-3">
+              {homeContent.secondaryEvidence.map((item) => (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    {...createRouteIntentHandlers(item.to)}
+                    className="inline-flex max-w-full items-center gap-2 rounded-sm font-bold text-[#1D4ED8] underline underline-offset-4 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+                  >
+                    <span className="min-w-0 break-words">{item.label}</span>
+                    <FaArrowRight className="shrink-0" aria-hidden="true" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           <div className="mc-panel p-5">
             <p className="text-sm font-black uppercase text-slate-500">Connect</p>
