@@ -20,7 +20,7 @@ export default function HackathonPrototypeDetails() {
       </section>
       <section aria-labelledby={`${project.id}-flow`}>
         <h3 id={`${project.id}-flow`} className="text-lg font-black text-slate-800">Intended single-call workflow</h3>
-        <p className="mt-2">This sanitized flow describes the wider design. The demonstrated portion starts at the source-code PR and ends at the draft production PR; full Jira orchestration and build/publication automation remain unestablished.</p>
+        <p className="mt-2">This is the wider design. The demonstrated delivery path starts at a merged source PR and ends at a draft production PR; build dispatch was manual, and full Jira-to-implementation orchestration remains unestablished.</p>
         <ol className="mt-4 list-decimal space-y-3 pl-6">{project.intendedFlow.map((step) => <li key={step.title}><strong className="text-slate-800">{step.title}:</strong> {step.detail}</li>)}</ol>
       </section>
       <section aria-labelledby={`${project.id}-decisions`}>

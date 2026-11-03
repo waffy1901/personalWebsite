@@ -3,9 +3,9 @@ import { hackathonPrototypeIdentity } from "./hackathonPrototypeIdentity.js"
 export const hackathonPrototypeSummary = {
   ...hackathonPrototypeIdentity,
   summary:
-    "Two-person hackathon exploring a single skill call from a Jira story to GKE delivery.",
+    "Built the deployment workstream of a Jira-to-GKE hackathon prototype: a Python poller with persistent run records, approval checks, and Slack notifications.",
   outcome:
-    "Demonstrated source-code PR promotion through dev, qp, and qa to a draft production cdk8s PR, with Grafana health checks and expected pod-version validation.",
+    "A 112-minute live run promoted a merged source PR through dev, qp, and qa to a draft production cdk8s PR, with Grafana health checks and deployed image-version validation.",
   reviewBoundary:
-    "The demonstrated handoff was a draft production PR. Human review remains required before production merge and rollout; production rollout was not demonstrated.",
+    "Human review remains required before production merge and rollout. The demo's draft production PR was closed unmerged; nothing was sent to production.",
 }

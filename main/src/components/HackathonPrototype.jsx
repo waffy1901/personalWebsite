@@ -9,7 +9,7 @@ export default function HackathonPrototype({ project }) {
   return (
     <article id={project.id} aria-labelledby={`${project.id}-heading`} className="mc-panel min-w-0 scroll-mt-56 p-5 [overflow-wrap:anywhere] sm:p-7">
       <StatusBadge tone="orange">{project.status}</StatusBadge>
-      <p className="mt-4 text-sm font-bold text-slate-600">{project.timeframe} | Two-person team</p>
+      <p className="mt-4 text-sm font-bold text-slate-600">{project.timeframe}</p>
       <h2 id={`${project.id}-heading`} className="mt-3 text-3xl font-black text-[#0B1220]">{project.title}</h2>
       <p className="mt-4 leading-relaxed text-slate-600">{project.summary}</p>
       <p className="mt-4 font-bold leading-relaxed text-slate-800">{project.outcome}</p>

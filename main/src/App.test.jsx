@@ -1050,10 +1050,10 @@ describe("App routes", () => {
       "Preflight and discovery",
       "Repository analysis and planning",
       "Implementation and source PR",
-      "Draft production PR",
       "Docker build",
       "Google Artifact Registry publication",
       "GKE delivery validation",
+      "Draft production PR",
     ])
     expect(project).not.toHaveProperty("source")
     const summary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
@@ -1063,7 +1063,7 @@ describe("App routes", () => {
     expect(readme).toContain(`[${hackathonPrototype.title}](https://waffy.dev${hackathonPrototype.path})`)
     expect(readme).not.toContain("](undefined)")
     expect(summary).not.toContain("Repository: undefined")
-    expect(portfolio.contentLastReviewed).toBe("2026-11-02")
+    expect(portfolio.contentLastReviewed).toBe("2026-11-03")
   })
 
   it("tracks project source and details interactions", async () => {
