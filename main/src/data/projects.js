@@ -1,4 +1,4 @@
-import { hackathonPrototype } from "./hackathonPrototype.js"
+import { hackathonPrototypeSummary as hackathonPrototype } from "./hackathonPrototypeSummary.js"
 import cdcLogo from "../images/cdcLogo.png"
 import cdcLogoWebp from "../images/cdcLogo.webp"
 import campusDiscoveryServiceLogo from "../images/discoveryServiceLogo.png"

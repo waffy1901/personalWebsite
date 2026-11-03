@@ -1,47 +1,8 @@
-// Shared canonical content; keep this module free of app and image imports.
+import { hackathonPrototypeSummary } from "./hackathonPrototypeSummary.js"
+import { hackathonPrototypeNotes } from "./hackathonPrototypeNotes.js"
+
+// Complete canonical project for generated public artifacts.
 export const hackathonPrototype = {
-  id: "jira-to-gke-hackathon",
-  focusId: "ai-assisted-engineering",
-  title: "Jira-to-GKE Delivery Prototype",
-  status: "Hackathon prototype",
-  timeframe: "October 28-29, 2026",
-  path: "/projects/#jira-to-gke-hackathon",
-  techStack: "Jira, AI-assisted engineering, Docker, Google Artifact Registry, GKE, cdk8s, Grafana, Slack",
-  summary:
-    "Two-person hackathon exploring a single skill call from a Jira story to a reviewable delivery workflow on GKE.",
-  outcome:
-    "Demonstrated source-code PR promotion through dev, qp, and qa to a draft production cdk8s PR, with Grafana health checks and expected pod-version validation.",
-  ownership: {
-    waffy: "Owned DevOps/infrastructure and end-to-end deployment validation for the demonstrated promotion path; configured a Slack webhook to trigger cdk8s PR reviews and validations.",
-    teammate: "Focused on the AI portion of the two-person prototype.",
-  },
-  reviewBoundary:
-    "The demonstrated handoff was a draft production PR. Human review remains required before production merge and rollout; production rollout was not demonstrated.",
-  demonstrated: [
-    "Promoted a source-code PR through dev, qp, and qa to a draft production PR in cdk8s.",
-    "Checked Grafana health and verified that pods were running the expected version.",
-    "Configured a Slack webhook to trigger cdk8s PR reviews and validations.",
-  ],
-  intendedFlow: [
-    { title: "Jira story", detail: "Start the wider workflow with one skill call and a story's requirements." },
-    { title: "Preflight and discovery", detail: "Discover repository context and prerequisites before proposing work." },
-    { title: "Repository analysis and planning", detail: "Turn the story and code context into an implementation plan." },
-    { title: "Implementation and source PR", detail: "Prepare changes for review before the delivery path." },
-    { title: "Draft production PR", detail: "Prepare a reviewable production proposal; human review remains required before production merge and rollout." },
-    { title: "Docker build", detail: "Build a container image for the proposed change." },
-    { title: "Google Artifact Registry publication", detail: "Publish the built image to Google Artifact Registry." },
-    { title: "GKE delivery validation", detail: "Validate workload health and the expected pod version on GKE." },
-  ],
-  decisions: [
-    "Used cdk8s PRs to make environment changes reviewable and preserve a human handoff before production.",
-    "Paired Grafana health signals with expected pod-version checks to validate both service health and the deployed version.",
-    "Used a Slack webhook to trigger cdk8s PR reviews and validations within the delivery workflow.",
-  ],
-  limitations: [
-    "This was an October 28-29, 2026 hackathon prototype, not a production delivery platform.",
-    "The complete Jira-to-implementation orchestration and Docker/Google Artifact Registry automation are intended scope; end-to-end completion of those steps is unestablished.",
-    "The demonstrated result ends at a draft production PR, with no claim of autonomous production merge or rollout.",
-    "Public notes are sanitized; employer code, repository links, internal URLs, and screenshots are not published.",
-  ],
-  bullets: [],
+  ...hackathonPrototypeSummary,
+  ...hackathonPrototypeNotes,
 }

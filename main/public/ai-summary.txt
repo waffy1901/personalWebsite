@@ -36,14 +36,10 @@ visibility, and a separate hackathon prototype.
 * Experience: https://waffy.dev/experience/#recent-engineering-work
 
 Hackathon prototyping:
-* Jira-to-GKE Delivery Prototype: October 28-29, 2026. Two-person hackathon
-  exploring a single skill call from a Jira story to a reviewable delivery
-  workflow on GKE. Demonstrated source-code PR promotion through dev, qp, and
-  qa to a draft production cdk8s PR, with Grafana health checks and expected
-  pod-version validation. Waffy owned DevOps/infrastructure and deployment
-  validation; his teammate focused on AI. The demonstrated handoff was a draft
-  production PR. Human review remains required before production merge and
-  rollout; production rollout was not demonstrated.
+* Jira-to-GKE Delivery Prototype: October 28-29, 2026. Two-person hackathon:
+  Waffy owned DevOps/infrastructure and deployment validation; his teammate
+  focused on AI. Explore the demonstrated promotion path and human review
+  boundary.
 * Project: https://waffy.dev/projects/#jira-to-gke-hackathon
 
 Production recovery:
@@ -542,7 +538,7 @@ Jira-to-GKE Delivery Prototype:
 * Stack: Jira, AI-assisted engineering, Docker, Google Artifact Registry, GKE,
   cdk8s, Grafana, Slack
 * Purpose: Two-person hackathon exploring a single skill call from a Jira
-  story to a reviewable delivery workflow on GKE.
+  story to GKE delivery.
 * Result / capability: Demonstrated source-code PR promotion through dev, qp,
   and qa to a draft production cdk8s PR, with Grafana health checks and
   expected pod-version validation.

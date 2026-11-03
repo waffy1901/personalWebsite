@@ -146,6 +146,7 @@ const loadCanonicalModules = async () => {
       caseStudiesModule,
       seoModule,
       publicPortfolioModule,
+      prototypeModule,
     ] = await Promise.all([
       server.ssrLoadModule("/src/data/profile.js"),
       server.ssrLoadModule("/src/data/experience.js"),
@@ -153,12 +154,18 @@ const loadCanonicalModules = async () => {
       server.ssrLoadModule("/src/data/caseStudies.js"),
       server.ssrLoadModule("/src/data/seo.js"),
       server.ssrLoadModule("/src/data/publicPortfolio.js"),
+      server.ssrLoadModule("/src/data/hackathonPrototype.js"),
     ])
 
     return {
       ...profileModule,
       ...experienceModule,
       ...projectsModule,
+      projects: projectsModule.projects.map((project) =>
+        project.id === prototypeModule.hackathonPrototype.id
+          ? prototypeModule.hackathonPrototype
+          : project
+      ),
       ...caseStudiesModule,
       ...seoModule,
       ...publicPortfolioModule,

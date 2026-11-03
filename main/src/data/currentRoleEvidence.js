@@ -1,4 +1,4 @@
-import { hackathonPrototype } from "./hackathonPrototype.js"
+import { hackathonPrototypeIdentity as hackathonPrototype } from "./hackathonPrototypeIdentity.js"
 
 // Shared by the Experience page and generated discovery; no app/image imports.
 export const currentRoleEvidence = {
@@ -17,7 +17,7 @@ export const currentRoleEvidence = {
         {
           id: "jira-to-gke-prototype-reference",
           title: hackathonPrototype.title,
-          summary: `${hackathonPrototype.timeframe}. ${hackathonPrototype.summary} ${hackathonPrototype.outcome} Waffy owned DevOps/infrastructure and deployment validation; his teammate focused on AI. ${hackathonPrototype.reviewBoundary}`,
+          summary: `${hackathonPrototype.timeframe}. Two-person hackathon: Waffy owned DevOps/infrastructure and deployment validation; his teammate focused on AI. Explore the demonstrated promotion path and human review boundary.`,
           href: hackathonPrototype.path,
           linkLabel: "Explore the delivery prototype",
         },

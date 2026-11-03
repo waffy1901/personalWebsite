@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router";
 import HackathonPrototype from "../components/HackathonPrototype.jsx";
-import { hackathonPrototype } from "../data/hackathonPrototype.js";
+import { hackathonPrototypeSummary as hackathonPrototype } from "../data/hackathonPrototypeSummary.js";
 import { FaCodeBranch, FaDatabase, FaMobileAlt, FaUsers } from "react-icons/fa";
 import {
   ImpactBand,

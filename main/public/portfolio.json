@@ -40,7 +40,7 @@
               {
                 "id": "jira-to-gke-prototype-reference",
                 "title": "Jira-to-GKE Delivery Prototype",
-                "summary": "October 28-29, 2026. Two-person hackathon exploring a single skill call from a Jira story to a reviewable delivery workflow on GKE. Demonstrated source-code PR promotion through dev, qp, and qa to a draft production cdk8s PR, with Grafana health checks and expected pod-version validation. Waffy owned DevOps/infrastructure and deployment validation; his teammate focused on AI. The demonstrated handoff was a draft production PR. Human review remains required before production merge and rollout; production rollout was not demonstrated.",
+                "summary": "October 28-29, 2026. Two-person hackathon: Waffy owned DevOps/infrastructure and deployment validation; his teammate focused on AI. Explore the demonstrated promotion path and human review boundary.",
                 "href": "/projects/#jira-to-gke-hackathon",
                 "linkLabel": "Explore the delivery prototype"
               }
@@ -516,7 +516,7 @@
         "Grafana",
         "Slack"
       ],
-      "summary": "Two-person hackathon exploring a single skill call from a Jira story to a reviewable delivery workflow on GKE.",
+      "summary": "Two-person hackathon exploring a single skill call from a Jira story to GKE delivery.",
       "outcome": "Demonstrated source-code PR promotion through dev, qp, and qa to a draft production cdk8s PR, with Grafana health checks and expected pod-version validation.",
       "url": "https://waffy.dev/projects/#jira-to-gke-hackathon",
       "status": "Hackathon prototype",

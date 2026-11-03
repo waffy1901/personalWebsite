@@ -102,6 +102,30 @@ The baseline's asset membership was:
 - `src/pages/Projects.jsx` JS: `assets/Projects-JYO4-rXl.js`, `assets/cdcLogo-8kHjk12k.js`. CSS: none.
 - `src/pages/Resume.jsx` JS: `assets/Resume-CqGSLSmF.js`. CSS: none.
 
+## Issue 311 disclosure entry
+
+The Jira-to-GKE prototype's longer notes load when its native disclosure first
+opens. The compact Experience reference imports identity metadata only; Projects
+loads its status, result, and human review boundary before expansion. The new
+`src/components/HackathonPrototypeDetails.jsx` dynamic entry has its own budget;
+all preexisting startup and route limits remain unchanged.
+
+Measured on 2026-11-03 for the PR #316 rework using the synthetic-key build command
+above in a clean isolated install: Node 22.22.3, npm 10.9.8, zlib
+1.3.1-e00f703, Vite 8.3.5, darwin arm64. These are local source measurements;
+the PR's final commit and hosted results bind the published revision separately.
+
+| Group | Observed JS raw / gzip | JS limit raw / gzip |
+| --- | ---: | ---: |
+| `src/pages/Experience.jsx` | 33717 / 12036 | 34000 / 12500 (unchanged) |
+| `src/pages/Projects.jsx` | 15826 / 5837 | 16000 / 6000 (unchanged) |
+| `src/components/HackathonPrototypeDetails.jsx` | 4964 / 1851 | 6000 / 2400 (new) |
+
+The new disclosure allowance gives approximately 21% raw and 30% gzip headroom,
+rounded to absolute byte limits. Its measured closure includes the shared
+identity chunk after subtracting startup assets. It emits no CSS and receives the
+same explicit 2000 raw / 1000 gzip CSS allowance as the other empty lazy groups.
+
 ## Reviewing changes and evidence limits
 
 When a budget fails, inspect the listed assets and manifest closure first. Prefer

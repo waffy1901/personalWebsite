@@ -80,6 +80,16 @@
         "raw": 2000,
         "gzip": 1000
       }
+    },
+    "src/components/HackathonPrototypeDetails.jsx": {
+      "js": {
+        "raw": 6000,
+        "gzip": 2400
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
     }
   }
 }

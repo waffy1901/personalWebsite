@@ -43,6 +43,12 @@ const formspreeMockState = vi.hoisted(() => ({
   },
 }))
 const routePreloadMock = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const prototypeDetailsLoadMock = vi.hoisted(() => vi.fn())
+
+vi.mock("./components/HackathonPrototypeDetails.jsx", async (importOriginal) => {
+  prototypeDetailsLoadMock()
+  return importOriginal()
+})
 
 vi.mock("@formspree/react", async (importOriginal) => {
   const actual = await importOriginal()
@@ -154,6 +160,7 @@ const expectNormalTextContrast = (foreground, background) => {
 beforeEach(() => {
   formspreeSubmitMock.mockClear()
   routePreloadMock.mockClear()
+  prototypeDetailsLoadMock.mockClear()
   formspreeMockState.current = {
     errors: null,
     submitting: false,
@@ -536,6 +543,7 @@ describe("App routes", () => {
     expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
 
     routePreloadMock.mockClear()
+  prototypeDetailsLoadMock.mockClear()
     fireEvent.focus(projectsLink)
     expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
   })
@@ -550,6 +558,7 @@ describe("App routes", () => {
     )
 
     routePreloadMock.mockClear()
+  prototypeDetailsLoadMock.mockClear()
     caseStudiesRender.unmount()
     renderRoute("/case-studies/kubernetes-autoscaling")
     const backLink = (await screen.findAllByRole("link", { name: /^case studies$/i }))
@@ -961,11 +970,14 @@ describe("App routes", () => {
     const disclosure = card.querySelector("details")
     const summary = card.querySelector("summary")
     expect(disclosure).not.toHaveAttribute("open")
-    expect(within(card).getByText(hackathonPrototype.limitations[0])).not.toBeVisible()
+    expect(prototypeDetailsLoadMock).not.toHaveBeenCalled()
+    expect(within(card).queryByText(hackathonPrototype.limitations[0])).not.toBeInTheDocument()
     summary.focus()
     // JSDOM does not emulate native summary keyboard activation; browser QA covers it.
     await user.click(summary)
     expect(disclosure).toHaveAttribute("open")
+    expect(await within(card).findByRole("heading", { name: "Ownership" })).toBeVisible()
+    expect(prototypeDetailsLoadMock).toHaveBeenCalledTimes(1)
     for (const item of hackathonPrototype.limitations) expect(within(card).getByText(item)).toBeVisible()
     expect(within(card).getByRole("heading", { name: "Intended single-call workflow" })).toBeVisible()
     expect(card.querySelectorAll("ol > li")).toHaveLength(hackathonPrototype.intendedFlow.length)
