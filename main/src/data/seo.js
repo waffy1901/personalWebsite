@@ -57,7 +57,7 @@ export const routeMetadata = [
     path: "/projects",
     title: "Projects | Waffy Ahmed",
     description:
-      "Selected software projects spanning public health data reconciliation, mobile job search tooling, and campus discovery workflows.",
+      "Software projects spanning public health reconciliation, mobile workflows, and an AI-assisted Jira-to-GKE hackathon delivery prototype.",
   },
   {
     path: "/resume",

@@ -243,7 +243,19 @@ const buildStructuredPortfolio = (model) => {
       techStack: splitCsv(project.techStack),
       summary: project.summary,
       outcome: project.outcome,
-      source: project.github,
+      ...(project.github ? { source: project.github } : {}),
+      ...(project.path ? { url: toAbsoluteUrl(project.path) } : {}),
+      ...(project.status ? {
+        status: project.status,
+        focusId: project.focusId,
+        timeframe: project.timeframe,
+        ownership: project.ownership,
+        reviewBoundary: project.reviewBoundary,
+        demonstrated: project.demonstrated,
+        intendedFlow: project.intendedFlow,
+        decisions: project.decisions,
+        limitations: project.limitations,
+      } : {}),
     })),
   }
 }
@@ -421,6 +433,7 @@ const buildAiSummary = (model, portfolio) => {
     add("", `${group.title}:`)
     for (const entry of group.entries) {
       add(...bullet(`${entry.title}: ${entry.summary}`))
+      if (entry.href) add(...bullet(`Project: ${toAbsoluteUrl(entry.href)}`))
     }
   }
   add("", ...wrapText(currentEvidence.evidenceNote))
@@ -504,10 +517,25 @@ const buildAiSummary = (model, portfolio) => {
   addSection("Featured Portfolio Projects")
   for (const project of projects) {
     add(`${project.title}:`)
-    add(...bullet(`Repository: ${project.github}`))
+    if (project.github) add(...bullet(`Repository: ${project.github}`))
+    if (project.path) add(...bullet(`Project: ${toAbsoluteUrl(project.path)}`))
     add(...bullet(`Stack: ${project.techStack}`))
     add(...bullet(`Purpose: ${project.summary}`))
     add(...bullet(`Result / capability: ${project.outcome}`))
+    if (project.status) {
+      add(...bullet(`Status: ${project.status}; ${project.timeframe}`))
+      add(...bullet(`Waffy's ownership: ${project.ownership.waffy}`))
+      add(...bullet(`Teammate: ${project.ownership.teammate}`))
+      add(...bullet(`Human review boundary: ${project.reviewBoundary}`))
+      add("Demonstrated:")
+      for (const item of project.demonstrated) add(...bullet(item))
+      add("Intended wider workflow (not all demonstrated):")
+      project.intendedFlow.forEach((step, index) => add(...numbered(index, `${step.title}: ${step.detail}`)))
+      add("Technical decisions:")
+      for (const item of project.decisions) add(...bullet(item))
+      add("Limitations:")
+      for (const item of project.limitations) add(...bullet(item))
+    }
     for (const item of project.bullets) add(...bullet(item))
     add("")
   }
@@ -589,7 +617,7 @@ const buildRootReadmeBlock = (model, portfolio, packageJson) => {
     "",
     ...portfolio.projects.map(
       (project) =>
-        `- ${markdownLink(project.title, project.source)} - ${project.summary} Stack: ${project.techStack.join(", ")}.`
+        `- ${markdownLink(project.title, project.source ?? project.url)} - ${project.summary} Stack: ${project.techStack.join(", ")}.`
     ),
     "",
     "**Public discovery:**",

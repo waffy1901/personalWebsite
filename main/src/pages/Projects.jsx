@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useLocation } from "react-router";
+import HackathonPrototype from "../components/HackathonPrototype.jsx";
+import { hackathonPrototype } from "../data/hackathonPrototype.js";
 import { FaCodeBranch, FaDatabase, FaMobileAlt, FaUsers } from "react-icons/fa";
 import {
   ImpactBand,
@@ -59,11 +62,26 @@ const projectFlowNodes = [
 ];
 
 function Projects() {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash !== `#${hackathonPrototype.id}`) return;
+    // Restore the fragment after the lazy route and parent scroll reset commit.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        document.getElementById(hackathonPrototype.id)?.scrollIntoView({
+          block: "start",
+          behavior: "instant",
+        });
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hash]);
+
   const featuredProject = projects.find(
     (project) => project.id === "cdc-data-reconciliation"
   );
   const supportingProjects = projects.filter(
-    (project) => project.id !== "cdc-data-reconciliation"
+    (project) => project.github && project.id !== "cdc-data-reconciliation"
   );
 
   return (
@@ -137,6 +155,8 @@ function Projects() {
             </div>
           </PresentationPanel>
         ) : null}
+
+        <HackathonPrototype project={hackathonPrototype} />
 
         <section aria-labelledby="supporting-projects-heading" className="space-y-5">
           <div>

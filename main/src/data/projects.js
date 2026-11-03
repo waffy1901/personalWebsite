@@ -1,3 +1,4 @@
+import { hackathonPrototype } from "./hackathonPrototype.js"
 import cdcLogo from "../images/cdcLogo.png"
 import cdcLogoWebp from "../images/cdcLogo.webp"
 import campusDiscoveryServiceLogo from "../images/discoveryServiceLogo.png"
@@ -8,7 +9,7 @@ import jobSearchLogoWebp from "../images/jobSearchLogo.webp"
 export const projectsPage = {
   title: "Practical builds for real workflows",
   description:
-    "Public health reconciliation, job search support, and campus discovery tools built with full-stack and mobile-first thinking.",
+    "Public health reconciliation, mobile workflow tools, and an AI-assisted Jira-to-GKE hackathon delivery prototype.",
 }
 
 export const projectStats = [
@@ -88,4 +89,5 @@ export const projects = [
     logoWidth: 300,
     logoHeight: 168,
   },
+  hackathonPrototype,
 ]

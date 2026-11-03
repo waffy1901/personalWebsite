@@ -1,13 +1,28 @@
+import { hackathonPrototype } from "./hackathonPrototype.js"
+
 // Shared by the Experience page and generated discovery; no app/image imports.
 export const currentRoleEvidence = {
   id: "recent-engineering-work",
-  heading: "Recent production work and technical guidance",
+  heading: "Recent engineering work and technical guidance",
   timeframe: "July - October 2026",
   introduction:
-    "Selected Software Engineer II work beyond the role highlights: application recovery, operational aftercare, infrastructure guidance, and engineering visibility.",
+    "Selected Software Engineer II work beyond the role highlights: application recovery, operational aftercare, infrastructure guidance, engineering visibility, and a separate hackathon prototype.",
   evidenceNote:
     "PR review volume describes activity; it does not measure review quality.",
   groups: [
+    {
+      id: "hackathon-prototyping",
+      title: "Hackathon prototyping",
+      entries: [
+        {
+          id: "jira-to-gke-prototype-reference",
+          title: hackathonPrototype.title,
+          summary: `${hackathonPrototype.timeframe}. ${hackathonPrototype.summary} ${hackathonPrototype.outcome} Waffy owned DevOps/infrastructure and deployment validation; his teammate focused on AI. ${hackathonPrototype.reviewBoundary}`,
+          href: hackathonPrototype.path,
+          linkLabel: "Explore the delivery prototype",
+        },
+      ],
+    },
     {
       id: "production-recovery",
       title: "Production recovery",

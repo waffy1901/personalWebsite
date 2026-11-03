@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useState } from "react";
 import { HiCog, HiLockClosed, HiServer, HiShieldCheck } from "react-icons/hi";
-import { useLocation } from "react-router";
+import { Link, useLocation } from "react-router";
 import ExperienceCard from "../components/ExperienceCard";
 import {
   ImpactBand,
@@ -252,7 +252,7 @@ function Experience() {
                     <article
                       key={entry.id}
                       id={entry.id}
-                      className="scroll-mt-56 border-l-2 border-[#2563EB]/20 pl-4"
+                      className={`scroll-mt-56 border-l-2 border-[#2563EB]/20 pl-4 ${entry.href ? "[overflow-wrap:anywhere]" : ""}`}
                     >
                       <h4 className="font-black text-slate-800">
                         <a
@@ -265,6 +265,11 @@ function Experience() {
                       <p className="mt-2 text-sm leading-relaxed text-slate-600">
                         {entry.summary}
                       </p>
+                      {entry.href ? (
+                        <Link to={entry.href} className="mt-3 inline-block text-sm font-black text-[#1D4ED8] underline underline-offset-4 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2">
+                          {entry.linkLabel}
+                        </Link>
+                      ) : null}
                     </article>
                   ))}
                 </div>

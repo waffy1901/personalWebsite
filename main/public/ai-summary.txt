@@ -25,15 +25,26 @@ Current Role Highlights:
 * Replaced shared CI credentials with short-lived JFrog OIDC tokens across 2
   teams and 20 repositories.
 
-Recent production work and technical guidance:
+Recent engineering work and technical guidance:
 
 July - October 2026
 
 Selected Software Engineer II work beyond the role highlights: application
-recovery, operational aftercare, infrastructure guidance, and engineering
-visibility.
+recovery, operational aftercare, infrastructure guidance, engineering
+visibility, and a separate hackathon prototype.
 
 * Experience: https://waffy.dev/experience/#recent-engineering-work
+
+Hackathon prototyping:
+* Jira-to-GKE Delivery Prototype: October 28-29, 2026. Two-person hackathon
+  exploring a single skill call from a Jira story to a reviewable delivery
+  workflow on GKE. Demonstrated source-code PR promotion through dev, qp, and
+  qa to a draft production cdk8s PR, with Grafana health checks and expected
+  pod-version validation. Waffy owned DevOps/infrastructure and deployment
+  validation; his teammate focused on AI. The demonstrated handoff was a draft
+  production PR. Human review remains required before production merge and
+  rollout; production rollout was not demonstrated.
+* Project: https://waffy.dev/projects/#jira-to-gke-hackathon
 
 Production recovery:
 * Emergency certificate response: Coordinated application rebuilds and
@@ -525,6 +536,63 @@ Campus Discovery Service:
 * Implemented secure user authentication and role-based access control,
   allowing event organizers and students to interact with the platform
   according to their permissions while protecting sensitive data.
+
+Jira-to-GKE Delivery Prototype:
+* Project: https://waffy.dev/projects/#jira-to-gke-hackathon
+* Stack: Jira, AI-assisted engineering, Docker, Google Artifact Registry, GKE,
+  cdk8s, Grafana, Slack
+* Purpose: Two-person hackathon exploring a single skill call from a Jira
+  story to a reviewable delivery workflow on GKE.
+* Result / capability: Demonstrated source-code PR promotion through dev, qp,
+  and qa to a draft production cdk8s PR, with Grafana health checks and
+  expected pod-version validation.
+* Status: Hackathon prototype; October 28-29, 2026
+* Waffy's ownership: Owned DevOps/infrastructure and end-to-end deployment
+  validation for the demonstrated promotion path; configured a Slack webhook
+  to trigger cdk8s PR reviews and validations.
+* Teammate: Focused on the AI portion of the two-person prototype.
+* Human review boundary: The demonstrated handoff was a draft production PR.
+  Human review remains required before production merge and rollout;
+  production rollout was not demonstrated.
+Demonstrated:
+* Promoted a source-code PR through dev, qp, and qa to a draft production PR
+  in cdk8s.
+* Checked Grafana health and verified that pods were running the expected
+  version.
+* Configured a Slack webhook to trigger cdk8s PR reviews and validations.
+Intended wider workflow (not all demonstrated):
+1. Jira story: Start the wider workflow with one skill call and a story's
+   requirements.
+2. Preflight and discovery: Discover repository context and prerequisites
+   before proposing work.
+3. Repository analysis and planning: Turn the story and code context into an
+   implementation plan.
+4. Implementation and source PR: Prepare changes for review before the
+   delivery path.
+5. Draft production PR: Prepare a reviewable production proposal; human review
+   remains required before production merge and rollout.
+6. Docker build: Build a container image for the proposed change.
+7. Google Artifact Registry publication: Publish the built image to Google
+   Artifact Registry.
+8. GKE delivery validation: Validate workload health and the expected pod
+   version on GKE.
+Technical decisions:
+* Used cdk8s PRs to make environment changes reviewable and preserve a human
+  handoff before production.
+* Paired Grafana health signals with expected pod-version checks to validate
+  both service health and the deployed version.
+* Used a Slack webhook to trigger cdk8s PR reviews and validations within the
+  delivery workflow.
+Limitations:
+* This was an October 28-29, 2026 hackathon prototype, not a production
+  delivery platform.
+* The complete Jira-to-implementation orchestration and Docker/Google Artifact
+  Registry automation are intended scope; end-to-end completion of those steps
+  is unestablished.
+* The demonstrated result ends at a draft production PR, with no claim of
+  autonomous production merge or rollout.
+* Public notes are sanitized; employer code, repository links, internal URLs,
+  and screenshots are not published.
 
 Resume and Education:
 
