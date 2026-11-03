@@ -17,6 +17,7 @@ import { SubmissionError } from "@formspree/core"
 import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { projects } from "./data/projects.js"
+import { hackathonPrototype } from "./data/hackathonPrototype.js"
 import { currentRoleEvidence, currentRoleHighlights, workExperiences } from "./data/experience.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { portfolioUrls, resume, socialLinks } from "./data/profile.js"
@@ -42,6 +43,12 @@ const formspreeMockState = vi.hoisted(() => ({
   },
 }))
 const routePreloadMock = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const prototypeDetailsLoadMock = vi.hoisted(() => vi.fn())
+
+vi.mock("./components/HackathonPrototypeDetails.jsx", async (importOriginal) => {
+  prototypeDetailsLoadMock()
+  return importOriginal()
+})
 
 vi.mock("@formspree/react", async (importOriginal) => {
   const actual = await importOriginal()
@@ -153,6 +160,7 @@ const expectNormalTextContrast = (foreground, background) => {
 beforeEach(() => {
   formspreeSubmitMock.mockClear()
   routePreloadMock.mockClear()
+  prototypeDetailsLoadMock.mockClear()
   formspreeMockState.current = {
     errors: null,
     submitting: false,
@@ -535,6 +543,7 @@ describe("App routes", () => {
     expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
 
     routePreloadMock.mockClear()
+  prototypeDetailsLoadMock.mockClear()
     fireEvent.focus(projectsLink)
     expect(routePreloadMock).toHaveBeenCalledWith("/projects/")
   })
@@ -549,6 +558,7 @@ describe("App routes", () => {
     )
 
     routePreloadMock.mockClear()
+  prototypeDetailsLoadMock.mockClear()
     caseStudiesRender.unmount()
     renderRoute("/case-studies/kubernetes-autoscaling")
     const backLink = (await screen.findAllByRole("link", { name: /^case studies$/i }))
@@ -932,7 +942,7 @@ describe("App routes", () => {
     renderRoute("/projects/")
     await screen.findByRole("heading", { name: /practical builds for real workflows/i })
 
-    for (const project of projects) {
+    for (const project of projects.filter((item) => item.github)) {
       const card = screen.getByRole("article", { name: `${project.title} project` })
       expect(within(card).getByText(project.summary)).toBeVisible()
       expect(within(card).getByText(project.outcome)).toBeVisible()
@@ -943,6 +953,102 @@ describe("App routes", () => {
     expect(screen.getByText("Saved 5000+ hours of manual reconciliation annually.")).toBeVisible()
     expect(screen.getByText("Fetches Adzuna jobs by preferred title, location, and search radius.")).toBeVisible()
     expect(screen.getByText("Gives students access to event capacities, details, and waitlists.")).toBeVisible()
+  })
+
+  it("separates the hackathon prototype's demonstrated result from intended scope", async () => {
+    const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+    renderRoute("/projects/")
+    const heading = await screen.findByRole("heading", { name: hackathonPrototype.title })
+    const card = heading.closest("article")
+    expect(card).toHaveAttribute("id", hackathonPrototype.id)
+    expect(within(card).getByText(hackathonPrototype.status)).toBeVisible()
+    expect(within(card).getByText(hackathonPrototype.outcome)).toBeVisible()
+    expect(within(card).getByText(hackathonPrototype.reviewBoundary)).toBeVisible()
+    expect(within(card).queryByRole("link", { name: "Source Code" })).not.toBeInTheDocument()
+    expect(card.querySelector("img")).toBeNull()
+    const disclosure = card.querySelector("details")
+    const summary = card.querySelector("summary")
+    expect(disclosure).not.toHaveAttribute("open")
+    expect(prototypeDetailsLoadMock).not.toHaveBeenCalled()
+    expect(within(card).queryByText(hackathonPrototype.limitations[0])).not.toBeInTheDocument()
+    summary.focus()
+    // JSDOM does not emulate native summary keyboard activation; browser QA covers it.
+    await user.click(summary)
+    expect(disclosure).toHaveAttribute("open")
+    expect(await within(card).findByRole("heading", { name: "Ownership" })).toBeVisible()
+    expect(prototypeDetailsLoadMock).toHaveBeenCalledTimes(1)
+    for (const item of hackathonPrototype.limitations) expect(within(card).getByText(item)).toBeVisible()
+    expect(within(card).getByRole("heading", { name: "Intended single-call workflow" })).toBeVisible()
+    expect(card.querySelectorAll("ol > li")).toHaveLength(hackathonPrototype.intendedFlow.length)
+    await waitFor(() => expect(getAnalyticsEvents("project_details_open")).toHaveLength(1))
+    expect(getAnalyticsEvents("project_details_open")[0][2]).toEqual(expect.objectContaining({
+      project_id: hackathonPrototype.id,
+      project_title: hackathonPrototype.title,
+      placement: "project_card",
+    }))
+    await user.click(summary)
+    expect(disclosure).not.toHaveAttribute("open")
+    expect(summary).toHaveFocus()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(getAnalyticsEvents("project_details_open")).toHaveLength(1)
+  })
+
+  it("restores the prototype fragment on direct entry and Experience navigation", async () => {
+    const user = userEvent.setup()
+    const scrollIntoViewMock = vi.fn()
+    const original = HTMLElement.prototype.scrollIntoView
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoViewMock })
+    try {
+      const view = renderRoute(hackathonPrototype.path)
+      await screen.findByRole("heading", { name: hackathonPrototype.title })
+      await waitFor(() => expect(scrollIntoViewMock.mock.contexts).toContain(document.getElementById(hackathonPrototype.id)))
+      view.unmount()
+      scrollIntoViewMock.mockClear()
+      renderRoute("/experience/")
+      const link = await screen.findByRole("link", { name: "Explore the delivery prototype" })
+      expect(link).toHaveAttribute("href", hackathonPrototype.path)
+      await user.click(link)
+      await screen.findByRole("heading", { name: hackathonPrototype.title })
+      await waitFor(() => expect(scrollIntoViewMock.mock.contexts).toContain(document.getElementById(hackathonPrototype.id)))
+    } finally {
+      if (original) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: original })
+      else delete HTMLElement.prototype.scrollIntoView
+    }
+  })
+
+  it("retains prototype claim qualifiers in generated discovery without a fabricated repository", () => {
+    const portfolio = readJsonFile("public/portfolio.json")
+    const project = portfolio.projects.find((item) => item.id === hackathonPrototype.id)
+    expect(project).toMatchObject({
+      status: hackathonPrototype.status,
+      focusId: "ai-assisted-engineering",
+      url: `https://waffy.dev${hackathonPrototype.path}`,
+      demonstrated: hackathonPrototype.demonstrated,
+      intendedFlow: hackathonPrototype.intendedFlow,
+      reviewBoundary: hackathonPrototype.reviewBoundary,
+      ownership: hackathonPrototype.ownership,
+      limitations: hackathonPrototype.limitations,
+    })
+    expect(project.intendedFlow.map((step) => step.title)).toEqual([
+      "Jira story",
+      "Preflight and discovery",
+      "Repository analysis and planning",
+      "Implementation and source PR",
+      "Draft production PR",
+      "Docker build",
+      "Google Artifact Registry publication",
+      "GKE delivery validation",
+    ])
+    expect(project).not.toHaveProperty("source")
+    const summary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
+    for (const item of hackathonPrototype.limitations) expect(summary).toContain(item)
+    expect(summary).toContain("Intended wider workflow (not all demonstrated):")
+    const readme = readFileSync("../README.md", "utf8")
+    expect(readme).toContain(`[${hackathonPrototype.title}](https://waffy.dev${hackathonPrototype.path})`)
+    expect(readme).not.toContain("](undefined)")
+    expect(summary).not.toContain("Repository: undefined")
+    expect(portfolio.contentLastReviewed).toBe("2026-11-02")
   })
 
   it("tracks project source and details interactions", async () => {
@@ -1879,7 +1985,7 @@ describe("App routes", () => {
     expect(screen.queryByRole("region", { name: /experience details/i })).not.toBeInTheDocument()
     expect(within(evidence).getByText(currentRoleEvidence.evidenceNote)).toBeVisible()
 
-    const links = within(evidence).getAllByRole("link")
+    const links = within(evidence).getAllByRole("link").filter((link) => link.getAttribute("href").startsWith("#"))
     for (const link of links) {
       const targetId = link.getAttribute("href").slice(1)
       const target = document.getElementById(targetId)

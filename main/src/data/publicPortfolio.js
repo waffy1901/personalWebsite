@@ -4,7 +4,7 @@ import { currentRoleEvidence } from "./currentRoleEvidence.js"
 
 export const publicPortfolio = {
   schemaVersion: "2.0",
-  contentLastReviewed: "2026-11-01",
+  contentLastReviewed: "2026-11-02",
   person: {
     title: currentEmployment.currentTitle,
     location: "United States",
