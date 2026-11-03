@@ -85,7 +85,7 @@ function Resume() {
             <p className="mt-3 text-sm leading-relaxed text-slate-600">
               The semantic resume below mirrors the PDF content for reading, copying, and assistive technology.
             </p>
-            <div className="mt-5 rounded-lg border border-slate-200 bg-white p-5 sm:p-8">
+            <div className="mt-5 rounded-lg border border-slate-200 bg-white p-3 sm:p-8">
               <ResumeDocument />
             </div>
           </div>

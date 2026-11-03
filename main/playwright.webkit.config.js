@@ -12,7 +12,7 @@ if (process.env.PLAYWRIGHT_PRODUCTION_BASE_URL?.trim()) {
 
 module.exports = defineConfig({
   testDir: "./e2e",
-  testMatch: ["production-smoke.spec.js", "webkit-local.spec.js"],
+  testMatch: ["production-smoke.spec.js", "webkit-local.spec.js", "resume-reflow.spec.js"],
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
