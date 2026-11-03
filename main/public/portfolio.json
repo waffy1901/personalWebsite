@@ -5,7 +5,7 @@
     "name": "Waffy Ahmed",
     "title": "Software Engineer II",
     "tagline": "Software Engineer II | Georgia Tech",
-    "summary": "Software Engineer II focused on platform reliability, security and CI/CD remediation, Kubernetes workload automation, Cloud Spanner migrations, secure cloud identity, and high-throughput production systems.",
+    "summary": "Software Engineer II at The Home Depot, focused on secure CI/CD modernization, production order reconciliation on GKE and Cloud Spanner, and technical leadership in AI-assisted payment triage.",
     "location": "United States",
     "education": {
       "institution": "Georgia Institute of Technology",
@@ -22,9 +22,9 @@
       "organization": "The Home Depot",
       "startDate": "2026-07",
       "highlights": [
-        "Led security and CI/CD remediation across 15 services, eliminating 66 unique critical/high CVEs from production workloads and raising build-gate pass rates from 33% to 100%.",
-        "Led 4 engineers through stakeholder validation and handoff of an AI triage agent spanning 7 payment applications.",
-        "Replaced shared CI credentials with short-lived JFrog OIDC tokens across 2 teams and 20 repositories."
+        "Led security and CI/CD modernization across 15 booking services through framework upgrades, container hardening, and release-pipeline recovery.",
+        "Productionized daily order reconciliation on GKE and Cloud Spanner using Kubernetes CronJobs, Workload Identity, and least-privilege IAM.",
+        "Led 4 engineers from design through stakeholder validation and handoff of an AI-assisted payment triage agent spanning 7 applications."
       ],
       "evidence": {
         "id": "recent-engineering-work",
@@ -113,8 +113,9 @@
         ]
       },
       "focus": [
-        "Security and CI/CD remediation",
-        "Production workflow automation",
+        "Secure CI/CD modernization",
+        "Production order reconciliation on GKE and Cloud Spanner",
+        "Technical leadership and AI-assisted payment triage",
         "Kubernetes CronJobs",
         "Cloud Spanner migrations",
         "Workload Identity and least-privilege IAM",
@@ -238,6 +239,9 @@
     }
   ],
   "highSignalTopics": [
+    "Secure CI/CD modernization",
+    "Production order reconciliation on GKE and Cloud Spanner",
+    "Technical leadership and AI-assisted payment triage",
     "Kubernetes autoscaling",
     "Platform ownership",
     "Production reliability",
