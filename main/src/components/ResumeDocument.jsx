@@ -3,14 +3,14 @@ import { resumeDocument } from "../data/resume.mjs"
 
 function ResumeDocument() {
   return (
-    <article aria-labelledby="resume-document-heading" className="text-[#0B1220]">
+    <article aria-labelledby="resume-document-heading" className="[overflow-wrap:anywhere] text-[#0B1220]">
       <header className="border-b border-slate-200 pb-5 text-center">
         <h2 id="resume-document-heading" className="text-3xl font-black sm:text-4xl">
           {resumeDocument.name}
         </h2>
         <ul className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm font-bold text-slate-700" aria-label="Contact information">
           {resumeDocument.contact.map((contact) => (
-            <li key={contact.label}>
+            <li key={contact.label} className="max-w-full">
               <a href={contact.href} className="underline decoration-[#2563EB]/50 underline-offset-4 hover:text-[#1D4ED8] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2">
                 <span className="sr-only">{contact.label}: </span>{contact.text}
               </a>
