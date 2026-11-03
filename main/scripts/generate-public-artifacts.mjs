@@ -147,6 +147,7 @@ const loadCanonicalModules = async () => {
       seoModule,
       publicPortfolioModule,
       prototypeModule,
+      homeModule,
     ] = await Promise.all([
       server.ssrLoadModule("/src/data/profile.js"),
       server.ssrLoadModule("/src/data/experience.js"),
@@ -155,6 +156,7 @@ const loadCanonicalModules = async () => {
       server.ssrLoadModule("/src/data/seo.js"),
       server.ssrLoadModule("/src/data/publicPortfolio.js"),
       server.ssrLoadModule("/src/data/hackathonPrototype.js"),
+      server.ssrLoadModule("/src/data/home.js"),
     ])
 
     return {
@@ -169,6 +171,7 @@ const loadCanonicalModules = async () => {
       ...caseStudiesModule,
       ...seoModule,
       ...publicPortfolioModule,
+      ...homeModule,
     }
   } finally {
     await server.close()
@@ -341,7 +344,7 @@ const buildJsonLd = (model, portfolio) => {
 }
 
 const buildLlms = (model, portfolio) => {
-  const { profile, routeMetadata, toCanonicalRouteUrl } = model
+  const { homeContent, profile, routeMetadata, toAbsoluteUrl, toCanonicalRouteUrl } = model
   const currentRoleLabel = `${portfolio.person.currentRole.title} at ${portfolio.person.currentRole.organization}`
   const keyPages = routeMetadata.map((route) => {
     const label = route.path === "/" ? "Home" : titleWithoutSuffix(route.title)
@@ -374,6 +377,7 @@ const buildLlms = (model, portfolio) => {
     "## Key Pages",
     "",
     ...keyPages,
+    ...homeContent.secondaryEvidence.map((item) => `- ${item.label}: ${toAbsoluteUrl(item.to)}`),
     "",
     "## High-Signal Topics",
     "",

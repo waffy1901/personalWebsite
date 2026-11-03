@@ -4,6 +4,6 @@ export const hackathonPrototypeIdentity = {
   focusId: "ai-assisted-engineering",
   title: "Jira-to-GKE Delivery Prototype",
   status: "Hackathon prototype",
-  timeframe: "October 28-29, 2026",
+  timeframe: "October 27-29, 2026",
   path: "/projects/#jira-to-gke-hackathon",
 }
