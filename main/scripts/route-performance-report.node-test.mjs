@@ -198,10 +198,10 @@ function candidateFor(fixture, overrides = {}) {
 test("discovers every canonical route while preserving Issue #174's fixed 80-run plan", () => {
   const routes = discoverCanonicalRoutes(routeMetadata)
   assert.deepEqual(routes, routeMetadata.map((entry) => entry.canonicalPath))
-  assert.equal(routes.length, 9)
+  assert.equal(routes.length, 13)
   const reportPlan = createReportPlan({ routes, profiles: PROFILES })
-  assert.equal(reportPlan.primarySamples, 90)
-  assert.equal(reportPlan.maximumAttempts, 180)
+  assert.equal(reportPlan.primarySamples, 130)
+  assert.equal(reportPlan.maximumAttempts, 260)
   assert.equal(HISTORICAL_ROUTES.length, 8)
   assert.equal(validateMeasurementPlan().plannedSuccessfulRuns, 80)
   const addedRoute = "/case-studies/new-platform/"
