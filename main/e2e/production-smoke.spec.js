@@ -222,8 +222,8 @@ for (const width of [320, 390, 640, 1024, 1440]) {
       const recentOutcomeProof = [
         "security and CI/CD modernization across 15 booking services",
         "daily order reconciliation on GKE and Cloud Spanner",
-        "Led 4 engineers from design through stakeholder validation and handoff",
-        "AI-assisted payment triage agent spanning 7 applications",
+        "Led a four-person team, including myself, through validation and handoff",
+        "AI-assisted payment triage across 7 applications; implemented a little over half of the tool",
       ]
       await page.goto("/", { waitUntil: "domcontentloaded" })
       const outcomes = page.getByRole("list", { name: "Recent engineering outcomes" })

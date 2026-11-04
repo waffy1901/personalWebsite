@@ -236,6 +236,7 @@ const buildStructuredPortfolio = (model) => {
         metricDetails: caseStudy.metrics,
         causalDiagram: {
           title: caseStudy.causalDiagram.title,
+          ...(caseStudy.causalDiagram.sequenceLabel ? { sequenceLabel: caseStudy.causalDiagram.sequenceLabel } : {}),
           description: caseStudy.causalDiagram.description,
           steps: caseStudy.causalDiagram.steps,
           feedback: caseStudy.causalDiagram.feedback,
@@ -447,7 +448,6 @@ const buildAiSummary = (model, portfolio) => {
       if (entry.href) add(...bullet(`Project: ${toAbsoluteUrl(entry.href)}`))
     }
   }
-  add("", ...wrapText(currentEvidence.evidenceNote))
 
   addSection("High-Level Positioning")
   add(
@@ -497,6 +497,11 @@ const buildAiSummary = (model, portfolio) => {
     add(...bullet(`Timeframe: ${caseStudy.timeframe}`))
     add(...bullet(`Summary: ${caseStudy.summary}`))
     add(...bullet(`Metrics: ${caseStudy.metrics.map(metricLabel).join("; ")}`))
+    if (caseStudy.causalDiagram) {
+      for (const metric of caseStudy.metrics) {
+        add(...bullet(`${metric.value} ${metric.label}: ${metric.detail}`))
+      }
+    }
     add(...bullet(`Stack: ${caseStudy.stack.join(", ")}`))
     if (caseStudy.causalDiagram) {
       for (const section of caseStudy.sections) {

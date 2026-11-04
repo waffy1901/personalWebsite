@@ -9,7 +9,7 @@ import {
   StatusBadge,
   SystemDiagram,
 } from "../components/MissionControl.jsx";
-import { caseStudies, caseStudiesPage } from "../data/caseStudies";
+import { caseStudies, caseStudiesPage } from "../data/caseStudyIndex.js";
 import { trackEvent } from "../utils/analytics";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
 
