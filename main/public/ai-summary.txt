@@ -21,8 +21,9 @@ Current Role Highlights:
   framework upgrades, container hardening, and release-pipeline recovery.
 * Productionized daily order reconciliation on GKE and Cloud Spanner using
   Kubernetes CronJobs, Workload Identity, and least-privilege IAM.
-* Led 4 engineers from design through stakeholder validation and handoff of an
-  AI-assisted payment triage agent spanning 7 applications.
+* Led a four-person team, including myself, through validation and handoff of
+  AI-assisted payment triage across 7 applications; implemented a little over
+  half of the tool.
 
 Recent engineering work and technical guidance:
 
@@ -84,8 +85,6 @@ Engineering visibility:
   of truth for Q3 story points and engineers' PR review metrics at the Q4
   kickoff all-hands. Those team metrics are separate from the personal October
   review count.
-
-PR review volume describes activity; it does not measure review quality.
 
 High-Level Positioning:
 
@@ -155,28 +154,31 @@ Application development:
 Professional Experience:
 
 Software Engineer II, The Home Depot, Atlanta, GA (July 2026 - Present):
-* Led security and CI/CD remediation across 15 services, upgrading frameworks
-  and fixing pipelines to eliminate 66 unique critical/high CVEs from
-  production workloads and raise build-gate pass rates from 33% to 100%.
-* Led a team of 4 engineers from design through stakeholder validation and
-  handoff of an AI triage agent spanning 7 payment applications; unified
-  code/config tracing, BigQuery, and store telemetry with historical baselines
-  and coverage checks, delivering cited diagnoses and suggested fixes while
-  suppressing false findings.
-* Drove JFrog OIDC adoption across 2 teams and 20 repositories, replacing
-  shared Maven/Docker credentials with short-lived, job-scoped tokens;
-  resolved 1,100+ security findings tied to plaintext token exposure in CI
-  logs.
-* Productionized daily order reconciliation, replacing laptop scripts,
-  database tunnels, and human GCP credentials with a Kubernetes workflow via
-  cdk8s, Terraform, and Spinnaker; implemented Workload Identity,
-  least-privilege IAM, and Secret Manager/External Secrets, eliminating human
-  production access.
+* Led security and CI/CD remediation across approximately 15 booking services:
+  10 directly remediated and five assisted. Removed 66 unique critical/high
+  CVE IDs from release builds; the owner-reported build-gate pass improved
+  from 33% to a final 100% across that service scope. Running-production image
+  remediation is not established here.
+* Led a four-person team, including myself, from design through stakeholder
+  validation and handoff of AI-assisted triage across 7 payment applications.
+  Implemented a little over half of the tool, with three other engineers
+  contributing; combined code/config tracing, BigQuery, store telemetry,
+  baselines, citations, and coverage checks. The receiving team now owns and
+  actively uses it.
+* Drove JFrog OIDC adoption across 2 teams and approximately 20 repositories,
+  replacing shared Maven/Docker credentials with short-lived, job-scoped
+  tokens. Resolved a reported 1,100+ scanning findings tied to plaintext token
+  output in CI logs; findings are not distinct credentials, and scan
+  methodology is not specified here.
+* Productionized daily order reconciliation with a Kubernetes workload via
+  cdk8s, Terraform, and Spinnaker, replacing laptop scripts and database
+  tunnels. Implemented Workload Identity, least-privilege IAM, and Secret
+  Manager/External Secrets, replacing human credentials for this workflow.
 * Re-architected order reconciliation from Cloud SQL to Cloud Spanner
-  mid-migration, engineering an in-container PGAdapter, resolving
-  cross-project IAM blockers, and hardening failure paths via staged
-  production validation; automated 7 weekly runs via Kubernetes CronJob,
-  eliminating ~120 engineer-hours of recurring toil annually.
+  mid-migration with an in-container PGAdapter, resolved cross-project IAM
+  blockers, and used staged production validation. The owner reports 7 weekly
+  CronJob executions and estimates ~120 engineer-hours of recurring toil saved
+  annually; the timing and annualization calculation remain unvalidated.
 * Diagnosed and resolved post–cluster-rebuild service timeouts (1s failures)
   by identifying stale node-level routing caused by NodePort usage; migrated
   internal services to ClusterIP, eliminating node dependency and restoring
@@ -273,9 +275,10 @@ Impact" and frames Waffy's production role beyond individual tickets.
 * Release Governance: Gate production releases by reviewing deployment changes
   before they reach shared environments, connecting Spinnaker, Kubernetes, and
   rollout standards to safer launches.
-  - Led framework upgrades and CI/CD pipeline remediation across 15 services,
-    eliminating 66 unique critical/high CVEs from production workloads and
-    raising build-gate pass rates from 33% to 100%.
+  - Led framework upgrades and CI/CD remediation across approximately 15
+    booking services, directly remediating 10 and assisting with five. Removed
+    66 unique critical/high CVE IDs from release builds; the owner reports a
+    final 100% build-gate pass across that service scope, up from 33%.
   - Prevent misconfigurations across multi-service rollouts by reviewing
     Spinnaker pipelines and Kubernetes manifests.
   - Enforce deployment safety standards across 15+ microservices spanning
@@ -345,9 +348,9 @@ Undergraduate Teaching Assistant, Georgia Tech College of Computing, Atlanta, GA
 
 Engineering Case Studies:
 
-Deeper writeups on reliability, deployment recovery, and data-system work,
-written around production constraints, technical choices, and measurable
-outcomes.
+Seven engineering stories spanning reliability, production data workflows,
+release security, AI-assisted investigation, and CI trust, with ownership,
+technical decisions, and evidence limits.
 
 Kubernetes Autoscaling for Transaction-Critical Services:
 * URL: https://waffy.dev/case-studies/kubernetes-autoscaling/
@@ -358,6 +361,14 @@ Kubernetes Autoscaling for Transaction-Critical Services:
   latency, errors, throughput, and CPU efficiency under production traffic.
 * Metrics: 40% lower mean latency; 89% fewer errors; 34.8M weekly requests;
   26% lower average CPU
+* 40% lower mean latency: Mean latency moved from 121 ms to 72 ms after
+  rollout.
+* 89% fewer errors: Reported 89% reduction; error count versus rate remains
+  unconfirmed.
+* 34.8M weekly requests: Throughput increased from 24.9M to 34.8M requests per
+  week.
+* 26% lower average CPU: Average CPU usage fell while dynamic scaling expanded
+  capacity.
 * Stack: Kubernetes, Horizontal Pod Autoscaling, GCP, Grafana,
   Prometheus/PromQL, k6, Postman
 * Problem:
@@ -479,6 +490,408 @@ CDC Data Reconciliation Platform:
   stakeholders; 6 team members
 * Stack: Python, FastAPI, SQLite, React, Tailwind CSS, Data reconciliation,
   Stakeholder demos
+
+Production Order Reconciliation on GKE and Spanner:
+* URL: https://waffy.dev/case-studies/production-order-reconciliation/
+* Organization: The Home Depot
+* Timeframe: May - October 2026
+* Summary: Moved an internal daily order-reconciliation workflow from
+  developer-run scripts to GKE, adapted it to Cloud Spanner, and followed
+  through on production sequencing and queue failures.
+* Metrics: 7/week reported scheduled executions; ~120 h/year owner-estimated
+  recurring toil saved; ~2,200 backlog items reprocessed
+* 7/week reported scheduled executions: Owner-reported daily cadence; not an
+  observed run-success rate.
+* ~120 h/year owner-estimated recurring toil saved: Annual estimate; the
+  per-run timing and annualization calculation remain unvalidated.
+* ~2,200 backlog items reprocessed: Normal processing resumed after items were
+  released from initial and maxed_out states.
+* Stack: GKE, cdk8s, Terraform, Spinnaker, Cloud Spanner, PGAdapter, BigQuery,
+  Workload Identity, Secret Manager / External Secrets
+* Problem and ownership:
+Internal order reconciliation depended on developer-run scripts, database
+tunnels, and human GCP credentials. A recurring business workflow needed an
+operational execution path rather than a person's laptop. This system is
+separate from the public CDC case-count reconciliation application.
+
+I productionized the workload with cdk8s Job/CronJob definitions, Terraform,
+and Spinnaker, implemented its workload identity and secret access, adapted
+the database integration, and addressed subsequent production defects. My
+ownership covered the workflow and its integration with dependent platforms.
+
+* Decisions and constraints:
+Moving execution to GKE changed both scheduling and the identity boundary.
+Workload Identity, least-privilege IAM, and Google Secret Manager/External
+Secrets replaced dependence on human credentials for this workflow.
+
+The database target changed from Cloud SQL to Cloud Spanner mid-migration. The
+PGAdapter sidecar option was blocked, so I placed PGAdapter inside the
+application container. This preserved the required database compatibility path
+within the deployment constraint, at the cost of coupling adapter lifecycle to
+the application container.
+
+Cross-project BigQuery IAM was another independent access boundary to resolve.
+A running container or successful Spanner connection alone could not establish
+that the complete reconciliation workflow had the required data access.
+
+* Execution and data-access boundaries: Sanitized conceptual sequence. Each
+  boundary can fail independently; the list is an accessible text equivalent
+  of the workflow.
+1. Scheduled workload: A cdk8s-defined Job/CronJob moves execution onto GKE.
+Execution requires workload access: Scheduled workload to Workload identity
+and secrets.
+2. Workload identity and secrets: Workload Identity, scoped IAM, and managed
+   secrets support non-human execution.
+Authorized execution reaches data dependencies: Workload identity and secrets
+to Database and reporting access.
+3. Database and reporting access: In-container PGAdapter supports the Spanner
+   path; cross-project BigQuery access is separately required.
+Data access enables reconciliation: Database and reporting access to
+Reconciliation and queue processing.
+4. Reconciliation and queue processing: Report sequencing and batch handling
+   affect whether work can complete.
+Dry-run, single-order, and full-write validation provide different evidence.
+Later report and queue failures showed why connectivity alone was
+insufficient.
+
+* Validation, failure, and recovery:
+Production validation progressed through dry-run, single-order, and full-write
+execution. These stages separated basic access and comparison checks from the
+consequences of broader writes.
+
+Production aftercare exposed different failure modes: a September sequencing
+race with the Elasticsearch gap report, followed by an October queue defect
+affecting batches larger than 100 items. I addressed those failures. Once
+items were released from initial and maxed_out states, normal processing
+reprocessed the approximately 2,200-item backlog. That is recovery evidence
+for this incident, not a guarantee about every future run.
+
+* Illustrative validation record: Sanitized checklist based on the reported
+  stages and failures. This is an explanatory artifact, not a historical log,
+  executable configuration, or recovery runbook.
+Stages and evidence
+dry-run -> inspect comparison output
+single-order -> inspect one write path
+full-write -> inspect broader execution
+
+Failure boundaries to inspect
+report dependency -> sequencing
+batch > 100 items -> queue handling
+initial / maxed_out -> backlog state
+
+* Outcome and limits:
+The owner reports seven scheduled executions per week and estimates
+approximately 120 engineer-hours of recurring toil saved annually. The
+underlying per-run timing and annualization calculation have not been
+validated for this public account, so the estimate is not a measured
+productivity result.
+
+The engineering lesson was to validate orchestration and queue boundaries
+alongside the database migration. For a future iteration, I would document
+representative batch sizes and dependency ordering as explicit acceptance
+checks. That is a proposed improvement, not a claim about tests that existed
+during the migration.
+
+Booking Security and CI/CD Recovery:
+* URL: https://waffy.dev/case-studies/booking-security-cicd-recovery/
+* Organization: The Home Depot
+* Timeframe: September - October 2026
+* Summary: Modernized release builds across approximately 15 booking services,
+  directly remediating 10 and assisting with five, while restoring delivery
+  paths blocked for roughly 11 months.
+* Metrics: 66 unique critical/high CVE IDs removed from release builds; 10 + 5
+  services directly remediated + assisted; 100% owner-reported final
+  build-gate pass; 16 code/SAST findings addressed
+* 66 unique critical/high CVE IDs removed from release builds: Reported
+  release-build scope; does not prove all running production images were
+  remediated.
+* 10 + 5 services directly remediated + assisted: Approximately 15 booking
+  services in the September-October effort.
+* 100% owner-reported final build-gate pass: Across approximately 15 services;
+  initial reported figure was 33%. Build-attempt denominator and exact
+  observation dates are unavailable.
+* 16 code/SAST findings addressed: Includes four critical findings. PR
+  scanning was added across seven applications.
+* Stack: Java, Spring Boot, Quarkus, Docker, CI/CD, SAST, PR scanning
+* Problem and ownership:
+Security remediation was entangled with unhealthy delivery paths across
+approximately 15 booking services. Framework, container, and pipeline changes
+had to produce usable release builds; fixing a dependency finding alone would
+not restore a blocked release path.
+
+I directly remediated 10 services and assisted with five others during
+September-October 2026. The work included Spring Boot and Quarkus
+modernization, container and build changes, code/SAST remediation, and
+pipeline recovery. The direct and assisted contributions reflect different
+levels of implementation ownership.
+
+* Decision and tradeoff:
+The alternative was to seek security exceptions. I chose to fix the underlying
+framework, container, and delivery problems so the release path could pass its
+gates through remediation. That choice does not mean an exception was
+requested or granted. Framework and container changes can remove vulnerable
+build inputs while also introducing compatibility failures, so validation had
+to cover both security and delivery.
+
+The consequential tradeoff was the additional validation burden of changing
+several layers in an estate with already-blocked releases. Compatibility
+checks mattered alongside vulnerability results because the change had to
+recover delivery as well as improve the release inputs.
+
+* From remediation to a usable release path: A conceptual evidence chain, not
+  a claim that every service had identical pipeline stages.
+1. Framework and container inputs: Spring Boot, Quarkus, container, and build
+   modernization change the release inputs.
+Changed inputs require compatibility evidence: Framework and container inputs
+to Staged validation and scanning.
+2. Staged validation and scanning: Build behavior, release-build CVEs, and
+   code/SAST findings require separate checks.
+Validation supports release-path recovery: Staged validation and scanning to
+Restored release path.
+3. Restored release path: A passing build gate supports delivery; deployed
+   runtime remediation requires further evidence.
+Scan success is not interchangeable with a deployable application or
+verification of every running production image.
+
+* Verification and recovery:
+Changes went through staged validation, and PR scanning was added across seven
+applications. Release-build vulnerability results, code/SAST findings, and
+build-gate status provided distinct evidence. The failure mode to guard
+against was a cleaner scan paired with an application or pipeline that could
+no longer release.
+
+Release paths blocked for roughly 11 months were restored. The supported
+security result concerns release builds; deployed-image remediation requires
+its own runtime evidence.
+
+* Illustrative evidence ledger: Sanitized conceptual ledger separating the
+  reported result types. This is not an internal scanner export or a
+  per-service historical record.
+Security evidence
+release builds: 66 unique critical/high CVE IDs removed
+code/SAST: 16 findings, including 4 critical
+PR scanning: added across 7 applications
+
+Delivery evidence
+contribution: 10 services direct + 5 assisted
+final build-gate pass: owner-reported 100%
+running production images: not established here
+
+* Outcome and lesson:
+The reported result was removal of 66 unique critical/high CVE IDs from
+release builds and remediation of 16 code/SAST findings, including four
+critical findings. The owner confirmed a final 100% build-gate pass across
+approximately 15 services, compared with the earlier reported 33%. Exact
+observation dates and a build-attempt denominator are unavailable; this is an
+owner-reported service-estate result.
+
+My lesson was to keep security and delivery evidence separate while solving
+them together. In future reporting, I would retain per-service before/after
+build artifacts and exact observation windows to distinguish release-build
+remediation, gate recovery, and deployed-runtime status.
+
+Evidence-Grounded AI-Assisted Payment Triage:
+* URL: https://waffy.dev/case-studies/ai-assisted-payment-triage/
+* Organization: The Home Depot
+* Timeframe: August - October 2026
+* Summary: Led a four-person team across seven applications, implemented a
+  little over half of the tool, and handed evidence-grounded payment triage to
+  its receiving team for active use.
+* Metrics: 7 applications in triage scope; 4 people total team, including me;
+  Active use by the receiving team
+* 7 applications in triage scope: Payment investigation context; not seven
+  autonomous remediation deployments.
+* 4 people total team, including me: Three other engineers contributed; I
+  implemented a little over half of the tool.
+* Active use by the receiving team: Owner-confirmed operational ownership and
+  use after knowledge transfer and handoff; no measured accuracy or
+  productivity uplift.
+* Stack: AI-assisted investigation, Code and configuration tracing, BigQuery,
+  Store telemetry, Historical baselines, Evidence citations, Knowledge
+  transfer
+* Problem and ownership:
+Payment triage spanned seven applications and required investigation across
+code, configuration, BigQuery, and store telemetry. An explanation needed
+traceable evidence and enough coverage to avoid turning a plausible narrative
+into an unsupported finding.
+
+The ask was to extend an existing skill/router. I led a four-person team,
+including myself, from design through stakeholder validation and handoff of
+that extension. I implemented a little over half of the tool; three other
+engineers contributed. I provided knowledge transfer and handoff to the
+operations and receiving teams. The receiving team now owns the tool and
+actively uses it.
+
+* Decision and tradeoff:
+Within that extension, the central design choice was to ground AI-assisted
+findings in code/config tracing, queried telemetry, historical baselines, and
+evidence citations. Coverage checks and false-finding suppression constrained
+what the tool should present. Making findings inspectable also made evidence
+collection and missing coverage part of the product's work.
+
+Historical baselines provide context; they do not establish causality by
+themselves. Citations help a reviewer inspect support, but a citation is not
+proof that an interpretation is correct. The supported scope is cited evidence
+for human investigation. This operational triage tool is separate from the
+Jira-to-GKE hackathon delivery prototype.
+
+* An inspectable triage finding: Sanitized conceptual view of evidence
+  grounding. The ordered text describes the boundaries without exposing
+  internal data.
+1. Code, configuration, and telemetry: Tracing, BigQuery, and store telemetry
+   provide investigation context.
+Source context supports comparison: Code, configuration, and telemetry to
+Baseline and coverage checks.
+2. Baseline and coverage checks: Historical comparison and coverage checks
+   help identify gaps and suppress false findings.
+Checked evidence supports a reviewable finding: Baseline and coverage checks
+to Cited finding for human investigation.
+3. Cited finding for human investigation: Evidence citations let the receiving
+   engineer inspect the basis for a suggestion.
+Missing coverage or weak support must remain visible to the investigator.
+Human judgment remains necessary even when a finding includes citations.
+
+* Validation and failure modes:
+Stakeholder validation, coverage checks, and suppression of false findings
+were part of the work. Relevant failure modes include missing evidence,
+incomplete application coverage, a misleading baseline comparison, and a
+confident explanation that outruns its cited support. Those limits are why
+evidence quality belongs in the investigation flow rather than being an
+afterthought.
+
+No reliable accuracy percentage or causal productivity measurement is
+available for this account. The evidence supports an evaluation approach and
+operational handoff, rather than numerical effectiveness. Examples below use
+placeholders to protect internal investigation data.
+
+* Illustrative finding review card: Invented placeholders demonstrate evidence
+  organization only. This is not an actual payment incident, tool output,
+  evaluation result, or internal schema.
+Evidence to inspect
+observation: [sanitized telemetry summary]
+code/config support: [source reference]
+baseline: [comparison context]
+coverage: [known gaps]
+
+Human review boundary
+candidate explanation: [reviewable hypothesis]
+citations: [supporting references]
+review: inspect support and missing coverage
+next step: human investigation
+
+* Outcome and lesson:
+The supported outcome is delivery through stakeholder validation, knowledge
+transfer, and handoff, followed by active use and ownership by the receiving
+team. That establishes operational adoption; it does not demonstrate that
+every suggestion is correct or that triage time fell by a measured amount.
+
+My lesson was to treat implementation, evidence quality, and operational
+ownership as one delivery responsibility. A future evaluation should preserve
+representative reviewed cases, coverage gaps, and incorrect findings so
+usefulness can be measured. That is a recommendation, not a claim that a
+benchmark already exists.
+
+JFrog OIDC and CI Credential Lifecycle:
+* URL: https://waffy.dev/case-studies/jfrog-oidc-adoption/
+* Organization: The Home Depot
+* Timeframe: October 2026
+* Summary: Drove a move from shared Maven and Docker credentials to
+  short-lived, job-scoped authentication across two teams and approximately 20
+  repositories.
+* Metrics: 2 teams adoption scope; ~20 repositories in scope; 1,100+ reported
+  scanning findings resolved
+* 2 teams adoption scope: Owner-reported October 2026 JFrog authentication
+  work.
+* ~20 repositories in scope: Maven and Docker CI authentication moved away
+  from shared credentials.
+* 1,100+ reported scanning findings resolved: Findings tied to plaintext token
+  output in CI logs across approximately 20 repositories; not a count of
+  distinct credentials.
+* Stack: JFrog, OIDC, Maven, Docker, CI/CD, Short-lived credentials
+* Problem and ownership:
+Shared Maven and Docker credentials crossed repository and job boundaries. The
+owner reported plaintext token output in CI logs across approximately 20
+repositories, linked to more than 1,100 scanning findings. The finding count
+describes scanner results, not 1,100 distinct leaked secrets.
+
+I drove JFrog OIDC adoption across two teams in October 2026, including CI
+pipeline adaptations for short-lived, job-scoped authentication. My role was
+to drive that cross-team change; participating repository work was shared.
+
+* Decision and trust boundary:
+The alternative I considered was a service account and password with custom
+masking. I chose OIDC and short-lived job-scoped tokens: masking addresses
+output handling, while job identity and temporary authentication also change
+how credentials are distributed and how long they remain usable. This made the
+identity-to-access boundary part of pipeline reliability.
+
+The tradeoff is that artifact operations now depend on the OIDC exchange and
+its trust configuration. A failed exchange can block a build even when the
+application code is healthy. The public account omits private issuer,
+audience, subject, trust-policy, permission, and token-lifetime settings; the
+diagram illustrates the boundary without supplying deployable provider
+configuration.
+
+* Job identity to artifact access: Illustrative trust sequence only. Internal
+  provider policies, permission values, and exchange endpoints are
+  intentionally omitted.
+1. CI job identity: A job presents identity for an OIDC-based authentication
+   flow.
+Identity is evaluated at the trust boundary: CI job identity to JFrog
+authentication boundary.
+2. JFrog authentication boundary: Trust configuration determines whether the
+   identity can obtain artifact access.
+Accepted identity enables scoped authentication: JFrog authentication boundary
+to Short-lived job token.
+3. Short-lived job token: The job uses temporary authentication for its Maven
+   or Docker artifact operations.
+An accepted exchange, a successful artifact operation, and absence of
+plaintext token output are separate verification concerns.
+
+* Verification and recovery limits:
+The work included CI adaptations and staged verification of Maven/Docker
+authentication. Authentication and artifact-operation checks serve different
+purposes: accepting an identity is not, by itself, evidence that the job can
+complete its required artifact operation. Short-lived tokens also do not make
+printing tokens safe.
+
+A future rollout should document recovery from a failed exchange without
+reintroducing shared secrets or logging token material. That is a recommended
+improvement; the historical recovery procedure is not documented here.
+
+* Illustrative credential-boundary checklist: Conceptual review aid, not JFrog
+  API syntax, internal CI configuration, or a historical test log. It contains
+  no usable credentials or policy values.
+Authentication and use
+job identity -> trust evaluation
+accepted exchange -> short-lived job token
+job token -> Maven / Docker operation
+
+Separate evidence questions
+Can the intended job authenticate?
+Can its artifact operation complete?
+Does output avoid plaintext token material?
+What does each scanner finding count?
+
+* Outcome and lesson:
+The owner reports adoption across two teams and approximately 20 repositories,
+replacing shared credentials with short-lived, job-scoped tokens and resolving
+more than 1,100 findings tied to plaintext token output in CI logs. The scan
+tool, observation window, and deduplication method are unspecified; the
+finding count is not a distinct-secret count or a numerical measure of risk
+reduction.
+
+I was the first to adopt this approach within my engineering organization and
+established it as the standard there. I reinforced that direction in a later
+engineer's migration PR review, explaining the implementation already in place
+and the rationale before approving. The reported implementation scope remains
+two teams and approximately 20 repositories; this is not a company-wide
+standard claim.
+
+The lesson was to treat credential lifetime, job identity, pipeline usability,
+and logging behavior as related boundaries. A future evidence package should
+preserve redacted artifact-operation results and repeatable scan definitions
+so adoption and exposure reduction can be assessed independently.
 
 Featured Portfolio Projects:
 
@@ -618,6 +1031,14 @@ Professional Portfolio Pages:
   https://waffy.dev/case-studies/legacy-deployment-recovery/
 * CDC Data Reconciliation Platform:
   https://waffy.dev/case-studies/cdc-data-reconciliation/
+* Production Order Reconciliation on GKE and Spanner:
+  https://waffy.dev/case-studies/production-order-reconciliation/
+* Booking Security and CI/CD Recovery:
+  https://waffy.dev/case-studies/booking-security-cicd-recovery/
+* Evidence-Grounded AI-Assisted Payment Triage:
+  https://waffy.dev/case-studies/ai-assisted-payment-triage/
+* JFrog OIDC and CI Credential Lifecycle:
+  https://waffy.dev/case-studies/jfrog-oidc-adoption/
 * Experience: https://waffy.dev/experience/
 * Projects: https://waffy.dev/projects/
 * Resume: https://waffy.dev/resume/

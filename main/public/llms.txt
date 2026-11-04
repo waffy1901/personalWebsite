@@ -6,7 +6,7 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer II 
 
 - Led security and CI/CD modernization across 15 booking services through framework upgrades, container hardening, and release-pipeline recovery.
 - Productionized daily order reconciliation on GKE and Cloud Spanner using Kubernetes CronJobs, Workload Identity, and least-privilege IAM.
-- Led 4 engineers from design through stakeholder validation and handoff of an AI-assisted payment triage agent spanning 7 applications.
+- Led a four-person team, including myself, through validation and handoff of AI-assisted payment triage across 7 applications; implemented a little over half of the tool.
 
 ## Canonical Sources
 
@@ -26,6 +26,10 @@ This site is the professional portfolio for Waffy Ahmed, a Software Engineer II 
 - Kubernetes Autoscaling for Transaction-Critical Services: https://waffy.dev/case-studies/kubernetes-autoscaling/
 - Legacy Deployment Recovery and Credential Rotation: https://waffy.dev/case-studies/legacy-deployment-recovery/
 - CDC Data Reconciliation Platform: https://waffy.dev/case-studies/cdc-data-reconciliation/
+- Production Order Reconciliation on GKE and Spanner: https://waffy.dev/case-studies/production-order-reconciliation/
+- Booking Security and CI/CD Recovery: https://waffy.dev/case-studies/booking-security-cicd-recovery/
+- Evidence-Grounded AI-Assisted Payment Triage: https://waffy.dev/case-studies/ai-assisted-payment-triage/
+- JFrog OIDC and CI Credential Lifecycle: https://waffy.dev/case-studies/jfrog-oidc-adoption/
 - Experience: https://waffy.dev/experience/
 - Projects: https://waffy.dev/projects/
 - Resume: https://waffy.dev/resume/

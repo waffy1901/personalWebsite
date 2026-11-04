@@ -5,5 +5,5 @@ export const currentRoleSummary = `${currentEmployment.currentTitle} at ${curren
 export const currentRoleHighlights = [
   "Led security and CI/CD modernization across 15 booking services through framework upgrades, container hardening, and release-pipeline recovery.",
   "Productionized daily order reconciliation on GKE and Cloud Spanner using Kubernetes CronJobs, Workload Identity, and least-privilege IAM.",
-  "Led 4 engineers from design through stakeholder validation and handoff of an AI-assisted payment triage agent spanning 7 applications.",
+  "Led a four-person team, including myself, through validation and handoff of AI-assisted payment triage across 7 applications; implemented a little over half of the tool.",
 ]

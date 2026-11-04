@@ -20,6 +20,7 @@ import {
   SystemDiagram,
 } from "../components/MissionControl.jsx";
 import SocialLinks from "../components/SocialLinks";
+import CurrentRoleCaseStudyLinks from "../components/CurrentRoleCaseStudyLinks.jsx";
 import { profile, resume } from "../data/profile";
 import { currentRoleHighlights, currentRoleSummary } from "../data/currentRoleHighlights.js";
 import { homeContent } from "../data/home.js";
@@ -226,6 +227,8 @@ function Home() {
       <section className="bg-[#F4F1EA]">
         <PageContainer className="space-y-8">
           <ImpactBand items={impactMetrics} />
+
+          <CurrentRoleCaseStudyLinks />
 
           <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
             <div>

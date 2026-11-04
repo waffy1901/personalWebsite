@@ -16,6 +16,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { SubmissionError } from "@formspree/core"
 import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
+import { recentCaseStudies } from "./data/recentCaseStudies.js"
+import { currentRoleCaseStudyLinks } from "./data/caseStudySeo.js"
 import { projects } from "./data/projects.js"
 import { hackathonPrototype } from "./data/hackathonPrototype.js"
 import { currentRoleEvidence, currentRoleHighlights, workExperiences } from "./data/experience.js"
@@ -655,6 +657,8 @@ describe("App routes", () => {
       "href",
       "/case-studies/kubernetes-autoscaling/"
     )
+    expect(screen.getAllByRole("link", { name: /read case study/i })).toHaveLength(7)
+    expect(screen.getByText("unique critical/high CVE IDs removed from release builds")).toBeVisible()
   })
 
   it("renders a case study detail route", async () => {
@@ -668,6 +672,56 @@ describe("App routes", () => {
     expect(
       screen.getByRole("heading", { name: /engineering path/i })
     ).toBeInTheDocument()
+  })
+
+  it.each(recentCaseStudies)("renders the complete $slug story with an ordered diagram and illustrative artifact", async (caseStudy) => {
+    renderRoute(`/case-studies/${caseStudy.slug}/`)
+    expect(await screen.findByRole("heading", { name: caseStudy.title, level: 1 })).toBeInTheDocument()
+    const sequence = screen.getByRole("list", { name: caseStudy.causalDiagram.sequenceLabel })
+    expect(within(sequence).getAllByRole("listitem").map((step) => within(step).getByRole("heading").textContent)).toEqual(caseStudy.causalDiagram.steps.map((step) => step.title))
+    expect(screen.getByRole("heading", { name: caseStudy.configurationExample.title })).toBeInTheDocument()
+    expect(screen.getByText(caseStudy.configurationExample.description)).toBeInTheDocument()
+    for (const section of caseStudy.sections) {
+      expect(screen.getByRole("heading", { name: section.heading })).toBeInTheDocument()
+      for (const paragraph of section.paragraphs) expect(screen.getByText(paragraph)).toBeInTheDocument()
+    }
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute("href", `https://waffy.dev/case-studies/${caseStudy.slug}/`)
+    expect(document.title).toBe(`${caseStudy.title} | Waffy Ahmed`)
+    for (const link of caseStudy.links) expect(screen.getByRole("link", { name: link.label })).toHaveAttribute("href", link.to)
+  })
+
+  it("navigates between deferred stories and an existing full story", async () => {
+    const user = userEvent.setup()
+    renderRoute("/case-studies/jfrog-oidc-adoption/")
+    await screen.findByRole("heading", { name: recentCaseStudies[3].title })
+    await user.click(screen.getByRole("link", { name: "Read booking release recovery" }))
+    await screen.findByRole("heading", { name: recentCaseStudies[1].title })
+    expect(screen.queryByRole("heading", { name: recentCaseStudies[3].title })).not.toBeInTheDocument()
+    await user.click(screen.getByRole("link", { name: "Read legacy deployment recovery" }))
+    await screen.findByRole("heading", { name: caseStudies[1].title })
+    expect(screen.queryByRole("heading", { name: recentCaseStudies[1].title })).not.toBeInTheDocument()
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute("href", `https://waffy.dev/case-studies/${caseStudies[1].slug}/`)
+  })
+
+  it.each([
+    ["booking-security-cicd-recovery", /alternative was to seek security exceptions/i],
+    ["ai-assisted-payment-triage", /ask was to extend an existing skill\/router/i],
+    ["jfrog-oidc-adoption", /alternative I considered was a service account and password with custom masking/i],
+  ])("preserves the owner-confirmed decision context for %s", async (slug, context) => {
+    renderRoute(`/case-studies/${slug}/`)
+    expect(await screen.findByText(context)).toBeVisible()
+    if (slug === "jfrog-oidc-adoption") {
+      expect(screen.getByText(/first to adopt this approach within my engineering organization/i)).toHaveTextContent(/later engineer's migration PR review.*not a company-wide standard claim/)
+    }
+  })
+
+  it.each(["/", "/experience/"])("offers all four recent stories from %s without replacing the HPA proof route", async (path) => {
+    renderRoute(path)
+    const navigation = await screen.findByRole("navigation", { name: "Recent SWE II case studies" })
+    for (const item of currentRoleCaseStudyLinks) {
+      expect(within(navigation).getByRole("link", { name: item.label })).toHaveAttribute("href", `/case-studies/${item.slug}/`)
+    }
+    if (path === "/") expect(screen.getByRole("link", { name: /read the kubernetes autoscaling case study/i })).toHaveAttribute("href", "/case-studies/kubernetes-autoscaling/")
   })
 
   it("explains the selected autoscaling tradeoff, failure mode, and evidence limits", async () => {
@@ -920,7 +974,7 @@ describe("App routes", () => {
     expect(within(outcomes).getAllByRole("listitem")).toHaveLength(3)
     expect(outcomes).toHaveTextContent(/security and CI\/CD modernization across 15 booking services/)
     expect(outcomes).toHaveTextContent(/productionized daily order reconciliation on GKE and Cloud Spanner/i)
-    expect(outcomes).toHaveTextContent(/Led 4 engineers from design through stakeholder validation and handoff.*7 applications/)
+    expect(outcomes).toHaveTextContent(/Led a four-person team, including myself.*7 applications.*implemented a little over half/i)
     expect(outcomes).not.toHaveTextContent(/201|33%|100%/)
     currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
     const hero = outcomes.closest("section")
@@ -1514,6 +1568,10 @@ describe("App routes", () => {
       "kubernetes-autoscaling",
       "legacy-deployment-recovery",
       "cdc-data-reconciliation",
+      "production-order-reconciliation",
+      "booking-security-cicd-recovery",
+      "ai-assisted-payment-triage",
+      "jfrog-oidc-adoption",
     ])
   })
 
@@ -1581,14 +1639,14 @@ describe("App routes", () => {
     expect(aiSummary).toContain(
       "Re-architected order reconciliation from Cloud SQL to Cloud Spanner"
     )
-    expect(aiSummary).toContain(
-      "Led a team of 4 engineers from design through stakeholder validation"
+    expect(aiSummary.replace(/\s+/g, " ")).toContain(
+      "Led a four-person team, including myself, from design through stakeholder validation"
     )
     expect(aiSummary.replace(/\s+/g, " ")).toContain(
-      "Led security and CI/CD remediation across 15 services, upgrading frameworks and fixing pipelines to eliminate 66 unique critical/high CVEs from production workloads and raise build-gate pass rates from 33% to 100%."
+      workExperiences[0].bullets[0]
     )
     expect(aiSummary).toMatch(
-      /Drove JFrog OIDC adoption across\s+2 teams and 20 repositories/
+      /Drove JFrog OIDC adoption across\s+2 teams and approximately 20 repositories/
     )
     expect(portfolioJson.skills).toContain("Cloud Spanner")
     expect(
@@ -1680,7 +1738,6 @@ describe("App routes", () => {
 
     expect(portfolioJson.schemaVersion).toBe("2.0")
     expect(portfolioJson.person.currentRole.evidence).toEqual(currentRoleEvidence)
-    expect(aiSummary).toContain(currentRoleEvidence.evidenceNote)
     expect(aiSummary).toContain(`https://waffy.dev/experience/#${currentRoleEvidence.id}`)
     for (const group of currentRoleEvidence.groups) {
       expect(aiSummary).toContain(group.title)
@@ -1718,11 +1775,22 @@ describe("App routes", () => {
     for (const snippet of selected.configurationExample.examples) {
       expect(aiSummary).toContain(snippet.code.replace(/\s+/g, " "))
     }
-    for (const otherCase of publicCases.filter((caseStudy) => caseStudy.slug !== selected.slug)) {
+    for (const otherCase of publicCases.filter((caseStudy) => !caseStudies.find((item) => item.slug === caseStudy.slug).causalDiagram)) {
       expect(otherCase).not.toHaveProperty("sections")
       expect(otherCase).not.toHaveProperty("causalDiagram")
       expect(otherCase).not.toHaveProperty("configurationExample")
     }
+  })
+
+  it.each(recentCaseStudies)("preserves full $slug evidence and qualifications in generated discovery", (selected) => {
+    const mirrored = readJsonFile("public/portfolio.json").caseStudies.find((item) => item.slug === selected.slug)
+    const aiSummary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
+    expect(mirrored.sections).toEqual(selected.sections)
+    expect(mirrored.metricDetails).toEqual(selected.metrics)
+    expect(mirrored.causalDiagram.sequenceLabel).toBe(selected.causalDiagram.sequenceLabel)
+    for (const section of selected.sections) for (const paragraph of section.paragraphs) expect(aiSummary).toContain(paragraph)
+    for (const metric of selected.metrics) expect(aiSummary).toContain(metric.detail)
+    for (const example of selected.configurationExample.examples) expect(aiSummary).toContain(example.code.replace(/\s+/g, " "))
   })
 
   it("renders the resume route", async () => {
@@ -1878,8 +1946,8 @@ describe("App routes", () => {
     )
   })
 
-  it("renders a not found route with non-indexable metadata", async () => {
-    renderRoute("/missing-page")
+  it.each(["/missing-page", "/case-studies/unknown-story/"])("renders %s with non-indexable not-found metadata", async (path) => {
+    renderRoute(path)
 
     expect(
       await screen.findByRole("heading", { name: /page not found/i })
@@ -1998,7 +2066,6 @@ describe("App routes", () => {
       name: currentRoleEvidence.heading,
     })
     expect(screen.queryByRole("region", { name: /experience details/i })).not.toBeInTheDocument()
-    expect(within(evidence).getByText(currentRoleEvidence.evidenceNote)).toBeVisible()
 
     const links = within(evidence).getAllByRole("link").filter((link) => link.getAttribute("href").startsWith("#"))
     for (const link of links) {
@@ -2071,9 +2138,9 @@ describe("App routes", () => {
         /re-architected order reconciliation from cloud sql to cloud spanner/i
       )
     ).toBeInTheDocument()
-    expect(screen.getByText(/7 weekly runs via kubernetes cronjob/i)).toBeInTheDocument()
+    expect(screen.getByText(/owner reports 7 weekly CronJob executions/i)).toBeInTheDocument()
     expect(
-      screen.getByText(/drove jfrog oidc adoption across 2 teams and 20 repositories/i)
+      screen.getByText(/drove jfrog oidc adoption across 2 teams and approximately 20 repositories/i)
     ).toBeInTheDocument()
     expect(screen.getByText(/nodeport usage/i)).toBeInTheDocument()
     await waitFor(() => expect(backButton).toHaveFocus())

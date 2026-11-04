@@ -14,7 +14,7 @@ export default function CausalDiagram({ diagram }) {
           {diagram.description}
         </p>
       </figcaption>
-      <ol aria-label="Autoscaling causal sequence" className="mt-5 space-y-4">
+      <ol aria-label={diagram.sequenceLabel ?? "Autoscaling causal sequence"} className="mt-5 space-y-4">
         {diagram.steps.map((step, index) => (
           <li key={step.title} className="min-w-0">
             <div className="rounded-lg border border-slate-200 bg-[#E8EDF2] px-[12px] py-4 sm:p-4">

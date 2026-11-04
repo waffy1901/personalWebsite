@@ -11,6 +11,16 @@
     }
   },
   "lazy": {
+    "src/data/recentCaseStudies.js": {
+      "js": {
+        "raw": 38500,
+        "gzip": 13000
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
     "src/pages/CaseStudies.jsx": {
       "js": {
         "raw": 19000,

@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState } from "react";
 import { HiCog, HiLockClosed, HiServer, HiShieldCheck } from "react-icons/hi";
 import { Link, useLocation } from "react-router";
 import ExperienceCard from "../components/ExperienceCard";
+import CurrentRoleCaseStudyLinks from "../components/CurrentRoleCaseStudyLinks.jsx";
 import {
   ImpactBand,
   PageContainer,
@@ -210,6 +211,8 @@ function Experience() {
           </PresentationPanel>
         ) : null}
 
+        <CurrentRoleCaseStudyLinks />
+
         <section
           id={currentRoleEvidence.id}
           aria-labelledby="recent-engineering-work-heading"
@@ -276,9 +279,6 @@ function Experience() {
               </section>
             ))}
           </div>
-          <p className="max-w-3xl text-sm leading-relaxed text-slate-500">
-            {currentRoleEvidence.evidenceNote}
-          </p>
         </section>
 
         <section

@@ -7,8 +7,6 @@ export const currentRoleEvidence = {
   timeframe: "July - October 2026",
   introduction:
     "Selected Software Engineer II work beyond the role highlights: application recovery, operational aftercare, infrastructure guidance, engineering visibility, and a separate hackathon prototype.",
-  evidenceNote:
-    "PR review volume describes activity; it does not measure review quality.",
   groups: [
     {
       id: "hackathon-prototyping",

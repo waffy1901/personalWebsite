@@ -17,6 +17,10 @@ http://www.waffy.dev/* https://waffy.dev/:splat 301!
 /case-studies/kubernetes-autoscaling /case-studies/kubernetes-autoscaling/index.html 200
 /case-studies/legacy-deployment-recovery /case-studies/legacy-deployment-recovery/index.html 200
 /case-studies/cdc-data-reconciliation /case-studies/cdc-data-reconciliation/index.html 200
+/case-studies/production-order-reconciliation /case-studies/production-order-reconciliation/index.html 200
+/case-studies/booking-security-cicd-recovery /case-studies/booking-security-cicd-recovery/index.html 200
+/case-studies/ai-assisted-payment-triage /case-studies/ai-assisted-payment-triage/index.html 200
+/case-studies/jfrog-oidc-adoption /case-studies/jfrog-oidc-adoption/index.html 200
 /experience /experience/index.html 200
 /projects /projects/index.html 200
 /resume /resume/index.html 200

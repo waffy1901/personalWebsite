@@ -126,6 +126,43 @@ rounded to absolute byte limits. Its measured closure includes the shared
 identity chunk after subtracting startup assets. It emits no CSS and receives the
 same explicit 2000 raw / 1000 gzip CSS allowance as the other empty lazy groups.
 
+## Issue 271 narrative entry
+
+The four recent SWE II narratives load on their detail routes. Home and
+Experience use lightweight link metadata, while the index uses summaries with
+the three existing stories. Full canonical composition remains available to the
+public-artifact generator and tests. The bounded split was accepted in local
+plan v1 Amendment 1 before implementation; no existing limits increased.
+
+Measured November 3, 2026 (November 4 UTC), from the uncommitted issue 271
+implementation based on `dbf6b72a122b51588d09515e3fd379220682e02a`, using the
+synthetic-key build command above: Node 22.22.3, npm 10.9.8, zlib
+1.3.1-e00f703, Vite 8.3.5, darwin arm64. This uses the existing installed
+dependencies, not a clean install. The validation-environment checker's linked
+local `minimatch` limitation and manual direct-version comparison are documented
+in [the local review note](issue-271-case-study-review.md#local-verification).
+
+| Group | Observed JS raw / gzip | JS limit raw / gzip |
+| --- | ---: | ---: |
+| `startup` | 318484 / 101933 | 380000 / 120000 (unchanged) |
+| `src/pages/CaseStudies.jsx` | 17847 / 6958 | 19000 / 7600 (unchanged) |
+| `src/pages/CaseStudy.jsx` | 23785 / 8574 | 25000 / 9000 (unchanged) |
+| `src/pages/Experience.jsx` | 33735 / 11975 | 34000 / 12500 (unchanged) |
+| `src/data/recentCaseStudies.js` | 35152 / 12394 | 38500 / 13000 (new) |
+
+The new entry includes its narrative asset plus the static shared
+`caseStudyIndex`, `hdLogo`, and `cdcLogo` modules after startup subtraction.
+The checker deliberately counts this shared closure for the nested entry even
+when a real detail visit already cached it. After owner-confirmed alternatives
+and extension/standard context were added, raw headroom is approximately 9.5%;
+gzip headroom is approximately 4.9%. This is a small allowance for content
+corrections and output variation, not room for another narrative expansion.
+It emits no CSS and receives the existing empty-group allowance of 2000 raw /
+1000 gzip. Startup CSS measures 78282 raw / 12821 gzip under unchanged limits.
+After the owner's Experience copy removal, Experience has 265 raw bytes of
+remaining headroom; further edits must keep
+its payload bounded rather than silently increase the budget.
+
 ## Reviewing changes and evidence limits
 
 When a budget fails, inspect the listed assets and manifest closure first. Prefer
