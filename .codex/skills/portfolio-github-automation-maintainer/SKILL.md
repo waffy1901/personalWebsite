@@ -14,6 +14,7 @@ For failing or delayed runs, use `$portfolio-actions-run-diagnoser` first. This 
    - `.github/workflows/dev-ci.yml`: PR lint/test/build gate.
    - `.github/workflows/portfolio-integrity.yml`: PR validation of generated public artifacts and focused portfolio invariants.
    - `.github/workflows/release-on-deploy.yml`: production deploy wait and GitHub release creation.
+   - `.github/workflows/post-deploy-closeout.yml`: exact-production evidence and bounded automatic issue/Project 2 closeout; read [the contract and authority rules](../../../docs/post-merge-closeout.md) before changing it.
    - `.github/workflows/semantic-release.yml`: manually dispatched, SHA-bound semantic production release publication.
    - `.github/workflows/npm-audit.yml`: dependency vulnerability audit.
    - `.github/workflows/deployed-security-headers.yml`: live `waffy.dev` header drift check.
@@ -27,6 +28,7 @@ For failing or delayed runs, use `$portfolio-actions-run-diagnoser` first. This 
 6. Run narrow verification first:
    - `npm run lint:workflows` for edits to `.github/workflows/*.yml` or `*.yaml`, including permissions, schedules, and action pins. Follow `docs/workflow-lint.md` if tools need setup. Use focused documentation checks for prose-only changes.
    - `npm run lint`, `npm run test`, and `npm run build` when workflow changes mirror app CI.
+   - `python3 scripts/test_post_deploy_closeout.py` and `python3 scripts/post_deploy_closeout.py --validate-contracts .github/closeout` for closeout helper/workflow/contract changes. Preserve the no-writes-before-evidence and exact-attempt gates.
    - `npm audit --audit-level=moderate` only when dependency/audit behavior is in scope.
 7. For publish or release readiness, hand off to `$portfolio-release-qa` or `$git-pr-publisher` as appropriate.
 

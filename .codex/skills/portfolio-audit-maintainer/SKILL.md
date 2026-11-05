@@ -28,6 +28,17 @@ evidence packet, authorized writes, and independent persistence checks.
 - Keep partial criterion completion scoped to the named criteria. Do not close
   the whole issue or set its item to Done while its closure contract is unmet.
 
+## Automatic closeout contracts
+
+For scoped issue implementation, prepare the reviewed criterion-to-check contract
+from [the automatic closeout guide](../../../docs/post-merge-closeout.md) without
+another permission prompt. Read the full current issue and Project Evidence
+needed, map every checklist and non-checklist requirement, and preserve its exact
+body fingerprint. Unrepresentable Browser/External account or other requirements
+remain pending; never map generic CI to unrelated claims. The standing permission
+belongs only to the trusted workflow. Manual agents may inspect its result and
+prepare a packet, but need the usual direct grant for any manual writes.
+
 ## Workflow
 
 1. Check `git status --short` and preserve unrelated changes.
@@ -49,7 +60,7 @@ evidence packet, authorized writes, and independent persistence checks.
    telemetry boundaries exact.
 7. Reconcile before changing status. Follow the closeout reference and the closure contract in the repository policy:
    - Close an issue only when its acceptance criteria and evidence contract are
-     satisfied and a direct human grant names the exact target. Prepare the evidence packet before acting on that grant.
+     satisfied and a direct human grant names the exact target for manual closeout. Prepare the evidence packet before acting on that grant. The documented standing exception is executable only by the bounded post-deploy workflow, not by this skill.
    - Keep historical context in the issue, PR, release, or archived audit; do
      not present fixed production issues as current.
    - Separate true breakage from low-severity caveats, investigations, and
