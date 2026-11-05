@@ -71,6 +71,10 @@ def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 
+def fingerprint(snapshot):
+    return digest(canonical(snapshot))
+
+
 def strict_json(text):
     def pairs(items):
         result = {}
@@ -279,7 +283,15 @@ class API:
         raise Pending("GraphQL pagination exceeded bound")
 
     def comments(self, number):
-        return unique(self.pages(f"issues/{number}/comments"), "id", "comments")
+        comments = self.pages(f"issues/{number}/comments")
+        return unique([self.comment_snapshot(c) for c in comments], "id", "comments")
+
+    @staticmethod
+    def comment_snapshot(comment):
+        # REST's list and individual endpoints can return different author avatars.
+        fields = ("id", "node_id", "body", "created_at", "updated_at", "issue_url", "html_url")
+        return {**{field: comment[field] for field in fields},
+                "user": {"id": (comment.get("user") or {}).get("id")}}
 
     def comment(self, comment_id):
         comment = self.get(f"issues/comments/{comment_id}")
@@ -296,7 +308,7 @@ class API:
                 and isinstance(comment.get("body"), str) and result.get("body") == comment["body"]
                 and "lastEditedAt" in result and result["lastEditedAt"] is None,
                 "closeout comment was edited or could not be independently verified")
-        return comment
+        return self.comment_snapshot(comment)
 
     def post_comment(self, number, body):
         return self.request("POST", f"/repos/{REPO}/issues/{number}/comments", {"body": body})[0]
@@ -320,7 +332,7 @@ class API:
         data = self.graphql('query{user(login:"waffy1901"){projectV2(number:2){id url public viewerCanUpdate}}}', {})
         project = data["user"]["projectV2"]
         require(project and project["url"] == PROJECT_URL and project["viewerCanUpdate"] is True, "Project 2 write access unavailable")
-        require(project.get("public") is True, "private Project baseline cannot be published in issue evidence")
+        require(project.get("public") is True, "private Project is outside automated closeout")
         pid = project["id"]
         common = "id name dataType"
         definitions = self.typed_connection(pid, "ProjectV2", "fields", f'''__typename
@@ -342,7 +354,7 @@ class API:
         memberships = self.issue_connection(issue["id"], "projectItems", "id isArchived project{id url public} content{... on Issue{id url}}")
         unique(memberships, "id", "project memberships")
         require(all(m.get("project", {}).get("public") is True for m in memberships),
-                "private/inaccessible Project membership cannot be published in issue evidence")
+                "private/inaccessible Project membership is outside automated closeout")
         matches = [m for m in memberships if m["project"]["id"] == pid]
         require(len(matches) == 1, "expected exactly one existing Project 2 item")
         item = matches[0]
@@ -540,13 +552,14 @@ def final_issue(issue):
 
 
 def make_comment(marker, payload):
-    # Store the pre-write expectation durably for safe retries, never from observed post-write values.
+    # Persist fingerprints for retries while keeping the full Project snapshot in memory.
     encoded = base64.b64encode(canonical(payload).encode()).decode()
     rows = []
     for requirement in payload["contract"]["requirements"]:
-        text = requirement["text"].replace("|", "\\|").replace("<", "&lt;")
+        text = requirement["text"].replace("|", "\\|")
+        delimiter = "`" * (1 + max(map(len, re.findall(r"`+", text)), default=0))
         evidence = "; ".join(f"`{e}`: {payload['evidence'][e]['result']} ([evidence]({payload['evidence'][e]['url']}))" for e in requirement["evidence"])
-        rows.append(f"| Line {requirement['line']}: {text} | {evidence} |")
+        rows.append(f"| Line {requirement['line']} {delimiter} {text} {delimiter} | {evidence} |")
     deploy, run = payload["deployment"], payload["run"]
     body = f'''{marker}
 Closeout evidence - {run['updated_at']}
@@ -589,6 +602,7 @@ def execute(api, event, now=None, report=None):
     report.update(issue=f"https://github.com/{REPO}/issues/{number}", upstream=run["html_url"], attempt=run["run_attempt"])
     deploy = deployment(api, run, steps)
     current_issue = api.issue(number)
+    require(current_issue["number"] == number, "issue number changed")
     current_project = api.project(current_issue)
     comments = api.comments(number)
     marker = f"<!-- portfolio-auto-closeout:v1:{number}:{run['head_sha']}:{run['id']}:{run['run_attempt']} -->"
@@ -599,28 +613,29 @@ def execute(api, event, now=None, report=None):
     comment = matching[0] if matching else None
     evidence = evidence_map(contract, run, steps, pr)
     identity = {k: run[k] for k in ("id", "run_attempt", "head_sha", "html_url", "updated_at")}
+    payload = {"contract": contract, "run": identity, "deployment": deploy, "evidence": evidence,
+               "pr_url": pr["html_url"]}
     if comment:
         require(comment.get("user", {}).get("id") == BOT_ID, "closeout marker was not written by github-actions[bot]")
         encoded = re.findall(r"<!-- closeout-baseline:([A-Za-z0-9+/=]+) -->", comment["body"])
         require(len(encoded) == 1, "own baseline missing/ambiguous")
-        payload = strict_json(base64.b64decode(encoded[0], validate=True).decode())
-        require(payload.get("contract") == contract and payload.get("run") == identity and
-                payload.get("deployment") == deploy and payload.get("evidence") == evidence and
-                payload.get("pr_url") == pr["html_url"], "saved baseline belongs to different evidence")
-        baseline_issue, baseline_project = payload["issue"], payload["project"]
+        saved = strict_json(base64.b64decode(encoded[0], validate=True).decode())
+        require(isinstance(saved, dict), "invalid saved baseline")
+        expected = saved.pop("expected", None)
+        require(saved == payload, "saved baseline belongs to different evidence")
+        require(isinstance(expected, dict) and set(expected) == {"issue_open", "issue_closed", "project_before", "project_done"}
+                and all(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value) for value in expected.values()),
+                "invalid saved snapshot fingerprints")
     else:
         require(current_issue["state"] == "OPEN", "issue already closed; never reclose manually closed work")
-        baseline_issue, baseline_project = current_issue, current_project
-        payload = {"contract": contract, "run": identity, "deployment": deploy, "evidence": evidence,
-                   "pr_url": pr["html_url"], "issue": baseline_issue, "project": baseline_project}
-    require(baseline_issue["state"] == "OPEN" and baseline_issue["number"] == number, "invalid original issue baseline")
-    validate_contract(contract, baseline_issue["body"], number)
-    needed = baseline_project["fields"]["Evidence needed"]
-    require(isinstance(needed, dict) and set(needed) == {"options"} and
-            sorted(o["name"] for o in needed["options"]) == sorted(contract["evidence_needed"]),
-            "Project Evidence needed differs from the contract")
-    target_issue, target_project = final_issue(baseline_issue), done_project(baseline_project)
-    text = make_comment(marker, payload)
+        validate_contract(contract, current_issue["body"], number)
+        needed = current_project["fields"]["Evidence needed"]
+        require(isinstance(needed, dict) and set(needed) == {"options"} and
+                sorted(o["name"] for o in needed["options"]) == sorted(contract["evidence_needed"]),
+                "Project Evidence needed differs from the contract")
+        expected = {"issue_open": fingerprint(current_issue), "issue_closed": fingerprint(final_issue(current_issue)),
+                    "project_before": fingerprint(current_project), "project_done": fingerprint(done_project(current_project))}
+    text = make_comment(marker, {**payload, "expected": expected})
     if comment:
         require(comment["body"] == text, "own comment differs from saved intended evidence")
 
@@ -628,7 +643,6 @@ def execute(api, event, now=None, report=None):
         # Each write is preceded by fresh provenance, issue, comments and project reads.
         latest = api.get(f"actions/runs/{run['id']}")
         require(all(latest.get(k) == run.get(k) for k in ("id", "head_sha", "run_attempt", "status", "conclusion")), "upstream attempt changed before write")
-        check_pointer(api, deploy)
         observed_issue = api.issue(number)
         observed_project = api.project(observed_issue)
         observed_comments = api.comments(number)
@@ -639,16 +653,20 @@ def execute(api, event, now=None, report=None):
                     "independent comment readback mismatch")
         else:
             require(observed_comments == comments, "issue comments changed before evidence write")
-        require(observed_issue == baseline_issue or (allow_closed and observed_issue == target_issue), "issue body/metadata/state changed during closeout")
-        allowed_projects = [baseline_project]
-        if allow_closed and observed_issue == target_issue:
-            allowed_projects.append(target_project)
-        require(observed_project in allowed_projects, "Project membership/schema/metadata changed during closeout")
-        if observed_issue["state"] == "CLOSED":
+        issue_hash = fingerprint(observed_issue)
+        issue_closed = allow_closed and issue_hash == expected["issue_closed"]
+        require(issue_hash == expected["issue_open"] or issue_closed, "issue body/metadata/state changed during closeout")
+        project_hash = fingerprint(observed_project)
+        project_done = project_hash == expected["project_done"]
+        require(project_hash == expected["project_before"] or (issue_closed and project_done),
+                "Project membership/schema/metadata changed during closeout")
+        if issue_closed:
             require(comment and api.closed_by_bot(number, comment["created_at"]), "issue was closed by someone else; no further writes")
-        return observed_issue, observed_project
+        # Read the production pointer last, directly before a possible mutation.
+        check_pointer(api, deploy)
+        return observed_issue, observed_project, project_done
 
-    observed_issue, observed_project = snapshot_check(bool(comment))
+    snapshot_check(bool(comment))
     if not comment:
         report["writes_attempted"].append("evidence comment")
         created = api.post_comment(number, text)
@@ -657,19 +675,19 @@ def execute(api, event, now=None, report=None):
         fresh_comments = api.comments(number)
         require(fresh_comments == comments + [comment], "comments changed after evidence write")
         comments = fresh_comments
-    observed_issue, observed_project = snapshot_check(True)
-    if observed_issue == baseline_issue:
+    observed_issue, _, _ = snapshot_check(True)
+    if observed_issue["state"] == "OPEN":
         report["writes_attempted"].append("issue body and completed closure")
-        api.close_issue(number, target_issue["body"])
-    observed_issue, observed_project = snapshot_check(True)
-    require(observed_issue == target_issue, "issue closure readback mismatch")
-    if observed_project != target_project:
+        api.close_issue(number, completed_body(observed_issue["body"]))
+    observed_issue, observed_project, project_done = snapshot_check(True)
+    require(observed_issue["state"] == "CLOSED", "issue closure readback mismatch")
+    if not project_done:
         report["writes_attempted"].append("Project 2 Status Done")
-        api.set_done(baseline_project)
-    observed_issue, observed_project = snapshot_check(True)
-    require(observed_issue == target_issue and observed_project == target_project, "final independent issue/Project readback mismatch")
+        api.set_done(observed_project)
+    observed_issue, observed_project, project_done = snapshot_check(True)
+    require(observed_issue["state"] == "CLOSED" and project_done, "final independent issue/Project readback mismatch")
     report.update(status="verified", comment=comment["html_url"], deployment=deploy,
-                  preserved_fields=sorted(baseline_project["fields"]), requirements=len(contract["requirements"]),
+                  preserved_fields=sorted(observed_project["fields"]), requirements=len(contract["requirements"]),
                   note="Closed COMPLETED; existing Project 2 item Done; exact comment/body/metadata and all supported fields independently verified.")
     return report
 

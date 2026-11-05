@@ -146,15 +146,16 @@ extra scalar, iteration, select, and nested built-in values are preserved. Only
 built-in `Updated`/`Closed` lifecycle values are excluded from equality because
 closing the issue changes them; custom fields with those names are preserved.
 
-The durable baseline in the comment is readable data (base64 is not encryption).
-Project 2 and every returned Project membership must still be public before that
-baseline can be published or resumed; private or inaccessible memberships block
-all writes. No private Project field values are copied to a public issue.
+The comment stores SHA-256 fingerprints of the complete original and expected
+final issue and Project snapshots. Full snapshots stay in memory, including values
+that a Project credential can see on an otherwise public item. Project 2 and every
+returned Project membership must be public for the workflow to proceed.
 
 Writes are limited to:
 
 1. One self-contained evidence comment with a stable run/attempt/issue/SHA marker
-   and a durable original expectation. Fetch its exact body back before closure.
+   and the original and expected snapshot fingerprints. Verify its identity,
+   author and exact body before closure.
 2. A checkbox-only body update and `CLOSED` / `COMPLETED` in one issue update.
 3. The existing Project 2 item's `Status: Done`, if it is not already Done.
 
@@ -165,10 +166,9 @@ membership and field values. Mutation responses alone are never success.
 
 Closeout jobs are serialized. Fresh issue/comment/Project reads precede each
 write; changes stop further writes. GitHub does not offer a transaction across
-these resources, so a narrow read/write race remains possible. Independent
-readback detects drift; the workflow never overwrites metadata to "repair" it.
-A partial failure is an explicit failing result, with the attempted stages in the
-artifact, not a claim that closeout completed.
+these resources, so an edit between the last read and the issue update could be
+overwritten. Independent readback checks the resulting values. A partial failure
+produces a failed job and records the attempted stages in the artifact.
 
 Rerunning the **closeout workflow's existing run** can reuse its exact bot-authored
 comment and original expectation. An independent GitHub edit-history check

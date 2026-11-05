@@ -130,7 +130,9 @@ class FakeAPI:
 
     def post_comment(self, number, body):
         self.writes.append("comment")
-        result = {"id": 99, "body": body, "user": {"id": c.BOT_ID}, "created_at": "2026-11-05T02:00:00Z",
+        result = {"id": 99, "node_id": "comment-node", "body": body, "user": {"id": c.BOT_ID},
+                  "created_at": "2026-11-05T02:00:00Z", "updated_at": "2026-11-05T02:00:00Z",
+                  "issue_url": f"https://api.github.com/repos/{c.REPO}/issues/123",
                   "html_url": f"https://github.com/{c.REPO}/issues/123#issuecomment-99"}
         self.comment_values.append(result)
         if self.fail == "lost comment response":
@@ -291,7 +293,7 @@ class CloseoutTests(unittest.TestCase):
 
     def test_pointer_changes_before_first_write(self):
         def change(method, api):
-            if method == "site" and api.reads.count("site") == 2:
+            if method == "comments" and api.reads.count("comments") == 2:
                 api.site_value["published_deploy"]["id"] = "different"
         self.api.hook = change
         self.assert_pending_without_writes()
@@ -338,6 +340,24 @@ class CloseoutTests(unittest.TestCase):
                 self.api.fail = None
                 self.assertEqual("verified", self.run_closeout()["status"])
                 self.assertEqual(1, self.api.writes.count("comment"))
+
+    def test_private_values_in_public_project_are_only_fingerprinted(self):
+        private_url = "https://github.com/example/private-repo/pull/7"
+        self.api.project_value["fields"]["Linked pull requests"] = {"pullRequests": [{"url": private_url}]}
+        before = c.fingerprint(self.api.project_value)
+        self.api.fail = "done"
+        with self.assertRaises(c.Pending):
+            self.run_closeout()
+        body = self.api.comment_values[0]["body"]
+        encoded = re.search(r"<!-- closeout-baseline:([A-Za-z0-9+/=]+) -->", body)[1]
+        saved = base64.b64decode(encoded).decode()
+        self.assertNotIn(private_url, body)
+        self.assertNotIn(private_url, saved)
+        self.assertEqual(before, json.loads(saved)["expected"]["project_before"])
+        self.api.fail = None
+        self.api.project_value["fields"]["Linked pull requests"]["pullRequests"].clear()
+        self.api.writes.clear()
+        self.assert_pending_without_writes()
 
     def test_manual_close_after_comment_does_not_authorize_project_write(self):
         self.api.fail = "close"
@@ -408,6 +428,18 @@ class DataAndPaginationTests(unittest.TestCase):
 
     def api(self):
         return c.API("repo", "project", "netlify", "site")
+
+    def test_comment_readback_compares_stable_metadata_across_endpoints(self):
+        api = self.api()
+        comment = FakeAPI().post_comment(123, "exact evidence")
+        listed = {**comment, "user": {**comment["user"], "avatar_url": "https://avatar.example/list"}}
+        detail = {**comment, "user": {**comment["user"], "avatar_url": "https://avatar.example/detail"}}
+        api.pages = lambda path: [listed]
+        api.get = lambda path: detail
+        api.graphql = lambda *args: {"node": {"id": comment["node_id"], "body": comment["body"], "lastEditedAt": None}}
+        self.assertEqual(api.comments(123), [api.comment(comment["id"])])
+        listed["user"]["id"] = 1
+        self.assertNotEqual(api.comments(123), [api.comment(comment["id"])])
 
     def test_rest_pagination_all_pages_and_count(self):
         api = self.api()

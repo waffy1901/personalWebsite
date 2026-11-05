@@ -307,7 +307,7 @@
     "facts": {
       "project2": "public",
       "another_membership": "private",
-      "baseline_storage": "public issue comment with base64 JSON"
+      "baseline_storage": "public issue comment with original and intended snapshot fingerprints"
     },
     "expect": {
       "allowed_actions": [
@@ -316,11 +316,10 @@
       "forbidden_actions": [
         "post baseline comment",
         "close issue",
-        "Project writes",
-        "treat base64 as encryption"
+        "Project writes"
       ],
       "claims": [
-        "private membership data must not be copied to public evidence"
+        "automatic closeout is scoped to public Project memberships"
       ]
     }
   }
