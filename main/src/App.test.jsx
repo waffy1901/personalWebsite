@@ -229,6 +229,48 @@ describe("App routes", () => {
     )
   })
 
+  it.each([true, false])("sets the portrait priority on the first render for desktop=%s", (desktop) => {
+    const media = { matches: desktop, addEventListener: vi.fn(), removeEventListener: vi.fn() }
+    vi.stubGlobal("matchMedia", vi.fn(() => media))
+    const { unmount } = renderRoute("/")
+    const portrait = screen.getByRole("img", { name: /waffy ahmed/i })
+    expectImagePolicy(portrait, {
+      loading: desktop ? "eager" : "lazy",
+      fetchPriority: desktop ? "high" : "auto",
+    })
+    expect(window.matchMedia).toHaveBeenCalledWith("(min-width: 1024px)")
+    expect(media.addEventListener).toHaveBeenCalledWith("change", expect.any(Function))
+    const notify = media.addEventListener.mock.calls[0][1]
+    act(() => {
+      media.matches = !desktop
+      notify()
+    })
+    expectImagePolicy(portrait, {
+      loading: desktop ? "lazy" : "eager",
+      fetchPriority: desktop ? "auto" : "high",
+    })
+    expect(screen.getAllByRole("img", { name: /waffy ahmed/i })).toHaveLength(1)
+    expect(screen.getByRole("img", { name: /waffy ahmed/i })).toBe(portrait)
+    unmount()
+    expect(media.removeEventListener).toHaveBeenCalledWith("change", notify)
+  })
+
+  it("keeps viewport priority and resize cleanup when matchMedia is unavailable", () => {
+    vi.stubGlobal("matchMedia", undefined)
+    vi.stubGlobal("innerWidth", 390)
+    const removeListener = vi.spyOn(window, "removeEventListener")
+    const { unmount } = renderRoute("/")
+    const portrait = screen.getByRole("img", { name: /waffy ahmed/i })
+    expectImagePolicy(portrait, { loading: "lazy", fetchPriority: "auto" })
+    act(() => {
+      window.innerWidth = 1280
+      window.dispatchEvent(new Event("resize"))
+    })
+    expectImagePolicy(portrait, { loading: "eager", fetchPriority: "high" })
+    unmount()
+    expect(removeListener).toHaveBeenCalledWith("resize", expect.any(Function))
+  })
+
   it("reserves the route shell through lazy route rendering", async () => {
     renderRoute("/projects")
 
@@ -795,6 +837,10 @@ describe("App routes", () => {
       "content",
       "Kubernetes Autoscaling for Transaction-Critical Services | Waffy Ahmed"
     )
+    for (const selector of ['meta[property="og:image"]', 'meta[property="og:image:secure_url"]', 'meta[name="twitter:image"]']) {
+      expect(document.querySelector(selector)).toHaveAttribute("content", "https://waffy.dev/og-image-v3.jpg")
+    }
+    expect(document.querySelector('meta[property="og:image:type"]')).toHaveAttribute("content", "image/jpeg")
   })
 
   it("preserves route-level SEO metadata on trailing-slash direct loads", async () => {

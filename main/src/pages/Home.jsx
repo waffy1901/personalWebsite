@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useSyncExternalStore } from "react";
 import { Link } from "react-router";
 import {
   FaArrowRight,
@@ -125,7 +125,34 @@ const routeCards = [
 
 const featuredCasePath = `/case-studies/${kubernetesAutoscalingSeo.slug}/`;
 
+// Match the hero's lg side-by-side layout before creating its only image element.
+const desktopHeroQuery = "(min-width: 1024px)";
+const isDesktopHero = () => {
+  if (typeof window === "undefined") return false;
+  return typeof window.matchMedia === "function"
+    ? window.matchMedia(desktopHeroQuery).matches
+    : window.innerWidth >= 1024;
+};
+const subscribeDesktopHero = (notify) => {
+  if (typeof window === "undefined") return () => {};
+  if (typeof window.matchMedia !== "function") {
+    window.addEventListener("resize", notify);
+    return () => window.removeEventListener("resize", notify);
+  }
+  const media = window.matchMedia(desktopHeroQuery);
+  if (typeof media.addEventListener === "function") {
+    media.addEventListener("change", notify);
+    return () => media.removeEventListener("change", notify);
+  }
+  // Older MediaQueryList implementations use the listener pair instead.
+  media.addListener?.(notify);
+  return () => media.removeListener?.(notify);
+};
+const serverDesktopHero = () => false;
+
 function Home() {
+  const desktopHero = useSyncExternalStore(subscribeDesktopHero, isDesktopHero, serverDesktopHero);
+
   return (
     <PageShell>
       <section className="mc-dark-field px-3 py-4 text-white sm:px-5 sm:py-7">
@@ -207,8 +234,8 @@ function Home() {
                       alt={profile.name}
                       width="675"
                       height="900"
-                      loading="eager"
-                      fetchPriority="high"
+                      loading={desktopHero ? "eager" : "lazy"}
+                      fetchPriority={desktopHero ? "high" : "auto"}
                       decoding="async"
                       className="h-64 w-full rounded-2xl object-cover object-center sm:h-80 lg:h-[26rem]"
                     />

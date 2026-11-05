@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "imageDirectories": ["main/src/images", "main/public"],
+  "resumePreviews": true,
+  "assets": [
+    { "path": "main/public/og-image-v3.jpg", "format": "jpeg", "width": 1200, "height": 630, "maxBytes": 300000 },
+    { "path": "main/public/og-image-v2.png", "format": "png", "width": 1200, "height": 630, "maxBytes": 1200000 },
+    { "path": "main/public/og-image.png", "format": "png", "width": 1200, "height": 630, "maxBytes": 100000 },
+    { "path": "main/public/logo192.png", "format": "png", "width": 192, "height": 192, "maxBytes": 17000 },
+    { "path": "main/public/logo512.png", "format": "png", "width": 512, "height": 512, "maxBytes": 29000 },
+    { "path": "main/public/resume-preview.png", "format": "png", "width": 960, "height": 1243, "maxBytes": 450000 },
+    { "path": "main/src/images/profilePic.jpg", "format": "jpeg", "width": 675, "height": 900, "maxBytes": 250000 },
+    { "path": "main/src/images/profilePic-450.webp", "format": "webp", "width": 450, "height": 600, "maxBytes": 55000 },
+    { "path": "main/src/images/profilePic-675.webp", "format": "webp", "width": 675, "height": 900, "maxBytes": 110000 },
+    { "path": "main/src/images/cdcLogo.png", "format": "png", "width": 275, "height": 183, "maxBytes": 70000 },
+    { "path": "main/src/images/cdcLogo.webp", "format": "webp", "width": 275, "height": 183, "maxBytes": 24000 },
+    { "path": "main/src/images/jobSearchLogo.png", "format": "png", "width": 259, "height": 194, "maxBytes": 37000 },
+    { "path": "main/src/images/jobSearchLogo.webp", "format": "webp", "width": 259, "height": 194, "maxBytes": 15000 },
+    { "path": "main/src/images/discoveryServiceLogo.png", "format": "png", "width": 300, "height": 168, "maxBytes": 34000 },
+    { "path": "main/src/images/discoveryServiceLogo.webp", "format": "webp", "width": 300, "height": 168, "maxBytes": 10000 },
+    { "path": "main/src/images/fintechGTLogo.png", "format": "png", "width": 259, "height": 195, "maxBytes": 19000 },
+    { "path": "main/src/images/fintechGTLogo.webp", "format": "webp", "width": 259, "height": 195, "maxBytes": 13000 },
+    { "path": "main/src/images/gtComputingLogo.png", "format": "png", "width": 225, "height": 225, "maxBytes": 30000 },
+    { "path": "main/src/images/gtComputingLogo.webp", "format": "webp", "width": 225, "height": 225, "maxBytes": 20000 },
+    { "path": "main/src/images/gtLogo.png", "format": "png", "width": 460, "height": 109, "maxBytes": 65000 },
+    { "path": "main/src/images/hdLogo.png", "format": "png", "width": 225, "height": 225, "maxBytes": 40000 },
+    { "path": "main/src/images/hdLogo.webp", "format": "webp", "width": 225, "height": 225, "maxBytes": 24000 },
+    { "path": "main/src/images/landisGyrLogo.png", "format": "png", "width": 225, "height": 225, "maxBytes": 17000 },
+    { "path": "main/src/images/landisGyrLogo.webp", "format": "webp", "width": 225, "height": 225, "maxBytes": 8000 }
+  ]
+}

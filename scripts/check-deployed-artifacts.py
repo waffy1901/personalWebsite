@@ -36,6 +36,7 @@ ARTIFACTS = (
     Artifact("waffyAhmedResume.pdf", "application/pdf"),
     Artifact("resume-preview.png", "image/png"),
     Artifact("og-image-v2.png", "image/png"),
+    Artifact("og-image-v3.jpg", "image/jpeg"),
 )
 
 

@@ -89,8 +89,10 @@ function createFixture(decoding) {
     root,
     "main/src/pages/Home.jsx",
     [
+      'const desktopHeroQuery = "(min-width: 1024px)"',
       "export default function Home({ profile }) {",
-      '  return <img src={profile.profilePicture} loading="eager" fetchPriority="high" decoding="async" alt="Profile" />',
+      '  const desktopHero = useSyncExternalStore(subscribeDesktopHero, isDesktopHero, serverDesktopHero)',
+      '  return <img src={profile.profilePicture} loading={desktopHero ? "eager" : "lazy"} fetchPriority={desktopHero ? "high" : "auto"} decoding="async" alt="Profile" />',
       "}",
       "",
     ].join("\n"),
@@ -162,6 +164,25 @@ test('rejects image decoding values other than "async"', () => {
     rmSync(fixtureRoot, { recursive: true, force: true })
   }
 })
+
+for (const [before, after, message] of [
+  ['loading={desktopHero ? "eager" : "lazy"}', 'loading="eager"', /desktop eager \/ narrow lazy loading/],
+  ['fetchPriority={desktopHero ? "high" : "auto"}', 'fetchPriority="high"', /desktop high \/ narrow auto priority/],
+  ['(min-width: 1024px)', '(min-width: 640px)', /read and subscribe to the 1024px hero layout/],
+  ['useSyncExternalStore(subscribeDesktopHero, isDesktopHero, serverDesktopHero)', 'false', /before the first image render/],
+]) {
+  test(`rejects a broken responsive Home portrait policy: ${after}`, () => {
+    const root = createFixture("async")
+    try {
+      replaceFixture(root, "main/src/pages/Home.jsx", [[before, after]])
+      const result = runChecker(root)
+      assert.equal(result.status, 1)
+      assert.match(result.stderr, message)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+}
 
 test("rejects a missing optimized resume preview", () => {
   const fixtureRoot = createFixture("async")

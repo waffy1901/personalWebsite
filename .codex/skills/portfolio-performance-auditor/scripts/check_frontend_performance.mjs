@@ -13,6 +13,7 @@ const lcpImagePolicies = [
     file: join(srcRoot, "pages", "Home.jsx"),
     label: "Home profile image",
     pattern: /src=\{profile\.profilePicture\}/,
+    responsive: true,
   },
   {
     file: join(srcRoot, "pages", "Resume.jsx"),
@@ -230,13 +231,21 @@ function checkHeroImagePolicy() {
       continue
     }
 
-    if (attrValue(tag, "loading") !== "eager") {
-      errors.push(`${image.label} should use loading=\"eager\" in ${relativePath}.`)
+    const expectedLoading = image.responsive ? 'desktopHero ? "eager" : "lazy"' : "eager"
+    const expectedPriority = image.responsive ? 'desktopHero ? "high" : "auto"' : "high"
+    const normalizeExpression = (value) => value?.replace(/\s+/g, " ").trim()
+    if (normalizeExpression(attrValue(tag, "loading")) !== expectedLoading) {
+      errors.push(`${image.label} should use ${image.responsive ? "desktop eager / narrow lazy loading" : 'loading="eager"'} in ${relativePath}.`)
     }
 
     const fetchPriority = attrValue(tag, "fetchPriority") ?? attrValue(tag, "fetchpriority")
-    if (fetchPriority !== "high") {
-      errors.push(`${image.label} should use fetchPriority=\"high\" in ${relativePath}.`)
+    if (normalizeExpression(fetchPriority) !== expectedPriority) {
+      errors.push(`${image.label} should use ${image.responsive ? "desktop high / narrow auto priority" : 'fetchPriority="high"'} in ${relativePath}.`)
+    }
+
+    if (image.responsive && (!/desktopHeroQuery\s*=\s*["']\(min-width: 1024px\)["']/.test(source)
+      || !/useSyncExternalStore\(subscribeDesktopHero,\s*isDesktopHero,\s*serverDesktopHero\)/.test(source))) {
+      errors.push(`${image.label} should read and subscribe to the 1024px hero layout before the first image render in ${relativePath}.`)
     }
 
     if (normalizedAttrValue(attrValue(tag, "decoding")) !== "async") {
