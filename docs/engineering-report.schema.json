@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Private repository engineering report v1",
+  "type": "object",
+  "required": ["schema_version", "repository", "as_of", "collected_at", "first_observed_at", "repository_created_at", "default_branch", "sources", "coverage", "rollups", "samples"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": 1},
+    "repository": {"type": "string", "pattern": "^[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+$"},
+    "as_of": {"$ref": "#/$defs/timestamp"},
+    "collected_at": {"$ref": "#/$defs/timestamp"},
+    "first_observed_at": {"anyOf": [{"$ref": "#/$defs/timestamp"}, {"type": "null"}]},
+    "repository_created_at": {"anyOf": [{"$ref": "#/$defs/timestamp"}, {"type": "null"}]},
+    "default_branch": {
+      "anyOf": [{"type": "object", "required": ["name", "sha"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}}}, {"type": "null"}]
+    },
+    "sources": {
+      "type": "object",
+      "required": ["commits", "pull_requests", "issues"],
+      "additionalProperties": false,
+      "properties": {
+        "commits": {"$ref": "#/$defs/url"},
+        "pull_requests": {"$ref": "#/$defs/url"},
+        "issues": {"$ref": "#/$defs/url"}
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["commits", "pull_requests", "issues", "commit_churn", "merged_pr_size", "issue_lifecycle"],
+      "additionalProperties": false,
+      "properties": {
+        "commits": {"$ref": "#/$defs/coverage"},
+        "pull_requests": {"$ref": "#/$defs/coverage"},
+        "issues": {"$ref": "#/$defs/coverage"},
+        "commit_churn": {"$ref": "#/$defs/coverage"},
+        "merged_pr_size": {"$ref": "#/$defs/coverage"},
+        "issue_lifecycle": {"$ref": "#/$defs/coverage"}
+      }
+    },
+    "rollups": {
+      "type": "object",
+      "required": ["daily", "weekly", "monthly", "lifetime"],
+      "additionalProperties": false,
+      "properties": {
+        "daily": {"type": "array", "items": {"$ref": "#/$defs/period"}},
+        "weekly": {"type": "array", "items": {"$ref": "#/$defs/period"}},
+        "monthly": {"type": "array", "items": {"$ref": "#/$defs/period"}},
+        "lifetime": {"$ref": "#/$defs/period"}
+      }
+    },
+    "samples": {
+      "type": "object",
+      "required": ["merged_prs", "issue_closures"],
+      "additionalProperties": false,
+      "properties": {
+        "merged_prs": {"type": "array", "items": {"$ref": "#/$defs/merged_pr_sample"}, "maxItems": 5},
+        "issue_closures": {"type": "array", "items": {"$ref": "#/$defs/issue_closure_sample"}, "maxItems": 5}
+      }
+    }
+  },
+  "$defs": {
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "url": {"type": "string", "format": "uri"},
+    "record_id": {"type": "integer", "minimum": 1},
+    "count": {"type": "integer", "minimum": 0},
+    "coverage": {
+      "type": "object",
+      "required": ["status", "expected", "collected", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "status": {"enum": ["complete", "partial", "unavailable"]},
+        "expected": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+        "collected": {"$ref": "#/$defs/count"},
+        "reason": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+      }
+    },
+    "duration": {
+      "type": "object",
+      "required": ["unit", "n", "small_sample", "median", "p90"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": {"const": "seconds"},
+        "n": {"$ref": "#/$defs/count"},
+        "small_sample": {"type": "boolean"},
+        "median": {"anyOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
+        "p90": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]}
+      }
+    },
+    "size": {
+      "type": "object",
+      "required": ["unit", "n", "small_sample", "median", "p90", "buckets"],
+      "additionalProperties": false,
+      "properties": {
+        "unit": {"const": "lines"},
+        "n": {"$ref": "#/$defs/count"},
+        "small_sample": {"type": "boolean"},
+        "median": {"anyOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
+        "p90": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+        "buckets": {
+          "type": "object",
+          "required": ["0-49", "50-199", "200-499", "500+"],
+          "additionalProperties": false,
+          "properties": {
+            "0-49": {"$ref": "#/$defs/count"},
+            "50-199": {"$ref": "#/$defs/count"},
+            "200-499": {"$ref": "#/$defs/count"},
+            "500+": {"$ref": "#/$defs/count"}
+          }
+        }
+      }
+    },
+    "line_totals": {
+      "type": "object",
+      "required": ["additions", "deletions", "file_touches"],
+      "additionalProperties": false,
+      "properties": {
+        "additions": {"$ref": "#/$defs/count"},
+        "deletions": {"$ref": "#/$defs/count"},
+        "file_touches": {"$ref": "#/$defs/count"}
+      }
+    },
+    "period": {
+      "type": "object",
+      "required": ["start", "end", "partial", "history_available", "contribution", "issues", "delivery"],
+      "additionalProperties": false,
+      "properties": {
+        "start": {"$ref": "#/$defs/timestamp"},
+        "end": {"$ref": "#/$defs/timestamp"},
+        "partial": {"type": "boolean"},
+        "history_available": {"type": "boolean"},
+        "contribution": {
+          "type": "object",
+          "required": ["commits", "active_days", "non_merge_commits", "churn"],
+          "additionalProperties": false,
+          "properties": {
+            "commits": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "active_days": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "non_merge_commits": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "churn": {
+              "anyOf": [{"type": "object", "required": ["raw", "eligible"], "additionalProperties": false, "properties": {"raw": {"$ref": "#/$defs/line_totals"}, "eligible": {"$ref": "#/$defs/line_totals"}}}, {"type": "null"}]
+            }
+          }
+        },
+        "issues": {
+          "type": "object",
+          "required": ["opened", "closed", "reopened", "outstanding_end", "resolution_time"],
+          "additionalProperties": false,
+          "properties": {
+            "opened": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "closed": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "reopened": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "outstanding_end": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "resolution_time": {"anyOf": [{"$ref": "#/$defs/duration"}, {"type": "null"}]}
+          }
+        },
+        "delivery": {
+          "type": "object",
+          "required": ["prs_opened", "prs_merged", "prs_closed_unmerged", "time_to_merge", "merged_pr_size"],
+          "additionalProperties": false,
+          "properties": {
+            "prs_opened": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "prs_merged": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "prs_closed_unmerged": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+            "time_to_merge": {"anyOf": [{"$ref": "#/$defs/duration"}, {"type": "null"}]},
+            "merged_pr_size": {"anyOf": [{"$ref": "#/$defs/size"}, {"type": "null"}]}
+          }
+        }
+      }
+    },
+    "merged_pr_sample": {
+      "type": "object",
+      "required": ["number", "opened_at", "merged_at", "seconds", "lines_changed", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "number": {"$ref": "#/$defs/record_id"},
+        "opened_at": {"$ref": "#/$defs/timestamp"},
+        "merged_at": {"$ref": "#/$defs/timestamp"},
+        "seconds": {"$ref": "#/$defs/count"},
+        "lines_changed": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
+        "url": {"$ref": "#/$defs/url"}
+      }
+    },
+    "issue_closure_sample": {
+      "type": "object",
+      "required": ["number", "event_id", "opened_at", "closed_at", "seconds", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "number": {"$ref": "#/$defs/record_id"},
+        "event_id": {"$ref": "#/$defs/record_id"},
+        "opened_at": {"$ref": "#/$defs/timestamp"},
+        "closed_at": {"$ref": "#/$defs/timestamp"},
+        "seconds": {"$ref": "#/$defs/count"},
+        "url": {"$ref": "#/$defs/url"}
+      }
+    }
+  }
+}
