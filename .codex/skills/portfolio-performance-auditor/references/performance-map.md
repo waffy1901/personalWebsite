@@ -12,11 +12,12 @@ Use this reference when performance, image behavior, lazy loading, or responsive
 ## Image Policy
 
 - Above-the-fold LCP candidates should be explicit:
-  - Home profile image: `loading="eager"`, `fetchPriority="high"`, `decoding="async"`.
+  - Home profile image: read the 1024px hero-layout media query before its first render. At desktop width use `loading="eager"` and `fetchPriority="high"`; below that breakpoint use `loading="lazy"` and `fetchPriority="auto"` because the portrait follows the hero text. Subscribe to viewport changes, keep one picture/img, and preserve `decoding="async"` and reserved dimensions. Browser lazy loading may still request a nearby offscreen portrait.
   - Resume preview image: `loading="eager"`, `fetchPriority="high"`, `decoding="async"`.
 - Repeated logos, project thumbnails, case-study images, and below-the-fold assets should use `loading="lazy"` and `decoding="async"`.
 - Avoid adding remote image hosts without checking `netlify.toml` CSP image and connect allowlists.
 - Prefer generated or existing bitmap assets for inspectable images; do not replace real portfolio imagery with decorative CSS/SVG placeholders.
+- Run `npm run check:image-budgets` for the explicit source image inventory, file formats, dimensions, and byte ceilings. Resume WebP ceilings come from the existing resume variant manifest. See [image budgets](../../../../docs/image-budgets.md) for encodings and deliberate headroom.
 
 ## Layout And Runtime Checks
 

@@ -32,6 +32,8 @@
     "test:deployed-artifacts": "python3 scripts/test_deployed_artifacts.py",
     "preview": "npm --prefix main run preview --",
     "check:bundle-budgets": "node scripts/check-bundle-budgets.mjs",
-    "test:bundle-budgets": "node --test scripts/check-bundle-budgets.node-test.mjs"
+    "test:bundle-budgets": "node --test scripts/check-bundle-budgets.node-test.mjs",
+    "check:image-budgets": "node scripts/check-image-budgets.mjs",
+    "test:image-budgets": "node --test scripts/check-image-budgets.node-test.mjs"
   }
 }

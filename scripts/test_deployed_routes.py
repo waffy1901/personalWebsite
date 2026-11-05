@@ -23,7 +23,7 @@ EXPECTED = CHECKER.RouteMetadataExpectation(
     title="Projects | Waffy Ahmed",
     description="Selected software projects.",
     canonical_url="https://waffy.dev/projects/",
-    image_url="https://waffy.dev/og-image-v2.png",
+    image_url="https://waffy.dev/og-image-v3.jpg",
 )
 
 EXPECTED_VALUES = {

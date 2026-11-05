@@ -350,7 +350,7 @@ new Function('github', 'context', `return (async () => {${source}})();`)(github,
                 self.assertEqual(result.stdout, '')
                 self.assertIn('Invalid deployment evidence:', result.stderr)
 
-    def test_identical_nine_public_artifacts_do_not_establish_frontend_identity(self):
+    def test_identical_ten_public_artifacts_do_not_establish_frontend_identity(self):
         path = ROOT / 'scripts/check-deployed-artifacts.py'
         spec = importlib.util.spec_from_file_location('artifact_counterexample', path)
         artifacts = importlib.util.module_from_spec(spec)
@@ -378,7 +378,7 @@ new Function('github', 'context', `return (async () => {${source}})();`)(github,
                 self.assertEqual(artifacts.validate_artifact_response(
                     artifact, (target / artifact.path).read_bytes(), response, request), [])
                 compared.append(artifact.path)
-            self.assertEqual(len(compared), 9)
+            self.assertEqual(len(compared), 10)
         published_other = site(published_deploy=deployment(id=OTHER, commit_ref='b' * 40))
         self.assert_failed_without_outputs(self.resolve(published=[published_other]))
         self.assert_failed_without_outputs(self.guard(published_other))

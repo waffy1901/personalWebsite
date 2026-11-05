@@ -217,6 +217,7 @@ const renderRouteHtml = (templateHtml, route, manifest) => {
   html = updateMetaContent(html, "property", "og:description", route.description)
   html = updateMetaContent(html, "property", "og:image", imageUrl)
   html = updateMetaContent(html, "property", "og:image:secure_url", imageUrl)
+  html = updateMetaContent(html, "property", "og:image:type", siteMetadata.imageType)
   html = updateMetaContent(html, "name", "twitter:title", route.title)
   html = updateMetaContent(html, "name", "twitter:description", route.description)
   html = updateMetaContent(html, "name", "twitter:image", imageUrl)

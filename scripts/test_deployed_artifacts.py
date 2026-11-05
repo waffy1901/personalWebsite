@@ -34,6 +34,11 @@ def curl_output(
 
 
 class DeployedArtifactsTest(unittest.TestCase):
+    def test_social_card_contract_keeps_legacy_png_and_current_jpeg(self):
+        artifacts = {artifact.path: artifact.content_type for artifact in CHECKER.ARTIFACTS}
+        self.assertEqual(artifacts["og-image-v2.png"], "image/png")
+        self.assertEqual(artifacts["og-image-v3.jpg"], "image/jpeg")
+
     def validate(
         self,
         *,

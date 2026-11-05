@@ -83,6 +83,15 @@ jobs:
       - name: Check frontend performance policy
         run: node .codex/skills/portfolio-performance-auditor/scripts/check_frontend_performance.mjs "$GITHUB_WORKSPACE"
 
+      - name: Test frontend performance policy fixtures
+        run: node --test .codex/skills/portfolio-performance-auditor/scripts/test_frontend_performance.mjs
+
+      - name: Test image budget checker fixtures
+        run: npm run test:image-budgets
+
+      - name: Check image dimensions, formats, and byte budgets
+        run: npm run check:image-budgets
+
       - name: Test historical Issue 174 performance contract
         run: npm run test:performance:baseline
 

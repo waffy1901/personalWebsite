@@ -9,7 +9,8 @@ export const siteMetadata = {
   siteName: "Waffy Ahmed | Software Engineer Portfolio",
   defaultTitle: "Waffy Ahmed | Software Engineer Portfolio",
   defaultDescription,
-  imagePath: "/og-image-v2.png",
+  imagePath: "/og-image-v3.jpg",
+  imageType: "image/jpeg",
   author: profileIdentity.name,
   keywords: [
     "Waffy Ahmed",

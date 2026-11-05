@@ -84,6 +84,10 @@ function Seo() {
       property: "og:image:secure_url",
       content: imageUrl,
     })
+    upsertMeta('meta[property="og:image:type"]', {
+      property: "og:image:type",
+      content: siteMetadata.imageType,
+    })
     upsertMeta('meta[name="twitter:title"]', {
       name: "twitter:title",
       content: metadata.title,
