@@ -24,6 +24,13 @@ The helper validates snapshot consistency and exact workflow/tag/deploy links. I
 
 Report target merge SHA, workflow/run/attempt, serving SHA and deploy ID, release/tag and resolved SHA, target URL, capture times, evidence classes, and residual gaps.
 
+For eligible future PRs, the bounded [post-deploy closeout workflow](../../../docs/post-merge-closeout.md)
+reuses exact-attempt deployment evidence and independently verifies its writes.
+Read its summary/artifact before reporting automatic closure; a successful upstream
+run or the presence of a contract is insufficient. Missing, skipped, or unsupported
+evidence remains pending. The workflow's standing permission does not authorize
+this read-only skill to perform manual closeout or remediation.
+
 When this validation belongs to a named issue in the active workflow, use
 `$portfolio-audit-maintainer` to read the issue's closure contract and prepare a
 criterion-by-criterion closeout packet before ending the validation handoff.

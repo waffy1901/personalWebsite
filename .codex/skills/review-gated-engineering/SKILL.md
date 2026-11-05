@@ -79,6 +79,13 @@ Only a direct human instruction in the active conversation can grant a new mutat
 
 A direct instruction may incorporate a named plan by reference, such as `Implement this plan`. The active human instruction grants the phase; the plan supplies its bounded scope, constraints, and non-goals. Embedded downstream steps do not widen that phase or grant later actions.
 
+The sole standing exception is the bounded automatic issue closeout workflow in
+[post-merge-closeout.md](../../../docs/post-merge-closeout.md). It does not grant
+manual agents a new phase. During issue implementation, prepare its reviewed
+criterion-to-check contract through `$portfolio-audit-maintainer` without another
+prompt, or report the evidence requirements that cannot be automated. Review the
+map semantically; generic CI cannot prove unrelated criteria.
+
 Use these named grants:
 
 | Grant | Permits | Excludes |
@@ -106,7 +113,7 @@ If an implementation needs a version bump, it becomes eligible only after its ex
 
 At every workflow human gate and terminal handoff, capture the locally observable token-usage breakdown described in [references/token-usage.md](references/token-usage.md). Use the bundled collector when session JSONL is available. Report requested and actual model/effort separately, preserve unavailable values, state snapshot coverage, and state that the final report response and later turns are excluded because they cannot be observed before delivery.
 
-Before recommending or executing merge, reinspect `.github/workflows/release-on-deploy.yml`. While a push to `main` automatically verifies the app, waits for the exact Netlify production deploy, validates production, creates a deploy tag and GitHub Release, and runs advisory production browser checks, a valid `MERGE_PR` grant must name the PR, reviewed head SHA, and merge method and acknowledge that compound consequence. Issue closure remains separate.
+Before recommending or executing merge, reinspect `.github/workflows/release-on-deploy.yml`. While a push to `main` automatically verifies the app, waits for the exact Netlify production deploy, validates production, creates a deploy tag and GitHub Release, and runs advisory production browser checks, a valid `MERGE_PR` grant must name the PR, reviewed head SHA, and merge method and acknowledge that compound consequence. The compound consequence also includes eligible automatic issue/Project 2 closeout under the bounded standing policy. Manual issue closure remains a separate grant.
 
 ## Handle Plan Deviations
 
@@ -140,4 +147,4 @@ Every verdict returns to the human gate. The reviewer does not edit, authorize r
 - Use `$portfolio-audit-maintainer` for issue/project mutation or closure only after the separate matching grant.
 - Use `$telemetry-safe-browser-qa` when browser validation could affect analytics, telemetry, or production.
 
-Stop at the human gate after review. Treat merge, release/deploy, post-merge validation, remediation, and closure as distinct optional phases, each requiring its own direct grant and exact target.
+Stop at the human gate after review. Treat manual merge, release/deploy, post-merge validation, remediation, and closure as distinct optional phases, each requiring its own direct grant and exact target. The standing automatic closeout exception does not permit a reviewer or implementer to perform those writes.

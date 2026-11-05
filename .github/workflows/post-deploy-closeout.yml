@@ -1,0 +1,79 @@
+name: Post-deploy issue closeout
+
+"on":
+  workflow_run:
+    workflows: [Create deployment release]
+    types: [completed]
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/post-deploy-closeout.yml
+      - .github/workflows/release-on-deploy.yml
+      - .github/closeout/**
+      - scripts/post_deploy_closeout.py
+      - scripts/test_post_deploy_closeout.py
+      - scripts/check_netlify_published_deploy.py
+      - scripts/check_netlify_deploy_state.py
+      - .codex/skills/portfolio-deployment-verifier/scripts/verify_deployment_evidence.py
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: Test closeout contracts and guards
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out PR for read-only fixture tests
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test deterministic closeout guards
+        run: python3 scripts/test_post_deploy_closeout.py
+      - name: Validate contract data
+        run: python3 scripts/post_deploy_closeout.py --validate-contracts .github/closeout
+
+  closeout:
+    name: Verify production evidence and close eligible issue
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.repository == 'waffy1901/personalWebsite' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == 'waffy1901/personalWebsite'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: post-deploy-closeout
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      issues: write
+    steps:
+      # workflow_run uses default-branch code, never an upstream PR branch or artifact.
+      - name: Check out trusted default-branch workflow revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify and perform bounded closeout
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CLOSEOUT_PROJECT_TOKEN: ${{ secrets.CLOSEOUT_PROJECT_TOKEN }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: python3 scripts/post_deploy_closeout.py --event "$GITHUB_EVENT_PATH" --report closeout-report.json
+      - name: Retain closeout result
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: closeout-result-${{ github.run_id }}-${{ github.run_attempt }}
+          path: closeout-report.json
+          if-no-files-found: warn
+          retention-days: 14

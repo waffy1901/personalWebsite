@@ -4,6 +4,11 @@ Read `docs/quality-and-verification-policy.md` first. Preparation and verificati
 are read-only; closing the issue, completing named criteria, posting evidence,
 and changing project fields must fit the direct human grant for the exact target.
 
+The [automatic closeout path](../../../../docs/post-merge-closeout.md) has a
+separate bounded standing permission. It does not widen a manual agent's grant.
+When reading its results, distinguish `verified`, `pending`, and `partial`; a
+posted comment alone does not prove that closure/readback completed.
+
 ## Resolve the request and handoff
 
 A direct "close out #176", "post the findings and close it", or "close out the
