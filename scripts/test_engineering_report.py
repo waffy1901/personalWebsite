@@ -2,12 +2,16 @@
 
 from contextlib import redirect_stderr, redirect_stdout
 from email.message import Message
+from http.client import HTTPResponse
 import io
 import json
 import os
 from pathlib import Path
 import ssl
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
@@ -107,6 +111,22 @@ def http_error(code, **headers):
     return HTTPError(API, code, "fixture", message, io.BytesIO(b"fixture"))
 
 
+def clipped_response(*, forbidden=False, retry_after=None, chunked=True):
+    if forbidden:
+        wire = b"HTTP/1.1 403 Forbidden\r\n"
+        if retry_after is not None:
+            wire += f"Retry-After: {retry_after}\r\n".encode()
+        wire += b"Transfer-Encoding: chunked\r\n\r\n2000\r\n" if chunked else b"Content-Length: 80\r\n\r\n"
+        wire += b'{"message":"clipped'
+    else:
+        wire = b'HTTP/1.1 200 OK\r\nContent-Length: 20\r\n\r\n{"clipped'
+    response = HTTPResponse(SimpleNamespace(makefile=lambda *_: io.BytesIO(wire)))
+    response.begin()
+    if forbidden:
+        raise HTTPError(API, response.status, response.reason, response.headers, response)
+    return response
+
+
 class GitHubTests(unittest.TestCase):
     def test_pagination_keeps_params_and_rejects_off_origin(self):
         requests = []
@@ -180,6 +200,34 @@ class GitHubTests(unittest.TestCase):
         with self.assertRaisesRegex(Unavailable, "^GitHub HTTP 403$"):
             github.object("")
         self.assertIsNone(github.blocked_reason)
+
+    def test_retries_clipped_success_and_forbidden_bodies(self):
+        cases = [({}, 1), ({"forbidden": True, "retry_after": 3}, 3),
+                 ({"forbidden": True}, 1), ({"forbidden": True, "chunked": False}, 1)]
+        for options, delay in cases:
+            with self.subTest(options=options):
+                waits = []
+                responses = iter([lambda: clipped_response(**options), lambda: Response({})])
+                github = GitHub(REPO, "fixture", opener=lambda *_args, **_kwargs: next(responses)(),
+                                sleep=waits.append)
+                self.assertEqual(github.object(""), {})
+                self.assertEqual(waits, [delay])
+
+    def test_retries_connection_reset_in_forbidden_body(self):
+        error = http_error(403)
+        responses = iter([error, Response({})])
+        waits = []
+
+        def open_response(request, **kwargs):
+            response = next(responses)
+            if response is error:
+                raise error
+            return response
+
+        github = GitHub(REPO, "fixture", opener=open_response, sleep=waits.append)
+        with patch.object(error, "read", side_effect=ConnectionResetError()):
+            self.assertEqual(github.object(""), {})
+        self.assertEqual(waits, [1])
 
 
 class ReportTests(unittest.TestCase):
@@ -293,6 +341,31 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(january["issues"]["opened"], 1)
         self.assertEqual(report["coverage"]["issue_lifecycle"]["status"], "unavailable")
 
+    def test_repository_creation_anchors_empty_inventories_when_branch_is_forbidden(self):
+        calls = []
+
+        def open_response(request, **kwargs):
+            path = request.selector.split("?", 1)[0].removeprefix(f"/repos/{REPO}")
+            calls.append(path)
+            if path == "/branches/main":
+                raise http_error(403)
+            if not path:
+                return Response({"default_branch": "main", "created_at": at(31, 22, 1)})
+            return Response([])
+
+        self.api = GitHub(REPO, "fixture", opener=open_response, sleep=lambda _: self.fail("should not sleep"))
+        report = self.collect()
+        lifetime = report["rollups"]["lifetime"]
+        self.assertEqual(calls, ["", "/branches/main", "/pulls", "/issues"])
+        self.assertEqual(report["repository_created_at"], at(31, 22, 1))
+        self.assertEqual(report["coverage"]["commits"]["reason"], "GitHub HTTP 403")
+        self.assertTrue(lifetime["history_available"])
+        self.assertEqual(lifetime["contribution"], dict.fromkeys(("commits", "non_merge_commits", "active_days", "churn")))
+        self.assertEqual(lifetime["delivery"]["prs_opened"], 0)
+        self.assertEqual(lifetime["delivery"]["prs_merged"], 0)
+        self.assertEqual(lifetime["issues"]["opened"], 0)
+        self.assertEqual(lifetime["issues"]["outstanding_end"], 0)
+
     def test_bad_issue_transition_fails(self):
         self.api.events.pop()
         issue = {"created": at(31, 22, 1), "state": "closed", "closed": at(2, 2)}
@@ -333,31 +406,97 @@ class ReportTests(unittest.TestCase):
         with self.assertRaisesRegex(Unavailable, "3000-file limit"):
             read_churn(BigCommit(), SHA_A)
 
-    def test_cli_publishes_private_pair_and_reuses_cache(self):
-        with TemporaryDirectory() as directory, patch(
-            "sys.argv", ["engineering_report.py", "--repo", REPO, "--output-dir", directory]
-        ), patch("engineering_report.read_token", return_value="fixture-secret"), patch(
-            "engineering_report.GitHub", return_value=self.api
-        ), redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-            old_mask = os.umask(0o077)
-            try:
-                self.assertEqual(main(), 0)
-                first = (Path(directory) / "current").resolve()
-                self.assertEqual(main(), 0)
-                current = (Path(directory) / "current").resolve()
-                self.assertNotEqual(first, current)
-                report = json.loads((current / "report.json").read_text())
-                self.assertIn(report["as_of"], (current / "report.md").read_text())
-                self.assertEqual(report["schema_version"], 1)
-                for path in (current, *current.iterdir(), Path(directory) / "cache.json"):
-                    self.assertEqual(path.stat().st_mode & 0o077, 0)
-                self.assertNotIn("fixture-secret", (Path(directory) / "cache.json").read_text())
-            finally:
-                os.umask(old_mask)
-
     def test_rejects_checkout_output(self):
         with self.assertRaisesRegex(Unavailable, "outside Git worktrees"):
             prepare_output(Path(__file__).resolve().parent / "report")
+
+
+class CLITests(unittest.TestCase):
+    def run_report(self, directory, api, *options):
+        args = ["engineering_report.py", "--repo", REPO, "--output-dir", str(directory), *options]
+        with patch("sys.argv", args), patch("engineering_report.read_token", return_value="fixture-secret"), patch(
+            "engineering_report.GitHub", return_value=api
+        ), redirect_stdout(io.StringIO()) as stdout, redirect_stderr(io.StringIO()) as stderr:
+            old_mask = os.umask(0o077)
+            try:
+                return main(), stdout.getvalue(), stderr.getvalue()
+            finally:
+                os.umask(old_mask)
+
+    def test_cli_publishes_private_pair_and_reuses_cache(self):
+        api = Fixture()
+        with TemporaryDirectory() as directory:
+            output = Path(directory)
+            self.assertEqual(self.run_report(output, api)[0], 0)
+            first = (output / "current").resolve()
+            api.calls.clear()
+            self.assertEqual(self.run_report(output, api)[0], 0)
+            current = (output / "current").resolve()
+            self.assertNotEqual(first, current)
+            self.assertEqual(api.calls, ["", "/branches/main", "/commits", "/pulls", "/issues"])
+            report = json.loads((current / "report.json").read_text())
+            self.assertIn(report["as_of"], (current / "report.md").read_text())
+            self.assertEqual(report["schema_version"], 1)
+            for path in (current, *current.iterdir(), output / "cache.json"):
+                self.assertEqual(path.stat().st_mode & 0o077, 0)
+            self.assertNotIn("fixture-secret", (output / "cache.json").read_text())
+
+    def test_cli_partial_publication_and_bad_arguments_have_distinct_statuses(self):
+        for options, expected_waits in (({}, [1, 2]), ({"forbidden": True, "retry_after": 2}, [2, 2])):
+            with self.subTest(options=options), TemporaryDirectory() as directory:
+                output = Path(directory)
+                self.assertEqual(self.run_report(output, Fixture())[0], 0)
+                first = (output / "current").readlink()
+                cache = (output / "cache.json").read_bytes()
+                waits = []
+                requests = []
+
+                def open_response(request, **kwargs):
+                    requests.append(request.full_url)
+                    return clipped_response(**options)
+
+                api = GitHub(REPO, "fixture", opener=open_response, sleep=waits.append)
+                with self.assertRaises(SystemExit) as usage:
+                    self.run_report(output, api, "--max-wait", "-1")
+                self.assertEqual(usage.exception.code, 2)
+                self.assertEqual((output / "current").readlink(), first)
+                self.assertEqual((output / "cache.json").read_bytes(), cache)
+                self.assertEqual(requests, [])
+
+                status, stdout, stderr = self.run_report(output, api)
+                self.assertEqual(status, 3)
+                self.assertIn("Report published", stdout)
+                self.assertIn("Incomplete GitHub coverage", stderr)
+                self.assertEqual(waits, expected_waits)
+                self.assertEqual(requests, [f"{API}/repos/{REPO}"] * 3)
+                current = output / "current"
+                self.assertNotEqual(current.readlink(), first)
+                report = json.loads((current / "report.json").read_text())
+                self.assertEqual(report["coverage"]["commits"]["status"], "unavailable")
+                self.assertIn("retry budget exhausted", report["coverage"]["commits"]["reason"])
+                self.assertIn(report["as_of"], (current / "report.md").read_text())
+
+    @unittest.skipUnless(sys.platform == "darwin", "requires real macOS ACL inheritance")
+    def test_cli_refuses_inherited_acl_before_writing(self):
+        with TemporaryDirectory(dir="/private/tmp") as parent:
+            parent = Path(parent)
+            parent.chmod(0o755)
+            subprocess.run(["/bin/chmod", "+a", "everyone allow list,search,file_inherit,directory_inherit",
+                            parent], check=True)
+            output = parent / "private\noutput"
+            output.mkdir(mode=0o700)
+            subprocess.run(["/usr/bin/xattr", "-w", "com.example.fixture", "fixture", output], check=True)
+            acl = subprocess.check_output(["/bin/ls", "-ldbe", output])
+            self.assertIn(b"inherited allow", acl)
+            self.assertEqual(output.stat().st_mode & 0o777, 0o700)
+
+            api = Fixture()
+            status, stdout, stderr = self.run_report(output, api)
+            self.assertEqual(status, 1)
+            self.assertEqual(stdout, "")
+            self.assertIn("macOS ACL", stderr)
+            self.assertEqual(api.calls, [])
+            self.assertEqual(list(output.iterdir()), [])
 
 
 if __name__ == "__main__":

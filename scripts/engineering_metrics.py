@@ -71,7 +71,8 @@ def episode_history(issues, events):
     return episodes, reopens
 
 
-def build_report(repo, as_of, commits, pulls, issues, churn, sizes, events, coverage, *, collected_at=None):
+def build_report(repo, as_of, repository_created_at, commits, pulls, issues, churn, sizes, events, coverage,
+                 *, collected_at=None):
     commit_rows = commits["commits"] if commits is not None else {}
     pull_rows = pulls or {}
     issue_rows = issues or {}
@@ -92,8 +93,7 @@ def build_report(repo, as_of, commits, pulls, issues, churn, sizes, events, cove
     week = today - timedelta(days=today.weekday())
     month = today.replace(day=1)
     previous_month = (month - DAY).replace(day=1)
-    repository_created = commits["repository_created_at"] if commits is not None else None
-    history_anchor = min((at for at in (first_observed, repository_created) if at and at < as_of), default=None)
+    history_anchor = min((at for at in (first_observed, repository_created_at) if at and at < as_of), default=None)
     history_start = day_start(history_anchor or as_of)
 
     def period(start, end):
@@ -193,7 +193,7 @@ def build_report(repo, as_of, commits, pulls, issues, churn, sizes, events, cove
         "as_of": as_of,
         "collected_at": collected_at or as_of,
         "first_observed_at": first_observed,
-        "repository_created_at": repository_created,
+        "repository_created_at": repository_created_at,
         "default_branch": {"name": commits["branch"], "sha": head} if commits is not None else None,
         "sources": {
             "commits": f"{repo_url}/commits/{head}" if head else f"{repo_url}/commits",

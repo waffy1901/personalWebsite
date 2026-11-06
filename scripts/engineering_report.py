@@ -2,8 +2,11 @@
 
 import argparse
 from collections import defaultdict
+import ctypes
 from datetime import UTC, datetime, timedelta
+import errno
 import fcntl
+from http.client import IncompleteRead
 import json
 import os
 from pathlib import Path
@@ -38,6 +41,23 @@ class Unavailable(Exception):
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
+
+
+def forbidden_detail(error):
+    limit = 4096
+    try:
+        body = error.read(limit)
+    except IncompleteRead as truncated:
+        return truncated.partial.decode(errors="replace"), True
+    except OSError:
+        return "", True
+    # A bounded read can return early at EOF without raising IncompleteRead.
+    try:
+        length = int(error.headers.get("Content-Length", "0"))
+    except ValueError:
+        length = 0
+    interrupted = not error.headers.get("Transfer-Encoding") and len(body) < min(length, limit)
+    return body.decode(errors="replace"), interrupted
 
 
 def read_token():
@@ -100,21 +120,25 @@ class GitHub:
                     return json.load(response), response.headers.get("Link", "")
             except HTTPError as error:
                 with error:
-                    detail = error.read(4096).decode(errors="replace") if error.code == 403 else ""
+                    detail, interrupted = forbidden_detail(error) if error.code == 403 else ("", False)
                 delay = self.retry_delay(error.code, error.headers, detail, attempt)
+                throttled = delay is not None and error.code in (403, 429)
+                reason = f"GitHub HTTP {error.code}"
+                if delay is None and interrupted:
+                    delay = 2 ** attempt
+                    reason += " response body interrupted"
                 if delay is None:
-                    reason = f"GitHub HTTP {error.code}"
                     if error.code == 401:
                         self.blocked_reason = reason
                     raise Unavailable(reason) from None
                 if attempt == 2 or self.waited + delay > self.max_wait:
-                    reason = f"GitHub HTTP {error.code}, retry budget exhausted"
-                    if error.code in (403, 429):
+                    reason += ", retry budget exhausted"
+                    if throttled:
                         self.blocked_reason = reason
                     raise Unavailable(reason) from None
                 self.waited += delay
                 self.sleep(delay)
-            except (URLError, OSError) as error:
+            except (URLError, OSError, IncompleteRead) as error:
                 if isinstance(getattr(error, "reason", error), ssl.SSLCertVerificationError):
                     self.blocked_reason = "GitHub TLS certificate verification failed"
                     raise Unavailable(self.blocked_reason) from None
@@ -165,9 +189,7 @@ def required_timestamp(value):
     return result
 
 
-def commit_inventory(api):
-    metadata = api.object("")
-    branch = metadata["default_branch"]
+def commit_inventory(api, branch):
     head = api.object(f"/branches/{quote(branch, safe='')}")["commit"]["sha"]
     if not SHA.fullmatch(head):
         raise ValueError("Invalid default branch SHA")
@@ -182,10 +204,7 @@ def commit_inventory(api):
         }
     if head not in commits:
         raise Unavailable("Default branch tip missing from commit inventory")
-    return {
-        "branch": branch, "sha": head, "commits": commits,
-        "repository_created_at": required_timestamp(metadata["created_at"]),
-    }
+    return {"branch": branch, "sha": head, "commits": commits}
 
 
 LOCKFILES = {
@@ -313,6 +332,13 @@ def issue_events(api, number, issue):
 
 def collect(api, cache, as_of):
     coverage = {}
+    repository_created_at = None
+
+    def read_commits(api):
+        nonlocal repository_created_at
+        metadata = api.object("")
+        repository_created_at = required_timestamp(metadata["created_at"])
+        return commit_inventory(api, metadata["default_branch"])
 
     def inventory(name, load):
         try:
@@ -359,7 +385,7 @@ def collect(api, cache, as_of):
         }
         return {key: current[str(key)]["value"] for key in keys if str(key) in current}
 
-    commits = inventory("commits", commit_inventory)
+    commits = inventory("commits", read_commits)
     pulls = inventory("pull_requests", pull_inventory)
     issues = inventory("issues", issue_inventory)
     churn = details(
@@ -385,13 +411,40 @@ def collect(api, cache, as_of):
         lambda number: issues[number] if issues[number]["updated"] < as_of else None,
         lambda number: issue_events(api, number, issues[number]),
     )
-    return commits, pulls, issues, churn, sizes, events, coverage
+    return repository_created_at, commits, pulls, issues, churn, sizes, events, coverage
 
 
-def require_private(path, kind):
-    info = path.lstat()
+def require_private(path, kind, fd=None):
+    info = path.lstat() if fd is None else os.fstat(fd)
     if not kind(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
         raise Unavailable(f"Expected owner-only access to {path}")
+    if sys.platform != "darwin":
+        return
+    if fd is not None:
+        require_no_macos_acl(path, fd)
+        return
+    opened = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        require_private(path, kind, opened)
+    finally:
+        os.close(opened)
+
+
+def require_no_macos_acl(path, fd):
+    # Darwin's ACLs can grant access beyond mode bits, including by inheritance.
+    libc = ctypes.CDLL("/usr/lib/libSystem.B.dylib", use_errno=True)
+    libc.acl_get_fd.argtypes = [ctypes.c_int]
+    libc.acl_get_fd.restype = ctypes.c_void_p
+    libc.acl_free.argtypes = [ctypes.c_void_p]
+    libc.acl_free.restype = ctypes.c_int
+    ctypes.set_errno(0)
+    acl = libc.acl_get_fd(fd)
+    if acl is not None:
+        libc.acl_free(acl)
+        raise Unavailable(f"Expected owner-only access without a macOS ACL to {path}")
+    # With an open descriptor, Darwin uses ENOENT to report an absent ACL.
+    if ctypes.get_errno() != errno.ENOENT:
+        raise Unavailable(f"Could not verify macOS ACL for {path}")
 
 
 def prepare_output(path):
@@ -406,6 +459,7 @@ def prepare_output(path):
 
 def write_file(path, contents):
     with path.open("x", encoding="utf-8") as stream:
+        require_private(path, stat.S_ISREG, stream.fileno())
         stream.write(contents)
 
 
@@ -423,10 +477,12 @@ def load_cache(directory, repo, backfill):
 
 def publish(directory, repo, cache, report):
     # Readers can resolve current once to consume a matching pair.
+    require_private(directory, stat.S_ISDIR)
     snapshot = Path(tempfile.mkdtemp(prefix="snapshot-", dir=directory))
     cache_temp = snapshot / "cache.json"
     link_temp = directory / f".{snapshot.name}-current"
     try:
+        require_private(snapshot, stat.S_ISDIR)
         write_file(snapshot / "report.json", json.dumps(report, indent=2) + "\n")
         write_file(snapshot / "report.md", render_markdown(report))
         write_file(cache_temp, json.dumps({"version": CACHE_VERSION, "repository": repo, "data": cache}) + "\n")
@@ -457,7 +513,7 @@ def main():
         lock_path = directory / ".lock"
         lock_fd = os.open(lock_path, os.O_CREAT | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
         with os.fdopen(lock_fd, "w") as lock:
-            require_private(lock_path, stat.S_ISREG)
+            require_private(lock_path, stat.S_ISREG, lock.fileno())
             try:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
             except BlockingIOError:
@@ -472,7 +528,7 @@ def main():
         incomplete = [name for name, item in data[-1].items() if item["status"] != "complete"]
         if incomplete:
             print(f"Incomplete GitHub coverage: {', '.join(incomplete)}", file=sys.stderr)
-            return 2
+            return 3
     except (Unavailable, OSError, ValueError, KeyError, TypeError) as error:
         print(f"Engineering report failed: {error}", file=sys.stderr)
         return 1
