@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Private repository engineering report v1",
+  "title": "Private repository engineering report v2",
   "type": "object",
   "required": ["schema_version", "repository", "as_of", "collected_at", "first_observed_at", "repository_created_at", "default_branch", "sources", "coverage", "rollups", "samples"],
   "additionalProperties": false,
   "properties": {
-    "schema_version": {"const": 1},
+    "schema_version": {"const": 2},
     "repository": {"type": "string", "pattern": "^[A-Za-z0-9_-]+/[A-Za-z0-9_.-]+$"},
     "as_of": {"$ref": "#/$defs/timestamp"},
     "collected_at": {"$ref": "#/$defs/timestamp"},
@@ -16,17 +16,25 @@
     },
     "sources": {
       "type": "object",
-      "required": ["commits", "pull_requests", "issues"],
+      "required": ["commits", "pull_requests", "issues", "workflow_runs", "releases", "deployments", "code_scanning", "dependabot"],
       "additionalProperties": false,
       "properties": {
         "commits": {"$ref": "#/$defs/url"},
         "pull_requests": {"$ref": "#/$defs/url"},
-        "issues": {"$ref": "#/$defs/url"}
+        "issues": {"$ref": "#/$defs/url"},
+        "workflow_runs": {"$ref": "#/$defs/url"},
+        "releases": {"$ref": "#/$defs/url"},
+        "deployments": {"$ref": "#/$defs/url"},
+        "code_scanning": {"$ref": "#/$defs/url"},
+        "dependabot": {"$ref": "#/$defs/url"}
       }
     },
     "coverage": {
       "type": "object",
-      "required": ["commits", "pull_requests", "issues", "commit_churn", "merged_pr_size", "issue_lifecycle"],
+      "required": [
+        "commits", "pull_requests", "issues", "commit_churn", "merged_pr_size", "issue_lifecycle",
+        "workflow_runs", "releases", "deployments", "deployment_states", "code_scanning", "dependabot"
+      ],
       "additionalProperties": false,
       "properties": {
         "commits": {"$ref": "#/$defs/coverage"},
@@ -34,7 +42,13 @@
         "issues": {"$ref": "#/$defs/coverage"},
         "commit_churn": {"$ref": "#/$defs/coverage"},
         "merged_pr_size": {"$ref": "#/$defs/coverage"},
-        "issue_lifecycle": {"$ref": "#/$defs/coverage"}
+        "issue_lifecycle": {"$ref": "#/$defs/coverage"},
+        "workflow_runs": {"$ref": "#/$defs/coverage"},
+        "releases": {"$ref": "#/$defs/coverage"},
+        "deployments": {"$ref": "#/$defs/coverage"},
+        "deployment_states": {"$ref": "#/$defs/coverage"},
+        "code_scanning": {"$ref": "#/$defs/coverage"},
+        "dependabot": {"$ref": "#/$defs/coverage"}
       }
     },
     "rollups": {
@@ -68,10 +82,11 @@
       "required": ["status", "expected", "collected", "reason"],
       "additionalProperties": false,
       "properties": {
-        "status": {"enum": ["complete", "partial", "unavailable"]},
+        "status": {"enum": ["complete", "partial", "unavailable", "not_collected"]},
         "expected": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]},
         "collected": {"$ref": "#/$defs/count"},
-        "reason": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+        "reason": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "earliest_at": {"$ref": "#/$defs/timestamp"}
       }
     },
     "duration": {
@@ -121,7 +136,7 @@
     },
     "period": {
       "type": "object",
-      "required": ["start", "end", "partial", "history_available", "contribution", "issues", "delivery"],
+      "required": ["start", "end", "partial", "history_available", "contribution", "issues", "delivery", "ci_cd", "quality"],
       "additionalProperties": false,
       "properties": {
         "start": {"$ref": "#/$defs/timestamp"},
@@ -164,6 +179,105 @@
             "time_to_merge": {"anyOf": [{"$ref": "#/$defs/duration"}, {"type": "null"}]},
             "merged_pr_size": {"anyOf": [{"$ref": "#/$defs/size"}, {"type": "null"}]}
           }
+        },
+        "ci_cd": {
+          "type": "object",
+          "required": ["workflow_runs", "releases", "deployments"],
+          "additionalProperties": false,
+          "properties": {
+            "workflow_runs": {"anyOf": [{"$ref": "#/$defs/workflow_runs"}, {"type": "null"}]},
+            "releases": {"anyOf": [{"$ref": "#/$defs/releases"}, {"type": "null"}]},
+            "deployments": {"anyOf": [{"$ref": "#/$defs/deployments"}, {"type": "null"}]}
+          }
+        },
+        "quality": {
+          "type": "object",
+          "required": ["code_scanning", "dependabot"],
+          "additionalProperties": false,
+          "properties": {
+            "code_scanning": {"anyOf": [{"$ref": "#/$defs/alerts"}, {"type": "null"}]},
+            "dependabot": {"anyOf": [{"$ref": "#/$defs/alerts"}, {"type": "null"}]}
+          }
+        }
+      }
+    },
+    "counts_by_label": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z][a-z_]{0,39}$"},
+      "additionalProperties": {"$ref": "#/$defs/count"}
+    },
+    "workflow_runs": {
+      "type": "object",
+      "required": ["total", "unfinished", "by_conclusion", "duration", "by_workflow"],
+      "additionalProperties": false,
+      "properties": {
+        "total": {"$ref": "#/$defs/count"},
+        "unfinished": {"$ref": "#/$defs/count"},
+        "by_conclusion": {"$ref": "#/$defs/counts_by_label"},
+        "duration": {"$ref": "#/$defs/duration"},
+        "by_workflow": {
+          "type": "object",
+          "propertyNames": {"pattern": "^[0-9]+$"},
+          "additionalProperties": {"$ref": "#/$defs/workflow"}
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["total", "unfinished", "by_conclusion", "duration", "path", "latest_run_url"],
+      "additionalProperties": false,
+      "properties": {
+        "total": {"$ref": "#/$defs/count"},
+        "unfinished": {"$ref": "#/$defs/count"},
+        "by_conclusion": {"$ref": "#/$defs/counts_by_label"},
+        "duration": {"$ref": "#/$defs/duration"},
+        "path": {"type": ["string", "null"], "pattern": "^\\.github/workflows/[A-Za-z0-9._-]+\\.ya?ml$"},
+        "latest_run_url": {"$ref": "#/$defs/url"}
+      }
+    },
+    "releases": {
+      "type": "object",
+      "required": ["published", "deployment_provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "published": {"$ref": "#/$defs/count"},
+        "deployment_provenance": {"anyOf": [{"$ref": "#/$defs/count"}, {"type": "null"}]}
+      }
+    },
+    "deployments": {
+      "type": "object",
+      "required": ["created", "by_state"],
+      "additionalProperties": false,
+      "properties": {
+        "created": {"$ref": "#/$defs/count"},
+        "by_state": {"anyOf": [{"$ref": "#/$defs/counts_by_label"}, {"type": "null"}]}
+      }
+    },
+    "alerts": {
+      "type": "object",
+      "required": ["opened", "resolved"],
+      "additionalProperties": false,
+      "properties": {
+        "opened": {
+          "type": "object",
+          "required": ["total", "by_severity"],
+          "additionalProperties": false,
+          "properties": {
+            "total": {"$ref": "#/$defs/count"},
+            "by_severity": {"$ref": "#/$defs/counts_by_label"}
+          }
+        },
+        "resolved": {
+          "anyOf": [{
+            "type": "object",
+            "required": ["total", "by_severity", "by_reason"],
+            "additionalProperties": false,
+            "properties": {
+              "total": {"$ref": "#/$defs/count"},
+              "by_severity": {"$ref": "#/$defs/counts_by_label"},
+              "by_reason": {"$ref": "#/$defs/counts_by_label"}
+            }
+          }, {"type": "null"}]
         }
       }
     },

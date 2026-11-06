@@ -1,10 +1,12 @@
 """Compute UTC repository rollups and format the private report."""
 
+from collections import Counter, defaultdict
 from datetime import UTC, datetime, timedelta
 from math import ceil
 from statistics import median
 
 
+PORTFOLIO_REPO = "waffy1901/personalWebsite"
 WEEK = timedelta(days=7)
 DAY = timedelta(days=1)
 LINE_METRICS = ("additions", "deletions", "file_touches")
@@ -71,8 +73,76 @@ def episode_history(issues, events):
     return episodes, reopens
 
 
-def build_report(repo, as_of, repository_created_at, commits, pulls, issues, churn, sizes, events, coverage,
-                 *, collected_at=None):
+def count_by(values):
+    return dict(sorted(Counter(values).items()))
+
+
+def run_statistics(runs):
+    return {
+        "total": len(runs),
+        "unfinished": sum(run["conclusion"] is None for run in runs),
+        "by_conclusion": count_by(run["conclusion"] for run in runs if run["conclusion"] is not None),
+        "duration": distribution([run["seconds"] for run in runs if run["seconds"] is not None], "seconds"),
+    }
+
+
+def workflow_rollup(runs, repo_url):
+    workflows = defaultdict(list)
+    for run_id, run in runs.items():
+        workflows[run["workflow_id"]].append((run_id, run))
+    by_workflow = {}
+    for workflow_id, group in sorted(workflows.items()):
+        latest_id, latest = max(group, key=lambda item: (item[1]["created"], item[0]))
+        by_workflow[str(workflow_id)] = {
+            **run_statistics([run for _, run in group]),
+            "path": latest["path"], "latest_run_url": f"{repo_url}/actions/runs/{latest_id}",
+        }
+    return {**run_statistics(list(runs.values())), "by_workflow": by_workflow}
+
+
+def ci_cd_rollup(activity, within, until, earliest_run, repo):
+    runs = activity["workflow_runs"]
+    workflows = None
+    if runs is not None and (earliest_run is None or until > earliest_run):
+        workflows = workflow_rollup(
+            {key: run for key, run in runs.items() if within(run["created"])}, f"https://github.com/{repo}"
+        )
+    releases = None
+    if activity["releases"] is not None:
+        published = [row for row in activity["releases"].values() if within(row["published"])]
+        provenance_count = None
+        if repo.casefold() == PORTFOLIO_REPO.casefold():
+            provenance_count = sum(row["deployment_provenance"] for row in published)
+        releases = {"published": len(published), "deployment_provenance": provenance_count}
+    deployments = None
+    if activity["deployments"] is not None:
+        ids = [key for key, created in activity["deployments"].items() if within(created)]
+        states = activity["deployment_states"] or {}
+        deployments = {
+            "created": len(ids),
+            "by_state": count_by(states[key] for key in ids) if all(key in states for key in ids) else None,
+        }
+    return {"workflow_runs": workflows, "releases": releases, "deployments": deployments}
+
+
+def alert_rollup(alerts, within, since, until):
+    opened = [row for row in alerts.values() if within(row["created"])]
+    resolved = [row for row in alerts.values() if within(row["resolved"])]
+    resolution_known = since == until or not any(
+        row["state"] != "open" and row["resolved"] is None and row["created"] < until
+        for row in alerts.values()
+    )
+    return {
+        "opened": {"total": len(opened), "by_severity": count_by(row["severity"] for row in opened)},
+        "resolved": {
+            "total": len(resolved), "by_severity": count_by(row["severity"] for row in resolved),
+            "by_reason": count_by(row["state"] for row in resolved),
+        } if resolution_known else None,
+    }
+
+
+def build_report(repo, as_of, repository_created_at, commits, pulls, issues, churn, sizes, events, activity,
+                 coverage, *, collected_at=None):
     commit_rows = commits["commits"] if commits is not None else {}
     pull_rows = pulls or {}
     issue_rows = issues or {}
@@ -83,18 +153,25 @@ def build_report(repo, as_of, repository_created_at, commits, pulls, issues, chu
          "seconds": elapsed(pull["created"], pull["merged"])}
         for number, pull in pull_rows.items() if pull["merged"] and pull["merged"] < as_of
     ]
-    activity = [
+    observed = [
         *(item["at"] for item in commit_rows.values()),
         *(item["created"] for item in pull_rows.values()),
         *(item["created"] for item in issue_rows.values()),
+        *(item["created"] for item in (activity["workflow_runs"] or {}).values()),
+        *(item["published"] for item in (activity["releases"] or {}).values()),
+        *(activity["deployments"] or {}).values(),
+        *(item["created"] for alerts in activity["alerts"].values() for item in (alerts or {}).values()),
     ]
-    first_observed = min((at for at in activity if at < as_of), default=None)
+    first_observed = min((at for at in observed if at < as_of), default=None)
     today = day_start(as_of)
     week = today - timedelta(days=today.weekday())
     month = today.replace(day=1)
     previous_month = (month - DAY).replace(day=1)
     history_anchor = min((at for at in (first_observed, repository_created_at) if at and at < as_of), default=None)
     history_start = day_start(history_anchor or as_of)
+
+    repo_url = f"https://github.com/{repo}"
+    earliest_run = coverage["workflow_runs"].get("earliest_at")
 
     def period(start, end):
         since, until = iso(start), min(iso(end), as_of)
@@ -174,6 +251,13 @@ def build_report(repo, as_of, repository_created_at, commits, pulls, issues, chu
                 ),
                 "merged_pr_size": size,
             },
+            "ci_cd": ci_cd_rollup(activity, within, until, earliest_run, repo) if known_history else {
+                "workflow_runs": None, "releases": None, "deployments": None,
+            },
+            "quality": {
+                name: alert_rollup(alerts, within, since, until) if known_history and alerts is not None else None
+                for name, alerts in activity["alerts"].items()
+            },
         }
 
     def periods(start, step):
@@ -184,11 +268,10 @@ def build_report(repo, as_of, repository_created_at, commits, pulls, issues, chu
             start = end
         return windows
 
-    repo_url = f"https://github.com/{repo}"
     head = commits["sha"] if commits is not None else None
     issue_samples = [item for item in episodes if item["closed_at"] < as_of]
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "repository": repo,
         "as_of": as_of,
         "collected_at": collected_at or as_of,
@@ -199,6 +282,11 @@ def build_report(repo, as_of, repository_created_at, commits, pulls, issues, chu
             "commits": f"{repo_url}/commits/{head}" if head else f"{repo_url}/commits",
             "pull_requests": f"{repo_url}/pulls?q=is%3Apr",
             "issues": f"{repo_url}/issues?q=is%3Aissue",
+            "workflow_runs": f"{repo_url}/actions",
+            "releases": f"{repo_url}/releases",
+            "deployments": f"{repo_url}/deployments",
+            "code_scanning": f"{repo_url}/security/code-scanning",
+            "dependabot": f"{repo_url}/security/dependabot",
         },
         "coverage": coverage,
         "rollups": {
@@ -226,13 +314,15 @@ def display(value):
     return "N/A" if value is None else f"{value:,}"
 
 
-def show_distribution(result):
+def show_distribution(result, *, seconds=False):
     if result is None:
         return "N/A"
     if not result["n"]:
         return "N/A (n=0)"
-    scale = 3600 if result["unit"] == "seconds" else 1
-    unit = " h" if scale == 3600 else " lines"
+    if result["unit"] == "seconds":
+        scale, unit = (1, " s") if seconds else (3600, " h")
+    else:
+        scale, unit = 1, " lines"
 
     def point(value):
         return f"{value / scale:,.2f}" if scale == 3600 else display(value)
@@ -241,6 +331,40 @@ def show_distribution(result):
         f'{point(result["median"])} / {point(result["p90"])}{unit} '
         f'(n={result["n"]}{", small sample" if result["small_sample"] else ""})'
     )
+
+
+def show_counts(counts):
+    if counts is None:
+        return "N/A"
+    return ", ".join(f"{key.replace('_', ' ')} {display(count)}" for key, count in counts.items()) or "0"
+
+
+def ci_cells(window):
+    ci_cd = window["ci_cd"] if window else {}
+    runs = ci_cd.get("workflow_runs")
+    releases = ci_cd.get("releases") or {}
+    deployments = ci_cd.get("deployments") or {}
+    conclusions = (runs or {}).get("by_conclusion", {})
+    named = ("success", "failure", "cancelled")
+    return {
+        "Runs": display(runs["total"] if runs else None),
+        "Success": display(conclusions.get("success", 0) if runs else None),
+        "Failure": display(conclusions.get("failure", 0) if runs else None),
+        "Cancelled": display(conclusions.get("cancelled", 0) if runs else None),
+        "Other completed": display(sum(count for key, count in conclusions.items() if key not in named) if runs else None),
+        "Unfinished": display(runs["unfinished"] if runs else None),
+        "Duration, median / p90": show_distribution(runs["duration"] if runs else None, seconds=True),
+        "Published releases": display(releases.get("published")),
+        "Deploy provenance releases": display(releases.get("deployment_provenance")),
+        "GitHub deployments": display(deployments.get("created")),
+    }
+
+
+def show_alerts(counts):
+    if counts is None:
+        return "N/A"
+    total = display(counts["total"])
+    return f'{total} ({show_counts(counts["by_severity"])})' if counts["total"] else total
 
 
 def render_markdown(report):
@@ -295,6 +419,17 @@ def render_markdown(report):
                 cells.append(display(churn[subset][metric] if churn else None))
             lines.append(f"| {subset.title()} {metric.replace('_', ' ')} | {' | '.join(cells)} |")
 
+    ci_columns = [ci_cells(window) for window in windows]
+    for label in ci_columns[0]:
+        cells = [column[label] for column in ci_columns]
+        lines.append(f"| {label} | {' | '.join(cells)} |")
+    lines.append(
+        "| GitHub deployment states | " + " | ".join(
+            show_counts(((window["ci_cd"]["deployments"] if window else None) or {}).get("by_state"))
+            for window in windows
+        ) + " |"
+    )
+
     lines += [
         "",
         "## Recent UTC weeks",
@@ -311,6 +446,42 @@ def render_markdown(report):
             display(issues["closed"]), display(issues["outstanding_end"]),
         ]
         lines.append(f"| {' | '.join(cells)} |")
+    lines += ["", "## CI and deployment trends by UTC week", ""]
+    lines.append(f"| Week beginning | {' | '.join(ci_columns[0])} |")
+    lines.append("| --- |" + " --- |" * len(ci_columns[0]))
+    for week in rollups["weekly"][-8:]:
+        label = week["start"][:10] + (" (partial)" if week["partial"] else "")
+        lines.append(f"| {label} | {' | '.join(ci_cells(week).values())} |")
+    month = monthly[current_month_start]
+    month_runs = (month["ci_cd"]["workflow_runs"] or {}).get("by_workflow", {})
+    if month_runs:
+        lines += [
+            "", "## Workflows this month", "",
+            "| Workflow | Runs | Conclusions | Unfinished | Duration, median / p90 |",
+            "| --- | ---: | --- | ---: | --- |",
+        ]
+        for workflow_id, row in month_runs.items():
+            label = row["path"] or f"Workflow #{workflow_id}"
+            lines.append(
+                f'| [{label}]({row["latest_run_url"]}) | {display(row["total"])} | '
+                f'{show_counts(row["by_conclusion"])} | {display(row["unfinished"])} | '
+                f'{show_distribution(row["duration"], seconds=True)} |'
+            )
+
+    lines += [
+        "", "## Security alerts by source", "",
+        "| Source | UTC period | Opened (severity) | Resolved (severity) | Resolution reasons |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    for key, source in (("code_scanning", "Code scanning"), ("dependabot", "Dependabot")):
+        for label, window in zip(("Lifetime", previous_month, f"{current_month_start} (partial)"), windows):
+            alerts = (window["quality"][key] if window else None) or {}
+            resolved = alerts.get("resolved")
+            lines.append(
+                f'| {source} | {label} | {show_alerts(alerts.get("opened"))} | '
+                f'{show_alerts(resolved)} | {show_counts(resolved["by_reason"] if resolved else None)} |'
+            )
+
     lines += ["", "## Source coverage", ""]
     lines.extend(f"- [GitHub {name.replace('_', ' ')}]({url})" for name, url in report["sources"].items())
     for name, item in report["coverage"].items():
@@ -320,10 +491,16 @@ def render_markdown(report):
             f'- {name.replace("_", " ").title()} {item["status"]}, '
             f'{display(item["collected"])} / {expected}{reason}'
         )
+    earliest_run = report["coverage"]["workflow_runs"].get("earliest_at")
+    if earliest_run:
+        lines.append(f"- Oldest visible Actions run created at {earliest_run}.")
     lines += [
         "",
         "Counts cover visible GitHub repository records. Churn excludes merge commits, and eligible churn also excludes the documented paths.",
         "Repeated issue closures count as separate episodes. N/A represents unavailable coverage or an empty distribution.",
+        "Actions totals cover visible run IDs, grouped by creation time. Outcomes and duration use the latest observed attempt.",
+        "Deploy provenance releases follow this portfolio's tag convention. GitHub deployment states are the latest returned for records created in each window.",
+        "Security alert resolutions use the current state and recorded closure time. A reopened alert can hide a prior resolution.",
         "The counts describe repository activity and delivery timing.",
         "",
         "## Sampled GitHub records",

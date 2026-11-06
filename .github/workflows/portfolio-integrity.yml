@@ -54,6 +54,9 @@ jobs:
       - name: Test deployed route checker
         run: python3 scripts/test_deployed_routes.py
 
+      - name: Test engineering report fixtures
+        run: npm run test:engineering:report
+
       - name: Test deployed security header checker fixtures
         run: npm run test:deployed-headers
 
