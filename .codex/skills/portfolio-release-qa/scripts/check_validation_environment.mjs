@@ -23,8 +23,22 @@ export function checkEnvironment(root, nodeVersion = process.versions.node) {
     const lock = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package-lock.json'), 'utf8'));
     if (!lock.packages) throw new Error(`${directory}: lockfile packages map is required`);
     for (const name of Object.keys(dependencies).sort()) {
-      const expected = lock.packages[`node_modules/${name}`]?.version;
-      if (!expected) throw new Error(`${directory}: no locked direct version for ${name}`);
+      const entry = lock.packages[`node_modules/${name}`];
+      let expected = entry?.version;
+      if (entry?.link === true) {
+        const { resolved } = entry;
+        if (typeof resolved !== 'string') {
+          throw new Error(`${directory}: invalid locked link target for ${name} (expected a resolved path)`);
+        }
+        // The empty key is valid when the link points to the package root.
+        const target = lock.packages[resolved];
+        expected = target?.version;
+        if (target?.link === true || typeof expected !== 'string' || !expected.trim()) {
+          throw new Error(`${directory}: no locked version for ${name} at link target ${JSON.stringify(resolved)}`);
+        }
+      } else if (!expected) {
+        throw new Error(`${directory}: no locked direct version for ${name}`);
+      }
       const installedFile = path.join(packageRoot, 'node_modules', name, 'package.json');
       const actual = fs.existsSync(installedFile) ? JSON.parse(fs.readFileSync(installedFile, 'utf8')).version : null;
       packages.push({ directory, name, expected, actual });
