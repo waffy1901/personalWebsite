@@ -1,0 +1,51 @@
+name: Engineering report
+
+"on":
+  schedule:
+    - cron: "43 9 * * 3"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: engineering-report
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: Verify private report collection
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+      deployments: read
+      issues: read
+      pull-requests: read
+      security-events: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Collect without publishing report data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          output_dir=$(mktemp -d "$RUNNER_TEMP/engineering-report.XXXXXX")
+          trap 'rm -rf -- "$output_dir"' EXIT
+
+          # Reports, caches, and raw diagnostics stay off this public repository.
+          status=0
+          python3 -B scripts/engineering_report.py --repo "$GITHUB_REPOSITORY" \
+            --backfill --skip-dependabot --max-requests 800 --output-dir "$output_dir" \
+            >/dev/null 2>&1 || status=$?
+          case "$status" in
+            0) echo "::notice::Engineering report collection completed for the configured sources." ;;
+            3) echo "::error::Engineering report coverage was incomplete. Run the collector locally for source diagnostics." ;;
+            *) echo "::error::Engineering report collection failed. Check runner setup and reproduce with the local command." ;;
+          esac
+          exit "$status"

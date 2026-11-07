@@ -16,9 +16,9 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
-from engineering_metrics import build_report, distribution, render_markdown, timestamp
+from engineering_metrics import PORTFOLIO_REPO, build_report, distribution, render_markdown, timestamp
 from engineering_report import (
-    API, GitHub, Unavailable, collect, issue_events, main, prepare_output, read_churn,
+    API, GitHub, Unavailable, collect, issue_events, main, prepare_output, read_churn, workflow_inventory,
 )
 
 
@@ -26,10 +26,21 @@ SHA_A = "a" * 40
 SHA_B = "b" * 40
 REPO = "owner/repo"
 AS_OF = "2026-02-03T12:00:00Z"
+NEW_INVENTORIES = ["/actions/runs", "/releases", "/deployments", "/code-scanning/alerts", "/dependabot/alerts"]
+INVENTORIES = ["", "/branches/main", "/commits", "/pulls", "/issues", *NEW_INVENTORIES]
 
 
 def at(day, hour=0, month=2):
     return f"2026-{month:02d}-{day:02d}T{hour:02d}:00:00Z"
+
+
+def run(run_id, created, **changes):
+    return {
+        "id": run_id, "workflow_id": 40, "path": ".github/workflows/check.yml@main",
+        "run_attempt": 1, "status": "completed", "conclusion": "success",
+        "created_at": created, "run_started_at": created, "updated_at": created,
+        **changes,
+    }
 
 
 class Fixture:
@@ -55,6 +66,12 @@ class Fixture:
             {"id": 21, "event": "reopened", "created_at": at(2)},
             {"id": 22, "event": "closed", "created_at": at(2, 2)},
         ]
+        self.workflow_pages = [{"total_count": 0, "workflow_runs": []}]
+        self.releases = []
+        self.deployments = []
+        self.deployment_states = {}
+        self.code_scanning = []
+        self.dependabot = []
         self.fail = set()
 
     def call(self, endpoint):
@@ -79,10 +96,19 @@ class Fixture:
             "/pulls": self.prs + self.prs[:1],
             "/issues": [{"number": 1, "pull_request": {}}, self.issue, self.issue],
             "/issues/4/events": list(reversed(self.events)) + self.events[:1],
+            "/releases": self.releases,
+            "/deployments": self.deployments,
+            "/code-scanning/alerts": self.code_scanning,
+            "/dependabot/alerts": self.dependabot,
+            **{f"/deployments/{key}/statuses": rows for key, rows in self.deployment_states.items()},
         }[endpoint]
 
     def pages(self, endpoint, **params):
         self.call(endpoint)
+        if endpoint == "/actions/runs":
+            assert not params
+            yield from self.workflow_pages
+            return
         assert endpoint == f"/commits/{SHA_A}"
         yield {
             "sha": SHA_A, "stats": {"additions": 17, "deletions": 4},
@@ -153,6 +179,60 @@ class GitHubTests(unittest.TestCase):
         github = GitHub(REPO, "fixture", opener=open_response)
         with self.assertRaisesRegex(Unavailable, "repeated a page"):
             list(github.rows("/issues"))
+
+    def test_workflow_pages_use_unfiltered_inventory_and_keep_latest_attempt(self):
+        requests = []
+        second = f"{API}/repositories/123/actions/runs?per_page=100&page=2"
+        original = run(101, at(1), conclusion="failure", updated_at=at(1, 1))
+        rerun = {**original, "run_attempt": 2, "conclusion": "success",
+                 "run_started_at": at(2), "updated_at": at(2, 2)}
+
+        def open_response(request, **kwargs):
+            requests.append(request.full_url)
+            if len(requests) == 1:
+                return Response({"total_count": 2, "workflow_runs": [rerun]}, {"Link": f'<{second}>; rel="next"'})
+            return Response({"total_count": 2, "workflow_runs": [original, run(102, at(2))]})
+
+        github = GitHub(REPO, "fixture", opener=open_response)
+        runs = workflow_inventory(github)
+        self.assertEqual(requests, [f"{API}/repos/{REPO}/actions/runs?per_page=100", second])
+        self.assertEqual(set(runs), {101, 102})
+        self.assertEqual(runs[101]["attempt"], 2)
+        self.assertEqual(runs[101]["seconds"], 7200)
+        self.assertEqual(runs[101]["conclusion"], "success")
+
+    def test_alert_pagination_follows_cursor_links(self):
+        requests = []
+        endpoint = "/dependabot/alerts"
+        second = f"{API}/repositories/123{endpoint}?after=next-cursor"
+
+        def open_response(request, **kwargs):
+            requests.append(request.full_url)
+            if len(requests) == 1:
+                return Response([{"number": 1}], {"Link": f'<{second}>; rel="next"'})
+            return Response([{"number": 2}])
+
+        github = GitHub(REPO, "fixture", opener=open_response)
+        self.assertEqual(list(github.rows(endpoint)), [{"number": 1}, {"number": 2}])
+        self.assertEqual(requests, [f"{API}/repos/{REPO}{endpoint}?per_page=100", second])
+
+    def test_request_budget_bounds_retries_and_later_pages(self):
+        requests = []
+        waits = []
+
+        def open_response(request, **kwargs):
+            requests.append(request.full_url)
+            if len(requests) == 1:
+                raise http_error(502)
+            return Response([1], {"Link": f'<{API}/repositories/123/issues?page=2>; rel="next"'})
+
+        github = GitHub(REPO, "fixture", opener=open_response, sleep=waits.append, max_requests=2)
+        with self.assertRaisesRegex(Unavailable, "request budget exhausted"):
+            list(github.rows("/issues"))
+        with self.assertRaisesRegex(Unavailable, "request budget exhausted"):
+            github.object("")
+        self.assertEqual(waits, [1])
+        self.assertEqual(requests, [f"{API}/repos/{REPO}/issues?per_page=100"] * 2)
 
     def test_retry_after_and_primary_reset(self):
         responses = iter([
@@ -235,8 +315,8 @@ class ReportTests(unittest.TestCase):
         self.api = Fixture()
         self.cache = {}
 
-    def collect(self, as_of=AS_OF):
-        return build_report(REPO, as_of, *collect(self.api, self.cache, as_of))
+    def collect(self, as_of=AS_OF, *, repo=REPO):
+        return build_report(repo, as_of, *collect(self.api, self.cache, as_of))
 
     def test_rollups_windows_denominators_and_issue_reopens(self):
         report = self.collect()
@@ -279,7 +359,7 @@ class ReportTests(unittest.TestCase):
         self.api.calls.clear()
         second = self.collect()
         self.assertEqual(first, second)
-        self.assertEqual(self.api.calls, ["", "/branches/main", "/commits", "/pulls", "/issues"])
+        self.assertEqual(self.api.calls, INVENTORIES)
 
         self.api.commits = self.api.commits[1:]
         self.api.issue.update(state="open", closed_at=None, updated_at=at(3))
@@ -351,12 +431,14 @@ class ReportTests(unittest.TestCase):
                 raise http_error(403)
             if not path:
                 return Response({"default_branch": "main", "created_at": at(31, 22, 1)})
+            if path == "/actions/runs":
+                return Response({"total_count": 0, "workflow_runs": []})
             return Response([])
 
         self.api = GitHub(REPO, "fixture", opener=open_response, sleep=lambda _: self.fail("should not sleep"))
         report = self.collect()
         lifetime = report["rollups"]["lifetime"]
-        self.assertEqual(calls, ["", "/branches/main", "/pulls", "/issues"])
+        self.assertEqual(calls, ["", "/branches/main", "/pulls", "/issues", *NEW_INVENTORIES])
         self.assertEqual(report["repository_created_at"], at(31, 22, 1))
         self.assertEqual(report["coverage"]["commits"]["reason"], "GitHub HTTP 403")
         self.assertTrue(lifetime["history_available"])
@@ -406,6 +488,142 @@ class ReportTests(unittest.TestCase):
         with self.assertRaisesRegex(Unavailable, "3000-file limit"):
             read_churn(BigCommit(), SHA_A)
 
+    def test_workflow_outcomes_time_windows_and_denominators(self):
+        rows = [
+            run(101, "2026-01-31T18:00:00-05:00", run_attempt=2, run_started_at=at(1), updated_at=at(1, 1)),
+            run(102, at(1), conclusion="failure", updated_at="2026-02-01T00:01:00Z"),
+            run(103, at(1, 1), workflow_id=50, conclusion="cancelled", run_started_at=None),
+            run(104, at(2), workflow_id=50, status="in_progress", conclusion=None, path="unsafe|label"),
+            run(105, AS_OF),
+        ]
+        self.api.workflow_pages = [{"total_count": len(rows), "workflow_runs": rows}]
+        report = self.collect()
+        january, february = report["rollups"]["monthly"]
+        january_runs = january["ci_cd"]["workflow_runs"]
+        february_runs = february["ci_cd"]["workflow_runs"]
+        self.assertEqual(january_runs["by_conclusion"], {"success": 1})
+        self.assertEqual(january_runs["duration"], distribution([3600], "seconds"))
+        self.assertEqual(february_runs["total"], 3)
+        self.assertEqual(february_runs["by_conclusion"], {"cancelled": 1, "failure": 1})
+        self.assertEqual(february_runs["duration"], distribution([60], "seconds"))
+        self.assertEqual(february_runs["unfinished"], 1)
+        self.assertEqual(february_runs["by_workflow"]["50"], {
+            "total": 2, "unfinished": 1, "by_conclusion": {"cancelled": 1},
+            "duration": distribution([], "seconds"),
+            "path": None, "latest_run_url": f"https://github.com/{REPO}/actions/runs/104",
+        })
+        self.assertIsNone(report["rollups"]["weekly"][0]["ci_cd"]["workflow_runs"])
+        self.assertEqual(report["rollups"]["daily"][-1]["ci_cd"]["workflow_runs"]["total"], 0)
+        lifetime = report["rollups"]["lifetime"]["ci_cd"]["workflow_runs"]
+        self.assertEqual(lifetime["total"], 4)
+        self.assertEqual(lifetime["duration"], distribution([60, 3600], "seconds"))
+        self.assertEqual(report["coverage"]["workflow_runs"]["earliest_at"], at(31, 23, 1))
+        markdown = render_markdown(report)
+        self.assertIn("[Workflow #50]", markdown)
+        self.assertNotIn("unsafe|label", markdown)
+
+    def test_incomplete_workflow_pagination_does_not_become_a_count(self):
+        self.api.workflow_pages = [{"total_count": 2, "workflow_runs": [run(101, at(1))]}]
+        report = self.collect()
+        self.assertEqual(report["coverage"]["workflow_runs"]["status"], "unavailable")
+        self.assertIn("pagination", report["coverage"]["workflow_runs"]["reason"])
+        self.assertIsNone(report["rollups"]["lifetime"]["ci_cd"]["workflow_runs"])
+
+    def test_release_provenance_and_latest_deployment_state(self):
+        deploy_release = {
+            "id": 11, "draft": False, "tag_name": "deploy-20260201T000000Z-a1b2c3d", "published_at": at(1),
+        }
+        self.api.releases = [
+            deploy_release, deploy_release,
+            {"id": 12, "draft": False, "tag_name": "v1.2.3", "published_at": at(31, 23, 1)},
+            {"id": 13, "draft": True, "tag_name": "v2.0.0", "published_at": None},
+        ]
+        first_deployment = {"id": 21, "created_at": at(1)}
+        self.api.deployments = [first_deployment, first_deployment, {"id": 22, "created_at": at(2)}]
+        self.api.deployment_states = {
+            21: [
+                {"id": 30, "created_at": at(1), "state": "pending"},
+                {"id": 32, "created_at": at(1, 1), "state": "success"},
+                {"id": 31, "created_at": at(1, 1), "state": "failure"},
+            ],
+            22: [],
+        }
+        report = self.collect(repo=PORTFOLIO_REPO)
+        january, february = report["rollups"]["monthly"]
+        self.assertEqual(january["ci_cd"]["releases"], {"published": 1, "deployment_provenance": 0})
+        self.assertEqual(february["ci_cd"]["releases"], {"published": 1, "deployment_provenance": 1})
+        self.assertEqual(february["ci_cd"]["deployments"], {"created": 2, "by_state": {"success": 1, "unreported": 1}})
+        self.assertNotIn("deployment_states", self.cache)
+
+        self.api.fail.add("/deployments/22/statuses")
+        partial = self.collect()
+        self.assertEqual(partial["coverage"]["deployment_states"]["status"], "partial")
+        self.assertEqual(partial["rollups"]["monthly"][-1]["ci_cd"]["releases"], {
+            "published": 1, "deployment_provenance": None,
+        })
+        self.assertEqual(partial["rollups"]["monthly"][-1]["ci_cd"]["deployments"], {"created": 2, "by_state": None})
+        self.assertEqual(partial["rollups"]["monthly"][0]["ci_cd"]["deployments"], {"created": 0, "by_state": {}})
+
+    def test_alert_openings_resolutions_severity_and_reopened_state(self):
+        dismissed = {"number": 1, "created_at": at(31, 23, 1), "updated_at": at(1),
+                     "state": "dismissed", "dismissed_at": at(1),
+                     "rule": {"security_severity_level": "high", "severity": "error"}}
+        self.api.code_scanning = [
+            {**dismissed, "state": "open", "updated_at": at(2)}, dismissed,
+            {"number": 2, "created_at": at(1), "state": "fixed", "fixed_at": at(2),
+             "rule": {"severity": "warning"}},
+        ]
+        self.api.dependabot = [
+            {"number": 1, "created_at": at(31, 23, 1), "updated_at": at(1), "state": "fixed", "fixed_at": at(1),
+             "security_vulnerability": {"severity": "critical"}, "security_advisory": {"severity": "high"}},
+            {"number": 2, "created_at": at(2), "updated_at": at(2), "state": "auto_dismissed",
+             "auto_dismissed_at": at(2), "security_vulnerability": {}, "security_advisory": {"severity": "low"}},
+        ]
+        report = self.collect()
+        january, february = report["rollups"]["monthly"]
+        self.assertEqual(january["quality"]["code_scanning"]["opened"], {"total": 1, "by_severity": {"high": 1}})
+        self.assertEqual(february["quality"]["code_scanning"]["resolved"], {
+            "total": 1, "by_severity": {"warning": 1}, "by_reason": {"fixed": 1},
+        })
+        self.assertEqual(february["quality"]["dependabot"]["opened"], {"total": 1, "by_severity": {"low": 1}})
+        self.assertEqual(february["quality"]["dependabot"]["resolved"], {
+            "total": 2, "by_severity": {"critical": 1, "low": 1}, "by_reason": {"auto_dismissed": 1, "fixed": 1},
+        })
+        self.assertIn("2 (critical 1, low 1)", render_markdown(report))
+
+    def test_conflicting_alerts_without_revision_leave_source_unavailable(self):
+        opened = {"number": 1, "created_at": at(1), "state": "open", "rule": {}}
+        self.api.code_scanning = [opened, {**opened, "state": "fixed", "fixed_at": at(2)}]
+        report = self.collect()
+        self.assertIn("changed during pagination", report["coverage"]["code_scanning"]["reason"])
+        self.assertIsNone(report["rollups"]["lifetime"]["quality"]["code_scanning"])
+
+    def test_missing_alert_timestamp_preserves_opened_counts(self):
+        self.api.code_scanning = [
+            {"number": 1, "created_at": at(1), "updated_at": at(2), "state": "dismissed", "rule": {}},
+        ]
+        report = self.collect()
+        january, february = report["rollups"]["monthly"]
+        self.assertEqual(report["coverage"]["code_scanning"]["status"], "partial")
+        self.assertEqual(january["quality"]["code_scanning"]["resolved"]["total"], 0)
+        self.assertEqual(february["quality"]["code_scanning"]["opened"], {"total": 1, "by_severity": {"unknown": 1}})
+        self.assertIsNone(february["quality"]["code_scanning"]["resolved"])
+
+    def test_empty_and_missing_phase_two_sources_are_distinct(self):
+        self.api.fail = {"/releases", "/dependabot/alerts", "/deployments"}
+        report = self.collect()
+        lifetime = report["rollups"]["lifetime"]
+        self.assertEqual(lifetime["ci_cd"]["workflow_runs"], {
+            "total": 0, "unfinished": 0, "by_conclusion": {},
+            "duration": distribution([], "seconds"), "by_workflow": {},
+        })
+        self.assertIsNone(lifetime["ci_cd"]["releases"])
+        self.assertIsNone(lifetime["ci_cd"]["deployments"])
+        self.assertIsNone(lifetime["quality"]["dependabot"])
+        self.assertEqual(lifetime["quality"]["code_scanning"]["opened"]["total"], 0)
+        self.assertEqual(report["coverage"]["dependabot"]["status"], "unavailable")
+        self.assertEqual(report["coverage"]["code_scanning"]["status"], "complete")
+
     def test_rejects_checkout_output(self):
         with self.assertRaisesRegex(Unavailable, "outside Git worktrees"):
             prepare_output(Path(__file__).resolve().parent / "report")
@@ -433,13 +651,25 @@ class CLITests(unittest.TestCase):
             self.assertEqual(self.run_report(output, api)[0], 0)
             current = (output / "current").resolve()
             self.assertNotEqual(first, current)
-            self.assertEqual(api.calls, ["", "/branches/main", "/commits", "/pulls", "/issues"])
+            self.assertEqual(api.calls, INVENTORIES)
             report = json.loads((current / "report.json").read_text())
             self.assertIn(report["as_of"], (current / "report.md").read_text())
-            self.assertEqual(report["schema_version"], 1)
+            self.assertEqual(report["schema_version"], 2)
             for path in (current, *current.iterdir(), output / "cache.json"):
                 self.assertEqual(path.stat().st_mode & 0o077, 0)
             self.assertNotIn("fixture-secret", (output / "cache.json").read_text())
+
+    def test_cli_marks_intentional_dependabot_skip(self):
+        api = Fixture()
+        api.fail.add("/dependabot/alerts")
+        with TemporaryDirectory() as directory:
+            output = Path(directory)
+            status, _, stderr = self.run_report(output, api, "--skip-dependabot")
+            self.assertEqual((status, stderr), (0, ""))
+            self.assertNotIn("/dependabot/alerts", api.calls)
+            report = json.loads((output / "current" / "report.json").read_text())
+            self.assertEqual(report["coverage"]["dependabot"]["status"], "not_collected")
+            self.assertIsNone(report["rollups"]["lifetime"]["quality"]["dependabot"])
 
     def test_cli_partial_publication_and_bad_arguments_have_distinct_statuses(self):
         for options, expected_waits in (({}, [1, 2]), ({"forbidden": True, "retry_after": 2}, [2, 2])):
