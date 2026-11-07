@@ -9,6 +9,8 @@
     "generate:resume": "npm --prefix main run generate:resume --",
     "lint": "npm run lint:operations && npm --prefix main run lint --",
     "lint:workflows": "bash scripts/check-workflows.sh",
+    "scan:secrets": "bash scripts/scan-secrets.sh",
+    "scan:dependencies": "osv-scanner scan source --offline --lockfile=package-lock.json --lockfile=main/package-lock.json",
     "test": "npm run test:operations && npm --prefix main run test --",
     "lint:operations": "npm --prefix operations run lint",
     "test:operations": "npm --prefix operations test",
