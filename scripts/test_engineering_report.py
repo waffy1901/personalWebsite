@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import patch
 from urllib.error import HTTPError, URLError
 
+from engineering_ai_usage import InvalidUsage, MAX_BYTES, build_ai_usage, parse_usage
 from engineering_metrics import PORTFOLIO_REPO, build_report, distribution, render_markdown, timestamp
 from engineering_report import (
     API, GitHub, Unavailable, collect, issue_events, main, prepare_output, read_churn, workflow_inventory,
@@ -629,15 +630,158 @@ class ReportTests(unittest.TestCase):
             prepare_output(Path(__file__).resolve().parent / "report")
 
 
+def usage_record(start="2026-02-01", end="2026-02-02", **changes):
+    return {"source": "synthetic-export", "provider": "synthetic-provider", "scope": "account",
+            "start": start, "end": end, "metrics": {"sessions": 1}, **changes}
+
+
+def usage_json(*records):
+    return json.dumps({"schema_version": 1, "records": records}).encode("utf-8")
+
+
+def linked_record(kind, number, **changes):
+    return usage_record(scope="repository", repository=REPO, work_item={
+        "url": f"https://github.com/{REPO}/{kind}/{number}", "origin": "source_recorded",
+    }, **changes)
+
+
+class AIUsageTests(unittest.TestCase):
+    def build_usage(self, records, *, failures=(), as_of="2026-03-03T12:00:00Z"):
+        api = Fixture()
+        api.fail.update(failures)
+        data = collect(api, {}, as_of)
+        report = build_report(REPO, as_of, *data)
+        _, _, pulls, issues, *_ = data
+        return build_ai_usage(report, parse_usage(usage_json(*records), REPO), pulls, issues)
+
+    def test_rollups_keep_scopes_models_and_metric_coverage_separate(self):
+        records = [
+            usage_record("2026-01-31", "2026-02-03", metrics={"input_tokens": 4}),
+            usage_record("2026-02-03", "2026-02-04", metrics={"input_tokens": 0, "output_tokens": 9}),
+            usage_record("2026-02-05", "2026-02-06", source="second-export", metrics={"input_tokens": 3}),
+            usage_record("2026-02-08", "2026-02-10", metrics={"input_tokens": 5}),
+            usage_record("2026-03-03", "2026-03-04"),
+            usage_record(model="synthetic-model"),
+            usage_record("2026-02-01", "2026-03-01", scope="repository", repository=REPO),
+            usage_record("2026-03-01", "2026-03-03", scope="repository", repository=REPO),
+            usage_record("2026-02-01", "2026-03-01", scope="repository", repository=REPO, model="synthetic-model"),
+        ]
+        usage = self.build_usage(records)
+        self.assertEqual(usage, self.build_usage(reversed(records)))
+        self.assertEqual(usage["excluded"], {"after_cutoff": 1, "unresolved_work_item": 0})
+        account, model, repo, repo_model = usage["series"]
+        self.assertEqual([(row["scope"], row["model"]) for row in usage["series"]], [
+            ("account", None), ("account", "synthetic-model"),
+            ("repository", None), ("repository", "synthetic-model"),
+        ])
+        self.assertEqual(model["rollups"]["lifetime"]["metrics"]["sessions"], 1)
+        self.assertEqual(account["observations"][2]["source"], "second-export")
+        daily, weekly, monthly, lifetime = (account["rollups"][key] for key in ("daily", "weekly", "monthly", "lifetime"))
+        self.assertEqual([row["start"] for row in daily], ["2026-02-03", "2026-02-05"])
+        self.assertEqual(daily[0]["metrics"]["input_tokens"], 0)
+        self.assertEqual(daily[0]["metrics"]["output_tokens"], 9)
+        self.assertIsNone(daily[0]["metrics"]["total_tokens"])
+        self.assertEqual([(row["start"], row["end"], row["covered_days"]) for row in weekly], [
+            ("2026-02-02", "2026-02-09", 2),
+        ])
+        self.assertIsNone(weekly[0]["metrics"]["output_tokens"])
+        self.assertEqual(len(monthly), 1)
+        self.assertEqual(monthly[0]["covered_days"], 4)
+        self.assertEqual(monthly[0]["record_count"], 3)
+        self.assertIsNone(monthly[0]["repository_prs_merged"])
+        self.assertEqual(monthly[0]["metrics"]["input_tokens"], 8)
+        self.assertEqual((lifetime["start"], lifetime["end"], lifetime["covered_days"], lifetime["record_count"]),
+                         ("2026-01-31", "2026-02-10", 7, 4))
+        self.assertEqual(lifetime["metrics"]["input_tokens"], 12)
+        self.assertEqual(repo["rollups"]["lifetime"]["end"], "2026-03-03")
+        self.assertEqual([row["repository_prs_merged"] for row in repo["rollups"]["monthly"]], [1, None])
+        self.assertEqual(repo_model["rollups"]["monthly"][0]["repository_prs_merged"], 1)
+
+    def test_work_item_uses_the_matching_inventory_and_excludes_unavailable_rows(self):
+        records = [linked_record("pull", 1, end="2026-03-01"), linked_record("issues", 4),
+                   linked_record("issues", 1), linked_record("pull", 4), linked_record("issues", 55),
+                   linked_record("issues", 55, start="2026-03-03", end="2026-03-04"),
+                   usage_record("2026-02-01", "2026-03-01", scope="repository", repository=REPO)]
+        usage = self.build_usage(records)
+        self.assertEqual(usage["excluded"], {"after_cutoff": 1, "unresolved_work_item": 3})
+        self.assertEqual([row["work_item"] for row in usage["series"]], [
+            None, {"url": f"https://github.com/{REPO}/issues/4", "origin": "source_recorded"},
+            {"url": f"https://github.com/{REPO}/pull/1", "origin": "source_recorded"},
+        ])
+        self.assertEqual([row["rollups"]["lifetime"]["metrics"]["sessions"] for row in usage["series"]], [1, 1, 1])
+        self.assertIsNone(usage["series"][2]["rollups"]["monthly"][0]["repository_prs_merged"])
+        unavailable = self.build_usage(records, failures=("/pulls",))
+        self.assertEqual(unavailable["excluded"]["unresolved_work_item"], 4)
+        self.assertEqual(len(unavailable["series"]), 2)
+        self.assertIsNone(unavailable["series"][0]["rollups"]["monthly"][0]["repository_prs_merged"])
+        at_cutoff = linked_record("pull", 3, start="2026-01-31", end="2026-02-01")
+        usage = self.build_usage([at_cutoff], as_of=at(1))
+        self.assertEqual(usage["excluded"], {"after_cutoff": 0, "unresolved_work_item": 1})
+        self.assertEqual(usage["series"], [])
+
+    def test_parser_rejects_unknown_versions_duplicate_keys_and_invalid_records(self):
+        rejected = [
+            b'{"schema_version":1,"schema_version":1,"records":[]}',
+            b'{"schema_version":2,"records":[]}',
+            b'{"schema_version":true,"records":[]}',
+            b'{"schema_version":1,"records":[{"metrics":{"sessions":1,"sessions":2}}]}',
+            b'{"schema_version":1,"records":[],"secret":"synthetic-marker"}',
+            b"\xff", b"[" * 2000, b" " * (MAX_BYTES + 1),
+            usage_json(usage_record(metrics={"sessions": -1})),
+            usage_json(usage_record(metrics={"sessions": True})),
+            usage_json(usage_record(metrics={"sessions": 1.0})),
+            usage_json(usage_record(metrics={"sessions": 10**12 + 1})),
+            usage_json(usage_record(metrics={"prompts": 1})),
+            usage_json(usage_record(metrics={})),
+            usage_json(usage_record(start="2026-02-30")),
+            usage_json(usage_record(start="2026-02-01T00:00:00Z")),
+            usage_json(usage_record(end="2026-02-01")),
+            usage_json(usage_record(source="synthetic-marker\n")),
+            usage_json(usage_record(model="https://example.com/synthetic-marker")),
+            usage_json(usage_record(repository=REPO)),
+            usage_json(usage_record(scope="repository")),
+            usage_json(usage_record(scope="repository", repository="other/repo")),
+            usage_json(linked_record("pull", "1?synthetic-marker")),
+            usage_json(linked_record("pull", "1#synthetic-marker")),
+            usage_json(linked_record("pull", 1, prompt="synthetic-marker")),
+            usage_json(usage_record(scope="repository", repository=REPO, work_item={
+                "url": f"https://github.com/{REPO}/pull/1", "origin": "inferred",
+            })),
+            usage_json(usage_record(scope="repository", repository=REPO, work_item={
+                "url": f"https://github.com/{REPO}/pull/1", "origin": "source_recorded", "note": "synthetic-marker",
+            })),
+            usage_json(usage_record(scope="repository", repository=REPO, work_item={
+                "url": "https://github.com/other/repo/pull/1", "origin": "source_recorded",
+            })),
+        ]
+        for index, document in enumerate(rejected):
+            with self.subTest(index=index), self.assertRaises(InvalidUsage) as error:
+                parse_usage(document, REPO)
+            self.assertNotIn("synthetic-marker", str(error.exception))
+
+    def test_overlap_is_rejected_across_sources_including_identical_windows(self):
+        first = usage_record("2026-02-01", "2026-02-04")
+        for second in (first, usage_record("2026-02-03", "2026-02-05", source="another-export")):
+            with self.assertRaisesRegex(InvalidUsage, "overlap"):
+                parse_usage(usage_json(first, second), REPO)
+
+
 class CLITests(unittest.TestCase):
-    def run_report(self, directory, api, *options):
+    def run_report(self, directory, api, *options, actions=False):
         args = ["engineering_report.py", "--repo", REPO, "--output-dir", str(directory), *options]
-        with patch("sys.argv", args), patch("engineering_report.read_token", return_value="fixture-secret"), patch(
+        with patch("sys.argv", args), patch.dict(os.environ, {"GITHUB_ACTIONS": str(actions).lower()}), patch(
+            "engineering_report.read_token", return_value="fixture-secret"
+        ) as token, patch(
             "engineering_report.GitHub", return_value=api
         ), redirect_stdout(io.StringIO()) as stdout, redirect_stderr(io.StringIO()) as stderr:
             old_mask = os.umask(0o077)
             try:
-                return main(), stdout.getvalue(), stderr.getvalue()
+                try:
+                    status = main()
+                except SystemExit as error:
+                    status = error.code
+                    token.assert_not_called()
+                return status, stdout.getvalue(), stderr.getvalue()
             finally:
                 os.umask(old_mask)
 
@@ -655,6 +799,8 @@ class CLITests(unittest.TestCase):
             report = json.loads((current / "report.json").read_text())
             self.assertIn(report["as_of"], (current / "report.md").read_text())
             self.assertEqual(report["schema_version"], 2)
+            self.assertNotIn("ai_usage", report)
+            self.assertNotIn("Imported AI usage", (current / "report.md").read_text())
             for path in (current, *current.iterdir(), output / "cache.json"):
                 self.assertEqual(path.stat().st_mode & 0o077, 0)
             self.assertNotIn("fixture-secret", (output / "cache.json").read_text())
@@ -664,12 +810,129 @@ class CLITests(unittest.TestCase):
         api.fail.add("/dependabot/alerts")
         with TemporaryDirectory() as directory:
             output = Path(directory)
-            status, _, stderr = self.run_report(output, api, "--skip-dependabot")
+            status, _, stderr = self.run_report(output, api, "--skip-dependabot", actions=True)
             self.assertEqual((status, stderr), (0, ""))
             self.assertNotIn("/dependabot/alerts", api.calls)
             report = json.loads((output / "current" / "report.json").read_text())
             self.assertEqual(report["coverage"]["dependabot"]["status"], "not_collected")
             self.assertIsNone(report["rollups"]["lifetime"]["quality"]["dependabot"])
+
+    def test_cli_opt_in_publishes_v3_without_changing_github_collection_or_cache(self):
+        api = Fixture()
+        with TemporaryDirectory() as directory:
+            output = Path(directory) / "report"
+            snapshot = Path(directory) / "private-input-name.json"
+            snapshot.write_bytes(usage_json(linked_record("pull", 1), usage_record(model="synthetic-model")))
+            snapshot.chmod(0o600)
+            self.assertEqual(self.run_report(output, api)[0], 0)
+            current = output / "current"
+            previous = json.loads((current / "report.json").read_text())
+            old_cache = (output / "cache.json").read_bytes()
+            api.calls.clear()
+
+            status, stdout, stderr = self.run_report(output, api, "--ai-usage-file", os.path.relpath(snapshot))
+            self.assertEqual((status, stderr), (0, ""))
+            self.assertEqual(api.calls, INVENTORIES)
+            self.assertEqual((output / "cache.json").read_bytes(), old_cache)
+            report_path = current / "report.json"
+            markdown_path = current / "report.md"
+            report = json.loads(report_path.read_text())
+            markdown = markdown_path.read_text()
+            self.assertEqual(report["schema_version"], 3)
+            for key in ("sources", "coverage", "samples"):
+                self.assertEqual(report[key], previous[key])
+            self.assertIn("## Imported AI usage", markdown)
+            self.assertIn("`synthetic-export`", markdown)
+            self.assertIn(f"[Source-recorded work item](https://github.com/{REPO}/pull/1)", markdown)
+            self.assertNotIn(snapshot.name, stdout + markdown + report_path.read_text())
+            for path in (report_path, markdown_path):
+                self.assertEqual(path.stat().st_mode & 0o077, 0)
+
+            schema_path = Path(__file__).resolve().parents[1] / "docs" / "engineering-report.schema.json"
+            schema = json.loads(schema_path.read_text())
+            self.assertEqual(set(report), {*schema["required"], *schema["then"]["required"]})
+            self.assertEqual(set(report["ai_usage"]), set(schema["$defs"]["ai_usage"]["required"]))
+            self.assertEqual(set(report["ai_usage"]["series"][0]), set(schema["$defs"]["ai_series"]["required"]))
+
+            snapshot.write_bytes(usage_json())
+            self.assertEqual(self.run_report(output, api, "--ai-usage-file", str(snapshot))[0], 0)
+            self.assertIn("AI usage observations are N/A", markdown_path.read_text())
+            self.assertEqual(json.loads(report_path.read_text())["ai_usage"]["series"], [])
+            self.assertEqual(self.run_report(output, api)[0], 0)
+            self.assertEqual(json.loads(report_path.read_text())["schema_version"], 2)
+            self.assertNotIn("Imported AI usage", markdown_path.read_text())
+
+    def test_cli_rejects_invalid_files_before_token_output_or_network_access(self):
+        api = Fixture()
+        with TemporaryDirectory() as directory:
+            parent = Path(directory)
+            output = parent / "report"
+            self.assertEqual(self.run_report(output, api)[0], 0)
+            old_entries = sorted(output.iterdir())
+            old_current = (output / "current").readlink()
+            old_cache = (output / "cache.json").read_bytes()
+            api.calls.clear()
+
+            invalid = parent / "synthetic-path-marker-invalid.json"
+            invalid.write_bytes(usage_json(usage_record(prompt="synthetic-payload-marker")))
+            invalid.chmod(0o600)
+            broad = parent / "synthetic-path-marker-broad.json"
+            broad.write_bytes(usage_json())
+            broad.chmod(0o644)
+            symbolic = parent / "synthetic-path-marker-symbolic.json"
+            symbolic.symlink_to(invalid)
+            hard = parent / "synthetic-path-marker-hardlink.json"
+            os.link(invalid, hard)
+            fifo = parent / "synthetic-path-marker-pipe"
+            os.mkfifo(fifo, 0o600)
+            worktree = parent / "other-worktree"
+            worktree.mkdir()
+            (worktree / ".git").touch()
+            inside = worktree / "synthetic-path-marker-worktree.json"
+            inside.write_bytes(usage_json())
+            inside.chmod(0o600)
+            aliased = parent / "alias"
+            aliased.symlink_to(worktree, target_is_directory=True)
+            malformed = parent / "synthetic-path-marker-malformed.json"
+            malformed.write_bytes(invalid.read_bytes())
+            malformed.chmod(0o600)
+
+            for path, actions, reason in [
+                (malformed, False, "record fields"), (broad, False, "owner-only"),
+                (symbolic, False, "symlink"), (hard, False, "single filesystem link"),
+                (fifo, False, "regular"), (inside, False, "outside Git worktrees"),
+                (aliased / inside.name, False, "outside Git worktrees"),
+                (parent / "synthetic-path-marker-missing.json", True, "local only"),
+            ]:
+                with self.subTest(reason=reason):
+                    status, stdout, stderr = self.run_report(output, api, "--ai-usage-file", str(path), actions=actions)
+                    self.assertEqual((status, stdout), (2, ""))
+                    self.assertIn(reason, stderr)
+                    self.assertNotIn("synthetic-path-marker", stderr)
+                    self.assertNotIn("synthetic-payload-marker", stderr)
+                    self.assertEqual(api.calls, [])
+                    self.assertEqual((output / "current").readlink(), old_current)
+                    self.assertEqual((output / "cache.json").read_bytes(), old_cache)
+                    self.assertEqual(sorted(output.iterdir()), old_entries)
+
+    @unittest.skipUnless(sys.platform == "darwin", "requires real macOS ACL enforcement")
+    def test_cli_refuses_ai_usage_input_with_macos_acl(self):
+        with TemporaryDirectory() as directory:
+            parent = Path(directory)
+            output = parent / "report"
+            snapshot = parent / "fixture.json"
+            snapshot.write_bytes(usage_json())
+            snapshot.chmod(0o600)
+            subprocess.run(["/bin/chmod", "+a", "everyone allow read", snapshot], check=True)
+            acl = subprocess.check_output(["/bin/ls", "-lbe", snapshot])
+            self.assertIn(b"allow read", acl)
+
+            api = Fixture()
+            status, stdout, stderr = self.run_report(output, api, "--ai-usage-file", str(snapshot))
+            self.assertEqual((status, stdout), (2, ""))
+            self.assertIn("macOS ACL", stderr)
+            self.assertEqual(api.calls, [])
+            self.assertFalse(output.exists())
 
     def test_cli_partial_publication_and_bad_arguments_have_distinct_statuses(self):
         for options, expected_waits in (({}, [1, 2]), ({"forbidden": True, "retry_after": 2}, [2, 2])):
@@ -686,9 +949,7 @@ class CLITests(unittest.TestCase):
                     return clipped_response(**options)
 
                 api = GitHub(REPO, "fixture", opener=open_response, sleep=waits.append)
-                with self.assertRaises(SystemExit) as usage:
-                    self.run_report(output, api, "--max-wait", "-1")
-                self.assertEqual(usage.exception.code, 2)
+                self.assertEqual(self.run_report(output, api, "--max-wait", "-1")[0], 2)
                 self.assertEqual((output / "current").readlink(), first)
                 self.assertEqual((output / "cache.json").read_bytes(), cache)
                 self.assertEqual(requests, [])

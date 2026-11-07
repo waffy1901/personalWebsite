@@ -16,7 +16,51 @@ The collector uses `GH_TOKEN`, then `GITHUB_TOKEN`, then the active `gh auth tok
 
 Reports go to `~/.local/state/personalwebsite-engineering/current/report.json` and `report.md`. Use `--output-dir` for a different private directory outside Git worktrees. Use a trusted local path on a volume that enforces file ownership and permissions, and use a separate directory per repository if overriding `--repo`. The directory and files are owner-only. On macOS, the collector refuses ACLs on private output paths, including inherited entries. A lock serializes writes, cache replacement is atomic, and `current` switches the report pair together. Resolve `current` once before reading both files in an automated consumer. Older snapshot directories remain in the private output directory and can be removed when they are no longer needed. Keep the cache and reports local. The cache contains normalized counts, timestamps, record identifiers and revision keys. It omits credentials, names, titles, messages, patches, raw API responses and filenames.
 
-For collection runs, exit code `0` means a report was published with complete coverage of the configured sources. Exit code `3` means a report was published with incomplete coverage. Exit code `1` means the run failed without publishing a report. Exit code `2` means invalid command usage and leaves `current` untouched. Schema version 2 adds `ci_cd` and `quality` to each rollup and retains the Phase 1 metrics. The Markdown report compares lifetime, previous month, and current month to date, and shows the eight most recent UTC weeks. [JSON Schema v2](engineering-report.schema.json)
+For collection runs, exit code `0` means a report was published with complete GitHub coverage of the configured sources. Exit code `3` means a report was published with incomplete GitHub coverage. Exit code `1` means the run failed without publishing a report. Exit code `2` means invalid command usage or invalid AI usage input and leaves `current` untouched. Reports without AI usage use schema version 2. An opted-in report uses schema version 3 and adds `ai_usage` alongside the same GitHub metrics. The Markdown report compares lifetime, previous month, and current month to date, and shows the eight most recent UTC weeks. [Report JSON Schema](engineering-report.schema.json)
+
+## Import AI usage locally
+
+Pass an explicitly prepared, provider-neutral version 1 snapshot to include AI usage in a private report. The collector rejects this flag in GitHub Actions. Use a trusted local path outside Git worktrees and a regular file with mode `0600`, no macOS ACL, and a single filesystem link. The file itself cannot be a symlink. The limit is 1 MiB of UTF-8 JSON. Invalid imports stop before token lookup, GitHub collection, or any output change.
+
+```sh
+npm run engineering:report -- --ai-usage-file "$HOME/.local/state/ai-usage.json"
+```
+
+This synthetic snapshot includes an account-wide observation and an independently measured repository observation.
+
+```json
+{
+  "schema_version": 1,
+  "records": [
+    {
+      "source": "example-usage-export",
+      "provider": "example-provider",
+      "model": "example-model",
+      "scope": "account",
+      "start": "2026-09-01",
+      "end": "2026-10-01",
+      "metrics": {"input_tokens": 1000, "output_tokens": 200}
+    },
+    {
+      "source": "example-repo-totals",
+      "provider": "example-provider",
+      "scope": "repository",
+      "repository": "waffy1901/personalWebsite",
+      "start": "2026-09-01",
+      "end": "2026-09-02",
+      "metrics": {"sessions": 2, "tool_calls": 0}
+    }
+  ]
+}
+```
+
+- `source` is an operator-chosen label for the export or record. `provider` and optional `model` are stable identifiers. Use 1-64 ASCII letters, digits, periods, underscores, or hyphens, starting with a letter or digit. Omit `model` or use `null` for a source-reported provider-level series. Use consistent labels over time and keep the source reference and measurement method in private records you control.
+- Each observation contains source-reported additive totals for the full UTC dates in `[start, end)`. Include one or more of `input_tokens`, `output_tokens`, `total_tokens`, `sessions`, `tool_calls`, and `duration_seconds`. Values are integers from 0 through 1,000,000,000,000, with duration measured in seconds. Omit metrics the source did not measure. The importer keeps measured zeroes and leaves omitted metrics unavailable. Use interval totals, converting cumulative counters to interval totals only when both boundaries and the calculation are supported by the source.
+- `scope` is `account` for account-wide usage. Set `scope` to `repository` only when the source explicitly identifies this repository and include `repository` with the exact `--repo` spelling. Account usage has no repository or work-item field. A repository observation may include `work_item` with `url` set to `https://github.com/<owner>/<repo>/issues/<number>` or `https://github.com/<owner>/<repo>/pull/<number>` and `origin` set to `source_recorded`. Use it only when the source records the link or you have a contemporaneous private mapping that demonstrates it. Keep the supporting record privately. The collector confirms the item exists with the specified type before the report cutoff using the normal GitHub inventory. It relies on your attestation for the usage link. An unavailable or unresolved item excludes the observation and increments the exclusion count.
+- Supply only sanitized aggregates and the allowlisted fields above. Keep transcripts, prompts, credentials, proprietary work data, private conversations, account IDs, and source paths out of the snapshot, including from labels. Duplicate keys and additional fields are rejected. The importer reads only the supplied file and uses the existing GitHub collection to check work items and retrieve delivery counts. Imported observations are retained in the private report pair. They stay out of the GitHub cache and are never sent to GitHub or an AI provider.
+- Each account, repository-wide, and individual work-item series is independent, as are provider-level and model-level series. A series may include successive observations from different sources, with comparable definitions and non-overlapping intervals. The importer rejects overlapping intervals within the same series even when source labels differ. Usage can appear in multiple separate series if the source supplies those views. The report does not add those series together or estimate the repository share of an account total.
+- Daily, Monday-based weekly, and calendar-monthly rollups include observations wholly contained in the corresponding UTC window. An interval crossing a boundary can appear at a coarser resolution. The importer excludes intervals ending after the cutoff and never prorates an interval. Lifetime means the imported observed span for the series. `covered_days` and `record_count` show the amount of each window represented. A metric is N/A if an included observation omits it. An empty import also shows N/A. The JSON retains the accepted observations with their source labels and dates.
+- A fully covered calendar month for a repository-wide series can show the repository's merged PR count for the exact same month when GitHub PR coverage is complete. Each count describes its own measured population. The comparison provides descriptive context for the report owner. It cannot establish causal impact or measure individual productivity.
 
 ## Weekly workflow
 
