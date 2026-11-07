@@ -22,6 +22,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
+from engineering_ai_usage import InvalidUsage, MAX_BYTES, build_ai_usage, parse_usage
 from engineering_metrics import PORTFOLIO_REPO, build_report, elapsed, render_markdown, timestamp
 
 
@@ -590,10 +591,34 @@ def require_no_macos_acl(path, fd):
         raise Unavailable(f"Could not verify macOS ACL for {path}")
 
 
+def inside_worktree(path):
+    return path == ROOT or ROOT in path.parents or any((p / ".git").exists() for p in (path, *path.parents))
+
+
+def read_ai_usage(path, repo):
+    try:
+        requested = path.expanduser().absolute()
+        # Resolve parent aliases without following a symlink at the file itself.
+        path = requested.parent.resolve() / requested.name
+        if inside_worktree(Path(os.path.normpath(requested))) or inside_worktree(path):
+            raise InvalidUsage("use a private AI usage file outside Git worktrees")
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, "rb") as stream:
+            require_private(path, stat.S_ISREG, stream.fileno())
+            if os.fstat(stream.fileno()).st_nlink != 1:
+                raise InvalidUsage("AI usage file must have a single filesystem link")
+            contents = stream.read(MAX_BYTES + 1)
+    except InvalidUsage:
+        raise
+    except (OSError, RuntimeError, Unavailable, ValueError):
+        raise InvalidUsage("could not open an owner-only regular AI usage file without a symlink or macOS ACL") from None
+    return parse_usage(contents, repo)
+
+
 def prepare_output(path):
     # Resolve for the checkout check and use the resolved path for all writes.
     path = path.expanduser().resolve()
-    if path == ROOT or ROOT in path.parents or any((p / ".git").exists() for p in (path, *path.parents)):
+    if inside_worktree(path):
         raise Unavailable("Use a private output directory outside Git worktrees.")
     path.mkdir(mode=0o700, parents=True, exist_ok=True)
     require_private(path, stat.S_ISDIR)
@@ -646,6 +671,7 @@ def main():
     parser.add_argument("--max-wait", type=int, default=60, help="Total retry sleep budget in seconds")
     parser.add_argument("--max-requests", type=int, default=4000, help="Total GitHub HTTP request budget")
     parser.add_argument("--skip-dependabot", action="store_true", help="Mark Dependabot alerts as not collected")
+    parser.add_argument("--ai-usage-file", type=Path, help="Import a private, sanitized AI usage JSON snapshot locally")
     args = parser.parse_args()
     if not REPO_NAME.fullmatch(args.repo) or args.repo.split("/")[1] in (".", ".."):
         parser.error("--repo must be a GitHub owner/name")
@@ -653,6 +679,14 @@ def main():
         parser.error("--max-wait must be nonnegative")
     if args.max_requests <= 0:
         parser.error("--max-requests must be positive")
+    ai_usage = None
+    if args.ai_usage_file is not None:
+        if os.environ.get("GITHUB_ACTIONS", "").lower() == "true":
+            parser.error("--ai-usage-file is local only")
+        try:
+            ai_usage = read_ai_usage(args.ai_usage_file, args.repo)
+        except InvalidUsage as error:
+            parser.error(str(error))
     os.umask(0o077)
     try:
         api = GitHub(args.repo, read_token(), args.max_wait, max_requests=args.max_requests)
@@ -670,6 +704,10 @@ def main():
             data = collect(api, cache, as_of, skip_dependabot=args.skip_dependabot)
             collected_at = timestamp(datetime.now(UTC).isoformat(timespec="seconds"))
             report = build_report(args.repo, as_of, *data, collected_at=collected_at)
+            if ai_usage is not None:
+                _, _, pulls, issues, *_ = data
+                report["schema_version"] = 3
+                report["ai_usage"] = build_ai_usage(report, ai_usage, pulls, issues)
             publish(directory, args.repo, cache, report)
         print(f"Report published locally to {directory / 'current'}")
         incomplete = [

@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta
 from math import ceil
 from statistics import median
 
+from engineering_ai_usage import render_ai_usage
+
 
 PORTFOLIO_REPO = "waffy1901/personalWebsite"
 WEEK = timedelta(days=7)
@@ -519,4 +521,6 @@ def render_markdown(report):
         )
     if not any(report["samples"].values()):
         lines.append("No qualifying cycle samples were available.")
+    if "ai_usage" in report:
+        lines.extend(render_ai_usage(report["ai_usage"]))
     return "\n".join(lines) + "\n"
