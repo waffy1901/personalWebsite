@@ -84,9 +84,13 @@ function Projects({ restoreSummaryFocus }) {
     // Restore the fragment after the lazy route and parent scroll reset commit.
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
-        const focusTarget = document.getElementById(targetId)?.querySelector("[data-project-focus]");
-        focusTarget?.focus({ preventScroll: true });
-        focusTarget?.scrollIntoView?.({ block: selectedId ? "start" : "nearest", behavior: "instant" });
+        const focusTarget = document.getElementById(targetId)?.querySelector("[data-focus]");
+        if (!focusTarget) return;
+        // The sticky header can grow when text wraps or is enlarged.
+        const headerHeight = document.querySelector("header")?.offsetHeight ?? 0;
+        focusTarget.style.scrollMarginTop = `${headerHeight + 8}px`;
+        focusTarget.focus({ preventScroll: true });
+        focusTarget.scrollIntoView?.({ block: selectedId ? "start" : "nearest", behavior: "instant" });
       });
     });
     return () => cancelAnimationFrame(frame);

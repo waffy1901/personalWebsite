@@ -116,12 +116,12 @@ function ProjectCard({
             <button
               type="button"
               onClick={showDetails}
-              data-project-focus={isFlipped ? undefined : ""}
+              data-focus={isFlipped ? undefined : ""}
               tabIndex={isFlipped ? -1 : 0}
               aria-label={`View details for ${title}`}
               aria-expanded={isFlipped}
               aria-controls={detailsId}
-              className="mc-button-primary w-full scroll-mt-36 sm:w-auto"
+              className="mc-button-primary w-full sm:w-auto"
             >
               <FaInfoCircle className="mr-2" aria-hidden="true" />
               View details
@@ -139,9 +139,9 @@ function ProjectCard({
           <p className="text-xs font-black uppercase text-[#93B4FF]">Technical notes</p>
           <h3
             id={`${detailsId}-heading`}
-            data-project-focus={isFlipped ? "" : undefined}
+            data-focus={isFlipped ? "" : undefined}
             tabIndex={isFlipped ? -1 : undefined}
-            className="mt-2 scroll-mt-36 break-words text-xl font-black"
+            className="mt-2 break-words text-xl font-black"
           >
             {title} details
           </h3>
@@ -167,7 +167,7 @@ function ProjectCard({
               onClick={hideDetails}
               tabIndex={isFlipped ? 0 : -1}
               aria-label={`Back to summary for ${title}`}
-              className="mc-button-secondary scroll-mt-36 py-3 sm:py-2"
+              className="mc-button-secondary py-3 sm:py-2"
             >
               <FaArrowLeft className="mr-2" aria-hidden="true" />
               Back

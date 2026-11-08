@@ -198,7 +198,10 @@ for (const width of [320, 390]) {
           if (index > 0) await button.click()
           await expect(button).toHaveAttribute("aria-expanded", "true")
           const back = cards[index].getByRole("button", { name: /^Back to summary for / })
-          await expect(back).toBeFocused()
+          const focusTarget = route === "/projects/"
+            ? cards[index].getByRole("region").getByRole("heading", { level: 3 })
+            : back
+          await expect(focusTarget).toBeFocused()
           await back.click()
           await expect(button).toHaveAttribute("aria-expanded", "false")
           await expect(button).toBeFocused()
@@ -263,9 +266,12 @@ for (const width of [320, 390, 640, 1024, 1440]) {
             await expect(card.getByRole("link", { name: "Source Code" })).toBeVisible()
           }
           await button.click()
-          const back = card.getByRole("button", { name: /^Back to summary for / })
-          await expect(back).toBeFocused()
-          await expectContentContained(card.getByRole("region"))
+          const details = card.getByRole("region")
+          const focusTarget = route === "/projects/"
+            ? details.getByRole("heading", { level: 3 })
+            : card.getByRole("button", { name: /^Back to summary for / })
+          await expect(focusTarget).toBeFocused()
+          await expectContentContained(details)
           await expect(button).toHaveAttribute("tabindex", "-1")
           const group = card.getByRole("group")
           await expect(group).toHaveAttribute("tabindex", "0")
@@ -959,6 +965,32 @@ test("linked project heading stays in view on a short landscape screen", async (
   })
   await expectProjectHeadingInView(heading)
   await expect(heading).toBeFocused()
+  monitor.assertClean()
+})
+
+test("linked project heading clears sticky navigation at 200% root font", async ({ page, baseURL }, testInfo) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  test.skip(testInfo.project.metadata.viewportClass !== "mobile", "Explicit viewport runs once per browser engine")
+  await page.setViewportSize({ width: 320, height: 568 })
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/projects/")
+  const card = page.locator("#job-search-aid")
+  const detailsButton = card.getByRole("button", { name: "View details for Job Search Aid" })
+  await expect(detailsButton).toBeVisible()
+  await page.evaluate(async () => {
+    const { document, location } = globalThis
+    await document.fonts.ready
+    document.documentElement.style.setProperty("font-size", "200%", "important")
+    location.hash = "job-search-aid"
+  })
+  await expect(page.locator("html")).toHaveCSS("font-size", "32px")
+  const heading = card.getByRole("heading", { name: "Job Search Aid details" })
+  await expect(heading).toBeFocused()
+  await expectProjectHeadingInView(heading)
+  await page.keyboard.press("Escape")
+  await expect(detailsButton).toBeFocused()
+  await expect(page).toHaveURL(new URL("/projects/", baseURL).href)
   monitor.assertClean()
 })
 

@@ -39,9 +39,9 @@ export default function HackathonPrototype({ project, isOpen, onSelect }) {
       <p className="mt-4 text-sm font-bold text-slate-600">{project.timeframe}</p>
       <h2
         id={`${project.id}-heading`}
-        data-project-focus={isOpen ? "" : undefined}
+        data-focus={isOpen ? "" : undefined}
         tabIndex={isOpen ? -1 : undefined}
-        className="mt-3 scroll-mt-36 text-3xl font-black text-[#0B1220]"
+        className="mt-3 text-3xl font-black text-[#0B1220]"
       >
         {project.title}
       </h2>
@@ -50,9 +50,9 @@ export default function HackathonPrototype({ project, isOpen, onSelect }) {
       <p className="mt-4 border-l-4 border-[#F96302] pl-4 leading-relaxed text-slate-700">{project.reviewBoundary}</p>
       <details open={isOpen} className="mt-6 border-t border-slate-200 pt-5">
         <summary
-          data-project-focus={isOpen ? undefined : ""}
+          data-focus={isOpen ? undefined : ""}
           onClick={handleToggle}
-          className="cursor-pointer scroll-mt-36 rounded-sm font-black text-[#1D4ED8] underline underline-offset-4 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
+          className="cursor-pointer rounded-sm font-black text-[#1D4ED8] underline underline-offset-4 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
         >
           Delivery flow, ownership, and limitations
         </summary>
