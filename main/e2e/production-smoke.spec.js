@@ -854,6 +854,110 @@ test("client navigation resets forward scroll and preserves history scroll resto
   monitor.assertClean()
 })
 
+test("project detail links restore focus and selection across reload and history", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.addInitScript(() => {
+    Object.defineProperty(globalThis.navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async () => { throw new Error("Clipboard denied") } },
+    })
+  })
+  const monitor = monitorPage(page, baseURL)
+  const jobPath = "/projects/#job-search-aid"
+  const campusPath = "/projects/#campus-discovery-service"
+  const jobCard = page.locator("#job-search-aid")
+  const jobBack = jobCard.getByRole("button", { name: "Back to summary for Job Search Aid" })
+  const jobDetails = jobCard.getByRole("button", { name: "View details for Job Search Aid" })
+  const campusBack = page.getByRole("button", { name: "Back to summary for Campus Discovery Service" })
+  const campusDetails = page.getByRole("button", { name: "View details for Campus Discovery Service" })
+  const copyButtons = page.getByRole("button", { name: /^Copy link to / })
+
+  await page.goto(jobPath)
+  await expect(jobBack).toBeFocused()
+  await expect.poll(() => jobCard.evaluate((card) =>
+    card.getBoundingClientRect().top - globalThis.document.querySelector("header").getBoundingClientRect().bottom
+  )).toBeGreaterThan(0)
+  await expect(jobCard.locator(":scope > div")).toHaveCSS("transform", "none")
+
+  await page.reload()
+  await expect(jobBack).toBeFocused()
+  await jobCard.getByRole("button", { name: "Copy link to Job Search Aid" }).click()
+  await expect(jobCard.getByRole("status")).toHaveText("Copy failed. Select the link and copy it manually.")
+  const fallback = jobCard.getByRole("textbox", { name: "Link to Job Search Aid" })
+  await expect(fallback).toHaveValue(new URL(jobPath, baseURL).href)
+  await fallback.focus()
+  expect(await fallback.evaluate((input) => input.value.slice(input.selectionStart, input.selectionEnd)))
+    .toBe(new URL(jobPath, baseURL).href)
+  await expectNoHorizontalOverflow(page)
+
+  await campusDetails.click()
+  await expect(page).toHaveURL(new URL(campusPath, baseURL).href)
+  await expect(campusBack).toBeFocused()
+  await expect(copyButtons).toHaveCount(1)
+  await expect(jobDetails).toHaveAttribute("aria-expanded", "false")
+
+  await page.keyboard.press("Escape")
+  await expect(page).toHaveURL(new URL("/projects/", baseURL).href)
+  await expect(campusDetails).toBeFocused()
+  await expect(copyButtons).toHaveCount(0)
+
+  await page.goBack()
+  await expect(campusBack).toBeFocused()
+  await page.goBack()
+  await expect(jobBack).toBeFocused()
+  await page.goForward()
+  await expect(campusBack).toBeFocused()
+  await page.goForward()
+  await expect(campusDetails).toBeFocused()
+  await expect(copyButtons).toHaveCount(0)
+
+  // Native fragment navigation does not assign React Router history keys.
+  await page.evaluate(() => { globalThis.location.hash = "missing-project" })
+  await expect(page).toHaveURL(/#missing-project$/)
+  await expect(jobDetails).toBeVisible()
+  await page.evaluate(() => { globalThis.location.hash = "job-search-aid" })
+  await expect(jobBack).toBeFocused()
+  await expectNoHorizontalOverflow(page)
+
+  await page.getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Projects" }).click()
+  await expect(page).toHaveURL(new URL("/projects/", baseURL).href)
+  await expect(page.locator("#main-content")).toBeFocused()
+  await expect.poll(() => getViewportScrollY(page)).toBe(0)
+  await expect(copyButtons).toHaveCount(0)
+  monitor.assertClean()
+})
+
+test("internal prototype link opens lazy project details and preserves keyboard controls", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/experience/")
+  await page.getByRole("link", { name: "Explore the delivery prototype" }).click()
+  await expect(page).toHaveURL(/\/projects\/#jira-to-gke-hackathon$/)
+  const prototype = page.locator("#jira-to-gke-hackathon")
+  const summary = prototype.locator("summary")
+  const ownership = prototype.getByRole("heading", { name: "Ownership" })
+  await expect(ownership).toBeVisible()
+  await expect(summary).toBeFocused()
+  await expect(prototype.getByRole("button", { name: "Copy link to Jira-to-GKE Delivery Prototype" })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(page).toHaveURL(/\/projects\/$/)
+  await expect(ownership).toHaveCount(0)
+  await expect(summary).toBeFocused()
+  await page.keyboard.press("Space")
+  await expect(page).toHaveURL(/\/projects\/#jira-to-gke-hackathon$/)
+  await expect(ownership).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+  monitor.assertClean()
+})
+
 test("resume preview loads with real image dimensions", async ({ page, baseURL }) => {
   const monitor = monitorPage(page, baseURL)
 

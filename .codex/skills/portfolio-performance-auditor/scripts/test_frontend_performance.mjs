@@ -152,6 +152,21 @@ test("accepts a valid route and image fixture", () => {
   }
 })
 
+test("accepts props on the lazy route element", () => {
+  const fixtureRoot = createFixture("async")
+
+  try {
+    replaceFixture(fixtureRoot, "main/src/App.jsx", [
+      ['element={<Projects />}', 'element={<Projects restoreSummaryFocus={level > 0} />}'],
+    ])
+    const result = runChecker(fixtureRoot)
+
+    assert.equal(result.status, 0, result.stderr)
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true })
+  }
+})
+
 test('rejects image decoding values other than "async"', () => {
   const fixtureRoot = createFixture("sync")
 
