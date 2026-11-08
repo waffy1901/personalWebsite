@@ -54,9 +54,9 @@ class FakeAPI:
                               "started_at": STAMP, "completed_at": "2026-11-05T01:25:00Z",
                               "steps": [{"name": name, "number": n, "status": "completed", "conclusion": "success",
                                          "started_at": STAMP, "completed_at": "2026-11-05T01:20:00Z"} for n, name in enumerate(steps, 1)]})
-        self.pr = {"number": 456, "merged": True, "merge_commit_sha": SHA, "merged_at": STAMP, "changed_files": 2,
-                   "base": {"ref": "main", "repo": {"full_name": c.REPO}}, "head": {"repo": {"full_name": c.REPO}},
-                   "html_url": f"https://github.com/{c.REPO}/pull/456"}
+        self.pr = {"number": 456, "merged": True, "mergeCommit": {"oid": SHA}, "mergedAt": STAMP,
+                   "baseRefName": "main", "changedFiles": 2, "baseRepository": {"nameWithOwner": c.REPO},
+                   "headRepository": {"nameWithOwner": c.REPO}, "url": f"https://github.com/{c.REPO}/pull/456"}
         self.files = [{"filename": ".github/closeout/issue-123.json", "status": "added"}, {"filename": "main/src/App.jsx", "status": "modified"}]
         self.contract = contract()
         self.release = {"id": 4, "tag_name": "deploy-20261105T011000Z-aaaaaaa", "draft": False, "prerelease": False,
@@ -83,8 +83,6 @@ class FakeAPI:
     def get(self, path):
         if path.startswith("actions/runs/"):
             return self.read("run", self.run)
-        if path == "pulls/456":
-            return self.read("pr", self.pr)
         if path.startswith("git/ref/tags/"):
             return self.read("tag", {"object": self.tag})
         if path.startswith("git/tags/"):
@@ -101,6 +99,9 @@ class FakeAPI:
         if path == "releases":
             return self.read("releases", [self.release])
         raise AssertionError(path)
+
+    def graphql(self, query, variables, credential="project"):
+        return self.read("pr", {"repository": {"pullRequest": self.pr}})
 
     def content(self, path, sha):
         self.assert_sha = sha
@@ -260,8 +261,29 @@ class CloseoutTests(unittest.TestCase):
                 self.api.issue_value["body"] = body
                 self.assert_pending_without_writes()
 
+    def test_unavailable_or_inexact_pr_identity_blocks_writes(self):
+        for field, value in (
+            ("mergeCommit", None),
+            ("mergeCommit", {}),
+            ("mergeCommit", {"oid": "b" * 40}),
+            ("number", 457),
+            ("merged", False),
+            ("baseRefName", "other"),
+            ("baseRepository", {"nameWithOwner": "foreign/repo"}),
+            ("headRepository", None),
+            ("headRepository", {"nameWithOwner": "foreign/repo"}),
+            ("url", f"https://github.com/{c.REPO}/pull/457"),
+            ("mergedAt", "2026-11-05T01:00:01Z"),
+        ):
+            with self.subTest(field=field, value=value):
+                self.api = FakeAPI()
+                self.api.pr[field] = value
+                self.assert_pending_without_writes()
+                self.assertEqual([], self.report["writes_attempted"])
+                self.assertNotIn("issue", self.api.reads)
+
     def test_incomplete_or_ambiguous_pr_files(self):
-        self.api.pr["changed_files"] += 1
+        self.api.pr["changedFiles"] += 1
         self.assert_pending_without_writes()
         self.api = FakeAPI()
         self.api.files[1] = {"filename": ".github/closeout/issue-124.json", "status": "added"}
@@ -461,6 +483,37 @@ class DataAndPaginationTests(unittest.TestCase):
         api.request = lambda *args: ([], {"Link": '<https://attacker.test/a>; rel="next"'})
         with self.assertRaises(c.Pending):
             api.pages("releases")
+
+    def test_associated_pr_uses_graphql_merge_oid_with_repo_credential(self):
+        api, fixture = self.api(), FakeAPI()
+        repo_path = f"/repos/{c.REPO}"
+        associated_path = f"{repo_path}/commits/{SHA}/pulls?per_page=100"
+        files_path = f"{repo_path}/pulls/456/files?per_page=100"
+        contract_path = f"{repo_path}/contents/.github/closeout/issue-123.json?ref={SHA}"
+        calls = []
+
+        def request(method, path, body=None, credential="repo"):
+            calls.append((method, path))
+            self.assertEqual("repo", credential)
+            if (method, path) == ("POST", "/graphql"):
+                owner, name = c.REPO.split("/")
+                self.assertEqual({"owner": owner, "name": name, "number": 456}, body["variables"])
+                self.assertRegex(body["query"], r"mergeCommit\s*\{\s*oid\s*\}")
+                return {"data": {"repository": {"pullRequest": fixture.pr}}}, {}
+            self.assertEqual("GET", method)
+            if path == associated_path:
+                return [{"number": 456}], {}
+            if path == files_path:
+                return fixture.files, {}
+            if path == contract_path:
+                encoded = base64.b64encode(json.dumps(fixture.contract).encode()).decode()
+                return {"type": "file", "encoding": "base64", "content": encoded}, {}
+            raise AssertionError(path)
+
+        api.request = request
+        self.assertEqual((fixture.pr["url"], fixture.contract), c.selected_contract(api, fixture.run))
+        self.assertEqual([("GET", associated_path), ("POST", "/graphql"),
+                          ("GET", files_path), ("GET", contract_path)], calls)
 
     def test_graphql_pagination_all_pages_and_incomplete_cursor(self):
         api = self.api()
