@@ -280,6 +280,35 @@ smoke cases and add local mocked contact-error and resume-download coverage.
 The lane provides Playwright WebKit compatibility evidence; it does not claim
 coverage of real Safari or iOS devices.
 
+### Local security scans
+
+Add [Gitleaks 8.30.1](https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1)
+and [OSV-Scanner 2.7.0](https://github.com/google/osv-scanner/releases/tag/v2.7.0)
+to your `PATH` after verifying their release checksums. Run these advisory checks
+from the repository root when needed.
+
+```bash
+npm run scan:secrets
+git fetch origin main
+npm run scan:secrets -- origin/main
+npm run scan:dependencies -- --download-offline-databases
+npm run scan:dependencies
+```
+
+`scan:secrets` uses Git 2.31 or newer and checks staged additions. Pass a base
+ref or SHA to check outgoing commits through `HEAD`, including merge diffs
+against the first parent. Use a full checkout and a current base ref. Gitleaks
+redacts matches, limits targets to 2 MB, and times out after 30 seconds. Exit 1
+indicates a match and exit 2 indicates a scan or setup error. Inspect the reported
+scope and findings locally.
+
+`scan:dependencies` checks both npm lockfiles against the local OSV database.
+Use `--download-offline-databases` on the first run and to refresh the advisory
+snapshot. The scan uses the cached database on subsequent runs. Check the reported
+package count. Exit 1 indicates advisory matches. Review their applicability and
+keep detailed output private.
+[OSV-Scanner offline mode](https://google.github.io/osv-scanner/usage/offline-mode/)
+
 ## Deployment
 
 Netlify is configured through [netlify.toml](./netlify.toml):
