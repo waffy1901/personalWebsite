@@ -162,14 +162,17 @@ function checkAppLazyLoading() {
       `\\bconst\\s+${escapedPage}\\s*=\\s*lazy\\s*\\(\\s*\\(\\)\\s*=>\\s*import\\(\\s*["']\\.\\/pages\\/${escapedPage}\\.jsx["']\\s*\\)\\s*\\)`,
     )
     const routePattern = new RegExp(
-      `<Route\\b(?:(?!<Route\\b)[\\s\\S])*?\\bpath\\s*=\\s*["']${escapedPath}["'](?:(?!<Route\\b)[\\s\\S])*?\\belement\\s*=\\s*\\{\\s*<${escapedPage}\\s*\\/>\\s*\\}`,
+      `<Route\\b(?:(?!<Route\\b)[\\s\\S])*?\\bpath\\s*=\\s*["']${escapedPath}["'](?:(?!<Route\\b)[\\s\\S])*?\\belement\\s*=\\s*\\{\\s*<${escapedPage}(?=\\s|/>)`,
     )
+    const routeMatch = routePattern.exec(appSource)
+    const pageTagStart = routeMatch ? routeMatch.index + routeMatch[0].lastIndexOf("<") : -1
+    const pageTagEnd = pageTagStart >= 0 ? jsxTagEnd(appSource, pageTagStart) : -1
 
     if (!lazyImportPattern.test(appSource)) {
       errors.push(`main/src/App.jsx should lazy-load ${page} from ./pages/${page}.jsx.`)
     }
 
-    if (!routePattern.test(appSource)) {
+    if (pageTagEnd === -1 || !/^\/>\s*\}/.test(appSource.slice(pageTagEnd - 1))) {
       errors.push(`main/src/App.jsx should render ${page} for route ${path}.`)
     }
   }

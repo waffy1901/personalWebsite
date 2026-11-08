@@ -82,24 +82,16 @@ async function focusByKeyboard(page, locator, { reverse = false, maxSteps = 100 
   ).toBe(true)
 }
 
-async function exerciseOverflowingExpandedRegion(page, regions) {
-  const overflowingIndexes = await regions.evaluateAll((elements) =>
-    elements.flatMap((element, index) =>
-      element.scrollHeight > element.clientHeight ? [index] : []
-    )
+async function exerciseOverflowingExpandedRegion(page, region, detailsButton, focusOptions) {
+  const hasOverflow = await region.evaluate(
+    (element) => element.scrollHeight > element.clientHeight
   )
-
-  if (overflowingIndexes.length === 0) {
+  if (!hasOverflow) {
     return false
   }
 
-  const region = regions.nth(overflowingIndexes.at(-1))
-  const card = region.locator("xpath=ancestor::article")
-  const detailsButton = card.locator(
-    'button[aria-label^="View details for "]'
-  )
   await expect(region).toHaveAttribute("tabindex", "0")
-  await focusByKeyboard(page, region, { reverse: true })
+  await focusByKeyboard(page, region, focusOptions)
 
   const initialScrollTop = await region.evaluate((element) => element.scrollTop)
   await page.keyboard.press("ArrowDown")
@@ -140,30 +132,33 @@ test("expanded project details remain accessible", async ({ page }, testInfo) =>
   const detailCount = await detailButtons.count()
   expect(detailCount, "projects should expose detail controls").toBeGreaterThan(0)
 
-  await focusByKeyboard(page, detailButtons.first())
-  await page.keyboard.press("Enter")
-  await expect(detailButtons.first()).toHaveAttribute("aria-expanded", "true")
-
-  for (let index = 1; index < detailCount; index += 1) {
-    const button = detailButtons.nth(index)
-    await button.click()
-    await expect(button).toHaveAttribute("aria-expanded", "true")
-  }
-
-  const backButtons = page.getByRole("button", { name: /^Back to summary for / })
-  await expect(backButtons).toHaveCount(detailCount)
+  let exercisedOverflow = false
   for (let index = 0; index < detailCount; index += 1) {
-    await expect(backButtons.nth(index)).toBeVisible()
+    const button = detailButtons.nth(index)
+    if (index === 0) {
+      await focusByKeyboard(page, button)
+      await page.keyboard.press("Enter")
+    } else {
+      await button.click()
+    }
+    await expect(button).toHaveAttribute("aria-expanded", "true")
+    const heading = page.getByRole("heading", { level: 3, name: / details$/ })
+    await expect(heading).toBeFocused()
+    const scrollRegion = page.getByRole("group", { name: / technical details$/ })
+    await expect(scrollRegion).toHaveCount(1)
+    if (await exerciseOverflowingExpandedRegion(page, scrollRegion, button)) {
+      exercisedOverflow = true
+      await expect(heading).toBeFocused()
+    }
+    await expectNoBlockingAccessibilityViolations({
+      page,
+      route,
+      state: `project-details-${index + 1}`,
+      testInfo,
+    })
+    await page.keyboard.press("Escape")
+    await expect(button).toBeFocused()
   }
-
-  const projectScrollRegions = page.locator(
-    '[role="group"][aria-label$=" technical details"]'
-  )
-  await expect(projectScrollRegions).toHaveCount(detailCount)
-  const exercisedOverflow = await exerciseOverflowingExpandedRegion(
-    page,
-    projectScrollRegions
-  )
   if (page.viewportSize().width <= 390) {
     expect(
       exercisedOverflow,
@@ -171,12 +166,6 @@ test("expanded project details remain accessible", async ({ page }, testInfo) =>
     ).toBe(true)
   }
 
-  await expectNoBlockingAccessibilityViolations({
-    page,
-    route,
-    state: "all-project-details-expanded",
-    testInfo,
-  })
 })
 
 test("expanded experience content remains accessible", async ({
@@ -199,7 +188,9 @@ test("expanded experience content remains accessible", async ({
   })
   await expect(experienceScrollRegion).toHaveCount(1)
   expect(
-    await exerciseOverflowingExpandedRegion(page, experienceScrollRegion),
+    await exerciseOverflowingExpandedRegion(
+      page, experienceScrollRegion, experienceDetails, { reverse: true }
+    ),
     "experience details should expose an overflowing keyboard-scrollable region"
   ).toBe(true)
 

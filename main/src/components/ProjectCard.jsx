@@ -1,82 +1,27 @@
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useId } from "react";
 import { FaArrowLeft, FaGithub, FaInfoCircle } from "react-icons/fa";
 import { StackChips } from "./MissionControl.jsx";
+import ProjectLinkCopy from "./ProjectLinkCopy.jsx";
 import { trackEvent, trackLinkClick } from "../utils/analytics";
 
-function usePrefersReducedMotion() {
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return undefined;
-    }
-
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
-
-    updatePreference();
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", updatePreference);
-      return () => mediaQuery.removeEventListener("change", updatePreference);
-    }
-
-    mediaQuery.addListener?.(updatePreference);
-    return () => mediaQuery.removeListener?.(updatePreference);
-  }, []);
-
-  return prefersReducedMotion;
-}
-
-function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, logo, logoWebp, logoWidth, logoHeight }) {
-  const [isFlipped, setIsFlipped] = useState(false);
-  const detailsButtonRef = useRef(null);
-  const backButtonRef = useRef(null);
-  const shouldRestoreDetailsFocusRef = useRef(false);
-  const prefersReducedMotion = usePrefersReducedMotion();
+function ProjectCard({
+  id,
+  title,
+  techStack,
+  summary,
+  outcome,
+  bullets,
+  github,
+  logo,
+  logoWebp,
+  logoWidth,
+  logoHeight,
+  isFlipped,
+  onSelect,
+}) {
   const cardId = useId();
   const detailsId = `${cardId}-details`;
   const stackItems = techStack.split(",").map((item) => item.trim());
-  const cardTransform = prefersReducedMotion
-    ? "none"
-    : isFlipped
-    ? "rotateY(180deg)"
-    : "rotateY(0deg)";
-  const frontTransform = prefersReducedMotion ? "none" : "rotateY(0deg)";
-  const backTransform = prefersReducedMotion ? "none" : "rotateY(180deg)";
-  const hiddenFaceDelay = prefersReducedMotion ? "0ms" : "250ms";
-  const faceStyle = {
-    WebkitBackfaceVisibility: "hidden",
-    backfaceVisibility: "hidden",
-    transitionProperty: "visibility",
-    transitionDuration: "0s",
-  };
-  const frontFaceStyle = {
-    ...faceStyle,
-    WebkitTransform: frontTransform,
-    transform: frontTransform,
-    transitionDelay: isFlipped ? hiddenFaceDelay : "0ms",
-    visibility: isFlipped ? "hidden" : "visible",
-  };
-  const backFaceStyle = {
-    ...faceStyle,
-    WebkitTransform: backTransform,
-    transform: backTransform,
-    transitionDelay: isFlipped ? "0ms" : hiddenFaceDelay,
-    visibility: isFlipped ? "visible" : "hidden",
-  };
-
-  useEffect(() => {
-    if (isFlipped) {
-      backButtonRef.current?.focus();
-      return;
-    }
-
-    if (shouldRestoreDetailsFocusRef.current) {
-      shouldRestoreDetailsFocusRef.current = false;
-      detailsButtonRef.current?.focus();
-    }
-  }, [isFlipped]);
 
   const showDetails = () => {
     trackEvent("project_details_open", {
@@ -84,12 +29,11 @@ function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, 
       project_id: id,
       project_title: title,
     });
-    setIsFlipped(true);
+    onSelect(id);
   };
 
   const hideDetails = () => {
-    shouldRestoreDetailsFocusRef.current = true;
-    setIsFlipped(false);
+    onSelect(null);
   };
 
   const handleKeyDown = (event) => {
@@ -101,25 +45,15 @@ function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, 
 
   return (
     <article
+      id={id}
       aria-label={`${title} project`}
-      className="w-full min-w-0 mc-perspective"
+      className="w-full min-w-0 scroll-mt-36 mc-perspective"
       onKeyDown={handleKeyDown}
     >
-      <div
-        className="relative w-full mc-transform-style-preserve-3d transition-transform duration-500 will-change-transform motion-reduce:transition-none"
-        style={{
-          WebkitTransform: cardTransform,
-          WebkitTransformStyle: "preserve-3d",
-          transform: cardTransform,
-          transformStyle: "preserve-3d",
-        }}
-      >
+      <div className="mc-project-flip relative w-full" data-flipped={isFlipped}>
         <div
           aria-hidden={isFlipped}
-          className={`${isFlipped ? "absolute inset-0" : "relative"} flex min-h-[29rem] flex-col overflow-hidden rounded-2xl border border-[#2563EB]/25 bg-[#111827] p-5 text-white shadow-[0_22px_60px_rgba(11,18,32,0.20)] mc-backface-hidden ${
-            isFlipped ? "pointer-events-none" : ""
-          }`}
-          style={frontFaceStyle}
+          className={`${isFlipped ? "absolute inset-0" : "relative"} flex min-h-[29rem] flex-col overflow-hidden rounded-2xl border border-[#2563EB]/25 bg-[#111827] p-5 text-white shadow-[0_22px_60px_rgba(11,18,32,0.20)]`}
         >
           <div className="absolute inset-x-0 top-0 h-1 bg-[#F96302]" aria-hidden="true" />
           <div
@@ -180,9 +114,9 @@ function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, 
 
           <div className="relative z-10 mt-auto flex justify-end">
             <button
-              ref={detailsButtonRef}
               type="button"
               onClick={showDetails}
+              data-focus={isFlipped ? undefined : ""}
               tabIndex={isFlipped ? -1 : 0}
               aria-label={`View details for ${title}`}
               aria-expanded={isFlipped}
@@ -200,13 +134,15 @@ function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, 
           role="region"
           aria-hidden={!isFlipped}
           aria-labelledby={`${detailsId}-heading`}
-          className={`${isFlipped ? "relative" : "absolute inset-0"} flex flex-col overflow-hidden rounded-lg border border-[#2563EB]/35 bg-[#0B1220] p-5 text-white shadow-[0_20px_70px_rgba(11,18,32,0.35)] mc-backface-hidden mc-rotate-y-180 ${
-            isFlipped ? "" : "pointer-events-none"
-          }`}
-          style={backFaceStyle}
+          className={`${isFlipped ? "relative" : "absolute inset-0"} mc-project-back mc-panel-dark flex flex-col overflow-hidden border-[#2563EB]/35 p-5`}
         >
           <p className="text-xs font-black uppercase text-[#93B4FF]">Technical notes</p>
-          <h3 id={`${detailsId}-heading`} className="mt-2 break-words text-xl font-black">
+          <h3
+            id={`${detailsId}-heading`}
+            data-focus={isFlipped ? "" : undefined}
+            tabIndex={isFlipped ? -1 : undefined}
+            className="mt-2 break-words text-xl font-black"
+          >
             {title} details
           </h3>
           <div
@@ -225,17 +161,19 @@ function ProjectCard({ id, title, techStack, summary, outcome, bullets, github, 
             </ul>
           </div>
           <p className="mt-3 text-xs text-slate-400">Scroll for all technical notes.</p>
-          <button
-            ref={backButtonRef}
-            type="button"
-            onClick={hideDetails}
-            tabIndex={isFlipped ? 0 : -1}
-            aria-label={`Back to summary for ${title}`}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-md border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:border-[#2563EB] hover:bg-white/15 focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#0B1220] sm:w-fit sm:py-2"
-          >
-            <FaArrowLeft className="mr-2" aria-hidden="true" />
-            Back
-          </button>
+          <div className="mt-4 flex flex-wrap items-start gap-3">
+            <button
+              type="button"
+              onClick={hideDetails}
+              tabIndex={isFlipped ? 0 : -1}
+              aria-label={`Back to summary for ${title}`}
+              className="mc-button-secondary py-3 sm:py-2"
+            >
+              <FaArrowLeft className="mr-2" aria-hidden="true" />
+              Back
+            </button>
+            {isFlipped ? <ProjectLinkCopy id={id} title={title} /> : null}
+          </div>
         </div>
       </div>
     </article>

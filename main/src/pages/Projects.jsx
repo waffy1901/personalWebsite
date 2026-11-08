@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { useLocation } from "react-router";
+import React, { useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router";
 import HackathonPrototype from "../components/HackathonPrototype.jsx";
 import { hackathonPrototypeSummary as hackathonPrototype } from "../data/hackathonPrototypeSummary.js";
 import { FaCodeBranch, FaDatabase, FaMobileAlt, FaUsers } from "react-icons/fa";
@@ -61,21 +61,47 @@ const projectFlowNodes = [
   },
 ];
 
-function Projects() {
-  const { hash } = useLocation();
+function getProjectId(hash) {
+  try {
+    const id = decodeURIComponent(hash.slice(1));
+    return projects.some((project) => project.id === id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+function Projects({ restoreSummaryFocus }) {
+  const { pathname, search, hash, key } = useLocation();
+  const navigate = useNavigate();
+  const selectedId = getProjectId(hash);
+  const previousSelectedId = useRef(null);
+
   useEffect(() => {
-    if (hash !== `#${hackathonPrototype.id}`) return;
+    const targetId = selectedId ?? (restoreSummaryFocus ? previousSelectedId.current : null);
+    previousSelectedId.current = selectedId;
+    if (!targetId) return;
+
     // Restore the fragment after the lazy route and parent scroll reset commit.
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
-        document.getElementById(hackathonPrototype.id)?.scrollIntoView({
-          block: "start",
-          behavior: "instant",
-        });
+        const focusTarget = document.getElementById(targetId)?.querySelector("[data-focus]");
+        if (!focusTarget) return;
+        // The sticky header can grow when text wraps or is enlarged.
+        const headerHeight = document.querySelector("header")?.offsetHeight ?? 0;
+        focusTarget.style.scrollMarginTop = `${headerHeight + 8}px`;
+        focusTarget.focus({ preventScroll: true });
+        focusTarget.scrollIntoView?.({ block: selectedId ? "start" : "nearest", behavior: "instant" });
       });
     });
     return () => cancelAnimationFrame(frame);
-  }, [hash]);
+  }, [key, selectedId, restoreSummaryFocus]);
+
+  const selectProject = (id) => {
+    navigate(
+      { pathname, search, hash: id ? `#${id}` : "" },
+      { state: { projectDetailChange: true } }
+    );
+  };
 
   const featuredProject = projects.find(
     (project) => project.id === "cdc-data-reconciliation"
@@ -151,12 +177,20 @@ function Projects() {
                 />
               </div>
 
-              <ProjectCard {...featuredProject} />
+              <ProjectCard
+                {...featuredProject}
+                isFlipped={selectedId === featuredProject.id}
+                onSelect={selectProject}
+              />
             </div>
           </PresentationPanel>
         ) : null}
 
-        <HackathonPrototype project={hackathonPrototype} />
+        <HackathonPrototype
+          project={hackathonPrototype}
+          isOpen={selectedId === hackathonPrototype.id}
+          onSelect={selectProject}
+        />
 
         <section aria-labelledby="supporting-projects-heading" className="space-y-5">
           <div>
@@ -171,7 +205,12 @@ function Projects() {
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.08fr_0.92fr]">
             {supportingProjects.map((project) => (
-              <ProjectCard key={project.id} {...project} />
+              <ProjectCard
+                key={project.id}
+                {...project}
+                isFlipped={selectedId === project.id}
+                onSelect={selectProject}
+              />
             ))}
           </div>
         </section>

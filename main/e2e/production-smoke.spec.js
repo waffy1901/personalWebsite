@@ -198,7 +198,10 @@ for (const width of [320, 390]) {
           if (index > 0) await button.click()
           await expect(button).toHaveAttribute("aria-expanded", "true")
           const back = cards[index].getByRole("button", { name: /^Back to summary for / })
-          await expect(back).toBeFocused()
+          const focusTarget = route === "/projects/"
+            ? cards[index].getByRole("region").getByRole("heading", { level: 3 })
+            : back
+          await expect(focusTarget).toBeFocused()
           await back.click()
           await expect(button).toHaveAttribute("aria-expanded", "false")
           await expect(button).toBeFocused()
@@ -263,9 +266,12 @@ for (const width of [320, 390, 640, 1024, 1440]) {
             await expect(card.getByRole("link", { name: "Source Code" })).toBeVisible()
           }
           await button.click()
-          const back = card.getByRole("button", { name: /^Back to summary for / })
-          await expect(back).toBeFocused()
-          await expectContentContained(card.getByRole("region"))
+          const details = card.getByRole("region")
+          const focusTarget = route === "/projects/"
+            ? details.getByRole("heading", { level: 3 })
+            : card.getByRole("button", { name: /^Back to summary for / })
+          await expect(focusTarget).toBeFocused()
+          await expectContentContained(details)
           await expect(button).toHaveAttribute("tabindex", "-1")
           const group = card.getByRole("group")
           await expect(group).toHaveAttribute("tabindex", "0")
@@ -851,6 +857,172 @@ test("client navigation resets forward scroll and preserves history scroll resto
   ).toBeVisible()
   await expect.poll(() => getViewportScrollY(page)).toBe(destinationScrollY)
   expect(documentRequests).toHaveLength(1)
+  monitor.assertClean()
+})
+
+async function expectProjectHeadingInView(heading) {
+  await expect.poll(() => heading.evaluate((element) => {
+    const { document, innerHeight } = globalThis
+    const headerBottom = document.querySelector("header").getBoundingClientRect().bottom
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    const lines = Array.from(range.getClientRects())
+    return lines.length > 0 &&
+      lines.every((line) => line.top >= headerBottom && line.bottom <= innerHeight)
+  }), { message: "project heading should be fully visible below sticky navigation" }).toBe(true)
+}
+
+test("project detail links restore focus and selection across reload and history", async ({
+  page,
+  baseURL,
+}) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await page.addInitScript(() => {
+    Object.defineProperty(globalThis.navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: async () => { throw new Error("Clipboard denied") } },
+    })
+  })
+  const monitor = monitorPage(page, baseURL)
+  const jobPath = "/projects/#job-search-aid"
+  const campusPath = "/projects/#campus-discovery-service"
+  const jobCard = page.locator("#job-search-aid")
+  const jobHeading = jobCard.getByRole("heading", { name: "Job Search Aid details" })
+  const jobDetails = jobCard.getByRole("button", { name: "View details for Job Search Aid" })
+  const campusHeading = page.getByRole("heading", { name: "Campus Discovery Service details" })
+  const campusDetails = page.getByRole("button", { name: "View details for Campus Discovery Service" })
+  const copyButtons = page.getByRole("button", { name: /^Copy link to / })
+
+  await page.goto(jobPath)
+  await expect(jobHeading).toBeFocused()
+  await expectProjectHeadingInView(jobHeading)
+  await expect(jobCard.locator(":scope > div")).toHaveCSS("transform", "none")
+
+  await page.reload()
+  await expect(jobHeading).toBeFocused()
+  await expectProjectHeadingInView(jobHeading)
+  await jobCard.getByRole("button", { name: "Copy link to Job Search Aid" }).click()
+  await expect(jobCard.getByRole("status")).toHaveText("Copy failed. Select the link and copy it manually.")
+  const fallback = jobCard.getByRole("textbox", { name: "Link to Job Search Aid" })
+  await expect(fallback).toHaveValue(new URL(jobPath, baseURL).href)
+  await fallback.focus()
+  expect(await fallback.evaluate((input) => input.value.slice(input.selectionStart, input.selectionEnd)))
+    .toBe(new URL(jobPath, baseURL).href)
+  await expectNoHorizontalOverflow(page)
+
+  await campusDetails.click()
+  await expect(page).toHaveURL(new URL(campusPath, baseURL).href)
+  await expect(campusHeading).toBeFocused()
+  await expect(copyButtons).toHaveCount(1)
+  await expect(jobDetails).toHaveAttribute("aria-expanded", "false")
+
+  await page.keyboard.press("Escape")
+  await expect(page).toHaveURL(new URL("/projects/", baseURL).href)
+  await expect(campusDetails).toBeFocused()
+  await expect(copyButtons).toHaveCount(0)
+
+  await page.goBack()
+  await expect(campusHeading).toBeFocused()
+  await expectProjectHeadingInView(campusHeading)
+  await page.goBack()
+  await expect(jobHeading).toBeFocused()
+  await page.goForward()
+  await expect(campusHeading).toBeFocused()
+  await page.goForward()
+  await expect(campusDetails).toBeFocused()
+  await expect(copyButtons).toHaveCount(0)
+
+  // Native fragment navigation does not assign React Router history keys.
+  await page.evaluate(() => { globalThis.location.hash = "missing-project" })
+  await expect(page).toHaveURL(/#missing-project$/)
+  await expect(jobDetails).toBeVisible()
+  await page.evaluate(() => { globalThis.location.hash = "job-search-aid" })
+  await expect(jobHeading).toBeFocused()
+  await expectNoHorizontalOverflow(page)
+
+  await page.getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Projects" }).click()
+  await expect(page).toHaveURL(new URL("/projects/", baseURL).href)
+  await expect(page.locator("#main-content")).toBeFocused()
+  await expect.poll(() => getViewportScrollY(page)).toBe(0)
+  await expect(copyButtons).toHaveCount(0)
+  monitor.assertClean()
+})
+
+test("linked project heading stays in view on a short landscape screen", async ({ page, baseURL }, testInfo) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  test.skip(testInfo.project.metadata.viewportClass !== "desktop", "Explicit viewport runs once per browser engine")
+  await page.setViewportSize({ width: 667, height: 375 })
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/projects/#cdc-data-reconciliation")
+  const card = page.locator("#cdc-data-reconciliation")
+  const heading = card.getByRole("heading", { name: "CDC Data Reconciliation details" })
+  await expect(card.locator(":focus")).toBeVisible()
+  await card.locator(":scope > div").evaluate(async (flip) => {
+    await Promise.all(flip.getAnimations().map((animation) => animation.finished))
+  })
+  await expectProjectHeadingInView(heading)
+  await expect(heading).toBeFocused()
+  monitor.assertClean()
+})
+
+test("linked project heading clears sticky navigation at 200% root font", async ({ page, baseURL }, testInfo) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  test.skip(testInfo.project.metadata.viewportClass !== "mobile", "Explicit viewport runs once per browser engine")
+  await page.setViewportSize({ width: 320, height: 568 })
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/projects/")
+  const card = page.locator("#job-search-aid")
+  const detailsButton = card.getByRole("button", { name: "View details for Job Search Aid" })
+  await expect(detailsButton).toBeVisible()
+  await page.evaluate(async () => {
+    const { document, location } = globalThis
+    await document.fonts.ready
+    document.documentElement.style.setProperty("font-size", "200%", "important")
+    location.hash = "job-search-aid"
+  })
+  await expect(page.locator("html")).toHaveCSS("font-size", "32px")
+  const heading = card.getByRole("heading", { name: "Job Search Aid details" })
+  await expect(heading).toBeFocused()
+  await expectProjectHeadingInView(heading)
+  await page.keyboard.press("Escape")
+  await expect(detailsButton).toBeFocused()
+  await expect(page).toHaveURL(new URL("/projects/", baseURL).href)
+  monitor.assertClean()
+})
+
+test("internal prototype link opens lazy project details and preserves keyboard controls", async ({
+  page,
+  baseURL,
+}, testInfo) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  if (testInfo.project.metadata.viewportClass === "mobile") {
+    await page.setViewportSize({ width: 390, height: 600 })
+  }
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/experience/")
+  await page.getByRole("link", { name: "Explore the delivery prototype" }).click()
+  await expect(page).toHaveURL(/\/projects\/#jira-to-gke-hackathon$/)
+  const prototype = page.locator("#jira-to-gke-hackathon")
+  const summary = prototype.locator("summary")
+  const heading = prototype.getByRole("heading", { name: "Jira-to-GKE Delivery Prototype" })
+  const ownership = prototype.getByRole("heading", { name: "Ownership" })
+  await expect(ownership).toBeVisible()
+  await expect(heading).toBeFocused()
+  await expectProjectHeadingInView(heading)
+  await expect(prototype.getByRole("button", { name: "Copy link to Jira-to-GKE Delivery Prototype" })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(page).toHaveURL(/\/projects\/$/)
+  await expect(ownership).toHaveCount(0)
+  await expect(summary).toBeFocused()
+  await page.keyboard.press("Space")
+  await expect(page).toHaveURL(/\/projects\/#jira-to-gke-hackathon$/)
+  await expect(ownership).toBeVisible()
+  await expect(heading).toBeFocused()
+  await expectNoHorizontalOverflow(page)
   monitor.assertClean()
 })
 

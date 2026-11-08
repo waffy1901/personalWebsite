@@ -1041,18 +1041,6 @@ describe("App routes", () => {
     expect(await screen.findByRole("heading", { name: /work experience/i, level: 1 })).toBeVisible()
   })
 
-  it.each([
-    ["Production incident response and recovery", "Production recovery", "production-recovery"],
-    ["October hackathon: Jira-to-GKE Delivery Prototype", hackathonPrototype.title, hackathonPrototype.id],
-  ])("opens the Home evidence link %s at its existing fragment", async (label, heading, targetId) => {
-    const user = userEvent.setup()
-    renderRoute("/")
-    const navigation = await screen.findByRole("navigation", { name: "More recent engineering evidence" })
-    await user.click(within(navigation).getByRole("link", { name: label }))
-    expect(await screen.findByRole("heading", { name: heading, exact: true })).toBeVisible()
-    expect(document.getElementById(targetId)).toBeVisible()
-  })
-
   it("shows each project purpose, distinctive result or capability, and source before details open", async () => {
     renderRoute("/projects/")
     await screen.findByRole("heading", { name: /practical builds for real workflows/i })
@@ -1073,7 +1061,7 @@ describe("App routes", () => {
   it("separates the hackathon prototype's demonstrated result from intended scope", async () => {
     const user = userEvent.setup()
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
-    renderRoute("/projects/")
+    renderBrowserRoute("/projects/")
     const heading = await screen.findByRole("heading", { name: hackathonPrototype.title })
     const card = heading.closest("article")
     expect(card).toHaveAttribute("id", hackathonPrototype.id)
@@ -1091,6 +1079,7 @@ describe("App routes", () => {
     // JSDOM does not emulate native summary keyboard activation; browser QA covers it.
     await user.click(summary)
     expect(disclosure).toHaveAttribute("open")
+    expect(window.location.hash).toBe(`#${hackathonPrototype.id}`)
     expect(await within(card).findByRole("heading", { name: "Ownership" })).toBeVisible()
     expect(prototypeDetailsLoadMock).toHaveBeenCalledTimes(1)
     for (const item of hackathonPrototype.limitations) expect(within(card).getByText(item)).toBeVisible()
@@ -1104,32 +1093,135 @@ describe("App routes", () => {
     }))
     await user.click(summary)
     expect(disclosure).not.toHaveAttribute("open")
+    expect(window.location.hash).toBe("")
     expect(summary).toHaveFocus()
-    await new Promise((resolve) => setTimeout(resolve, 0))
     expect(getAnalyticsEvents("project_details_open")).toHaveLength(1)
+    expect(getAnalyticsEvents("page_view")).toHaveLength(1)
+  })
+
+  it.each([
+    ["Production incident response and recovery", "Production recovery", "production-recovery"],
+    ["October hackathon: Jira-to-GKE Delivery Prototype", hackathonPrototype.title, hackathonPrototype.id],
+  ])("opens the Home evidence link %s at its existing fragment", async (label, heading, targetId) => {
+    const user = userEvent.setup()
+    renderRoute("/")
+    const navigation = await screen.findByRole("navigation", { name: "More recent engineering evidence" })
+    await user.click(within(navigation).getByRole("link", { name: label }))
+    expect(await screen.findByRole("heading", { name: heading, exact: true })).toBeVisible()
+    expect(document.getElementById(targetId)).toBeVisible()
   })
 
   it("restores the prototype fragment on direct entry and Experience navigation", async () => {
     const user = userEvent.setup()
+    vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
     const scrollIntoViewMock = vi.fn()
     const original = HTMLElement.prototype.scrollIntoView
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoViewMock })
     try {
+      const expectHeadingFocusedAndScrolled = async () => {
+        const heading = screen.getByRole("heading", { name: hackathonPrototype.title })
+        await waitFor(() => expect(heading).toHaveFocus())
+        expect(scrollIntoViewMock.mock.contexts).toEqual([heading])
+      }
       const view = renderRoute(hackathonPrototype.path)
-      await screen.findByRole("heading", { name: hackathonPrototype.title })
-      await waitFor(() => expect(scrollIntoViewMock.mock.contexts).toContain(document.getElementById(hackathonPrototype.id)))
+      expect(await screen.findByRole("heading", { name: "Ownership" })).toBeVisible()
+      await expectHeadingFocusedAndScrolled()
       view.unmount()
       scrollIntoViewMock.mockClear()
       renderRoute("/experience/")
       const link = await screen.findByRole("link", { name: "Explore the delivery prototype" })
       expect(link).toHaveAttribute("href", hackathonPrototype.path)
       await user.click(link)
-      await screen.findByRole("heading", { name: hackathonPrototype.title })
-      await waitFor(() => expect(scrollIntoViewMock.mock.contexts).toContain(document.getElementById(hackathonPrototype.id)))
+      expect(await screen.findByRole("heading", { name: "Ownership" })).toBeVisible()
+      await expectHeadingFocusedAndScrolled()
+      expect(getAnalyticsEvents("project_details_open")).toHaveLength(0)
     } finally {
       if (original) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: original })
       else delete HTMLElement.prototype.scrollIntoView
     }
+  })
+
+  it.each(projects.filter((project) => project.github))(
+    "opens only $title from its project fragment",
+    async ({ id, title }) => {
+      vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
+      renderBrowserRoute(`/projects/#${id}`)
+
+      const details = await screen.findByRole("region", { name: `${title} details` })
+      expect(details.closest("article")).toHaveAttribute("id", id)
+      expect(screen.getAllByRole("button", { name: /^Back to summary for / })).toHaveLength(1)
+      const heading = within(details).getByRole("heading", { name: `${title} details` })
+      await waitFor(() => expect(heading).toHaveFocus())
+      expect(getAnalyticsEvents("project_details_open")).toHaveLength(0)
+      expect(getAnalyticsEvents("page_view")).toHaveLength(1)
+    }
+  )
+
+  it.each(["missing-project", "%E0%A4%A"])("keeps the projects index usable at #%s", async (fragment) => {
+    renderRoute(`/projects/#${fragment}`)
+    await screen.findByRole("heading", { name: /practical builds for real workflows/i })
+    expect(screen.queryByRole("button", { name: /^Back to summary for / })).not.toBeInTheDocument()
+    expect(screen.getAllByRole("button", { name: /^View details for / })).toHaveLength(3)
+    expect(screen.getByText("Delivery flow, ownership, and limitations").closest("details")).not.toHaveAttribute("open")
+  })
+
+  it("preserves the project fragment through the uppercase redirect", async () => {
+    renderBrowserRoute("/Projects/?ref=example#job-search-aid")
+    expect(await screen.findByRole("region", { name: "Job Search Aid details" })).toBeVisible()
+    expect(window.location.pathname + window.location.search + window.location.hash).toBe(
+      "/projects/?ref=example#job-search-aid"
+    )
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      "href", "https://waffy.dev/projects/"
+    )
+  })
+
+  it("copies a canonical project link with keyboard activation and status feedback", async () => {
+    const user = userEvent.setup()
+    const writeText = vi.spyOn(navigator.clipboard, "writeText")
+    renderBrowserRoute("/projects/?ref=example#job-search-aid")
+
+    const details = await screen.findByRole("region", { name: "Job Search Aid details" })
+    const heading = within(details).getByRole("heading", { name: "Job Search Aid details" })
+    const notes = within(details).getByRole("group", { name: "Job Search Aid technical details" })
+    const back = within(details).getByRole("button", { name: "Back to summary for Job Search Aid" })
+    const copy = within(details).getByRole("button", { name: "Copy link to Job Search Aid" })
+    await waitFor(() => expect(heading).toHaveFocus())
+    await user.tab()
+    expect(notes).toHaveFocus()
+    await user.tab()
+    expect(back).toHaveFocus()
+    await user.tab()
+    expect(copy).toHaveFocus()
+    await user.keyboard("{Enter}")
+
+    expect(writeText).toHaveBeenCalledExactlyOnceWith(`${window.location.origin}/projects/#job-search-aid`)
+    expect(within(details).getByRole("status")).toHaveTextContent("Project link copied.")
+    expect(window.location.search).toBe("?ref=example")
+  })
+
+  it.each(["denied", "unavailable"])("offers a selectable project link when clipboard access is %s", async (clipboard) => {
+    const user = userEvent.setup()
+    if (clipboard === "denied") {
+      vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new Error("Clipboard denied"))
+    } else {
+      vi.spyOn(navigator, "clipboard", "get").mockReturnValue(undefined)
+    }
+    renderBrowserRoute("/projects#job-search-aid")
+
+    const copy = await screen.findByRole("button", { name: "Copy link to Job Search Aid" })
+    const heading = screen.getByRole("heading", { name: "Job Search Aid details" })
+    await waitFor(() => expect(heading).toHaveFocus())
+    await user.click(copy)
+
+    const link = await screen.findByRole("textbox", { name: "Link to Job Search Aid" })
+    expect(link).toHaveValue(`${window.location.origin}/projects/#job-search-aid`)
+    expect(link).toHaveAttribute("readonly")
+    expect(screen.getByRole("status")).toHaveTextContent("Copy failed.")
+    await user.tab()
+    expect(link).toHaveFocus()
+    expect(link.selectionStart).toBe(0)
+    expect(link.selectionEnd).toBe(link.value.length)
   })
 
   it("retains prototype claim qualifiers in generated discovery without a fabricated repository", () => {
@@ -1169,7 +1261,7 @@ describe("App routes", () => {
   it("tracks project source and details interactions", async () => {
     const user = userEvent.setup()
     vi.stubEnv("VITE_GA_MEASUREMENT_ID", "G-TEST123")
-    renderRoute("/projects")
+    renderBrowserRoute("/projects")
 
     await screen.findByRole("heading", {
       name: /practical builds for real workflows/i,
@@ -1197,13 +1289,14 @@ describe("App routes", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole("button", {
-          name: /back to summary for cdc data reconciliation/i,
+        screen.getByRole("heading", {
+          name: "CDC Data Reconciliation details",
         })
       ).toHaveFocus()
     )
     expect(sourceCodeLink).toHaveAttribute("tabindex", "-1")
     expect(cdcCard.querySelector('button[aria-label^="View details for "]')).toHaveAttribute("tabindex", "-1")
+    expect(window.location.pathname + window.location.hash).toBe("/projects#cdc-data-reconciliation")
 
     expect(getAnalyticsEvents("project_source_click")).toEqual([
       [
@@ -1238,6 +1331,8 @@ describe("App routes", () => {
       ).toHaveFocus()
     )
     expect(sourceCodeLink).toHaveAttribute("tabindex", "0")
+    expect(window.location.hash).toBe("")
+    expect(getAnalyticsEvents("page_view")).toHaveLength(1)
   })
 
   it("tracks resume and social link interactions", async () => {

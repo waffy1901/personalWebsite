@@ -155,19 +155,24 @@ function App() {
     navigationType,
   }))
   const displayedLocation = displayedRoute.location
-  const routePending = location.key !== displayedLocation.key
+  const routePending =
+    location.key !== displayedLocation.key || location.hash !== displayedLocation.hash
+  const projectDetailChange = displayedLocation.state?.projectDetailChange
 
   useEffect(() => {
-    if (location.key === displayedLocation.key) return
+    if (!routePending) return
 
     // Keep the router's URL and page-view semantics immediate, but update the
     // lazy route tree in a transition so its existing content stays visible.
     startTransition(() => {
       setDisplayedRoute({ location, navigationType })
     })
-  }, [displayedLocation.key, location, navigationType])
+  }, [location, navigationType, routePending])
 
   useEffect(() => {
+    // Project controls manage focus within the current route.
+    if (projectDetailChange) return
+
     if (
       displayedRoute.navigationType !== "PUSH" &&
       displayedRoute.navigationType !== "REPLACE"
@@ -178,7 +183,7 @@ function App() {
     const scrollToTop = { top: 0, left: 0, behavior: "instant" }
     window.scrollTo(scrollToTop)
     document.getElementById("main-content")?.focus({ preventScroll: true })
-  }, [displayedRoute])
+  }, [displayedRoute, projectDetailChange])
 
   usePageTracking()
 
@@ -216,13 +221,30 @@ function App() {
               <Route caseSensitive path="/case-studies" element={<CaseStudies />} />
               <Route caseSensitive path="/case-studies/:slug" element={<CaseStudy />} />
               <Route caseSensitive path="/experience" element={<Experience />} />
-              <Route caseSensitive path="/projects" element={<Projects />} />
+              <Route
+                caseSensitive
+                path="/projects"
+                element={
+                  <Projects
+                    restoreSummaryFocus={projectDetailChange || displayedRoute.navigationType === "POP"}
+                  />
+                }
+              />
               <Route caseSensitive path="/Resume" element={<Navigate to="/resume/" replace />} />
               <Route caseSensitive path="/Contact" element={<Navigate to="/contact/" replace />} />
               <Route caseSensitive path="/CaseStudies" element={<Navigate to="/case-studies/" replace />} />
               <Route caseSensitive path="/Case-Studies" element={<Navigate to="/case-studies/" replace />} />
               <Route caseSensitive path="/Experience" element={<Navigate to="/experience/" replace />} />
-              <Route caseSensitive path="/Projects" element={<Navigate to="/projects/" replace />} />
+              <Route
+                caseSensitive
+                path="/Projects"
+                element={
+                  <Navigate
+                    to={{ pathname: "/projects/", search: displayedLocation.search, hash: displayedLocation.hash }}
+                    replace
+                  />
+                }
+              />
               <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
