@@ -506,34 +506,64 @@ def check_pointer(api, deploy):
 
 def selected_contract(api, run):
     pulls = unique(api.pages(f"commits/{run['head_sha']}/pulls"), "number", "associated PRs")
+    query = """
+        query($owner: String!, $name: String!, $number: Int!) {
+            repository(owner: $owner, name: $name) {
+                pullRequest(number: $number) {
+                    number merged mergedAt baseRefName changedFiles url
+                    mergeCommit { oid }
+                    baseRepository { nameWithOwner }
+                    headRepository { nameWithOwner }
+                }
+            }
+        }
+    """
+    owner, name = REPO.split("/")
     candidates = []
     for item in pulls:
-        pr = api.get(f"pulls/{item['number']}")
-        if pr.get("merged") is True and pr.get("merge_commit_sha") == run["head_sha"] and pr.get("base", {}).get("ref") == "main":
-            require(pr.get("base", {}).get("repo", {}).get("full_name") == REPO and
-                    pr.get("head", {}).get("repo", {}).get("full_name") == REPO, "foreign PR not eligible")
-            candidates.append(pr)
+        number = item["number"]
+        require(type(number) is int and number > 0, "invalid associated PR number")
+        data = api.graphql(query, {"owner": owner, "name": name, "number": number}, credential="repo")
+        repository = data.get("repository")
+        pr = repository.get("pullRequest") if isinstance(repository, dict) else None
+        require(isinstance(pr, dict) and type(pr.get("number")) is int and pr["number"] == number,
+                "associated PR identity unavailable")
+        require(type(pr.get("merged")) is bool and isinstance(pr.get("baseRefName"), str),
+                "associated PR merge state unavailable")
+        if not pr["merged"] or pr["baseRefName"] != "main":
+            continue
+        commit = pr.get("mergeCommit")
+        oid = commit.get("oid") if isinstance(commit, dict) else None
+        require(isinstance(oid, str) and SHA.fullmatch(oid), "merged PR commit identity unavailable")
+        if oid != run["head_sha"]:
+            continue
+        for field in ("baseRepository", "headRepository"):
+            repo = pr.get(field)
+            require(isinstance(repo, dict) and repo.get("nameWithOwner") == REPO, "foreign PR not eligible")
+        candidates.append(pr)
     require(len(candidates) == 1, "no single exact merged PR for upstream SHA")
     pr = candidates[0]
-    require(instant(pr["merged_at"]) <= instant(run["run_started_at"]), "PR merge postdates upstream run")
+    pr_url = f"https://github.com/{REPO}/pull/{pr['number']}"
+    require(pr.get("url") == pr_url, "PR URL mismatch")
+    require(instant(pr.get("mergedAt")) <= instant(run["run_started_at"]), "PR merge postdates upstream run")
     files = unique(api.pages(f"pulls/{pr['number']}/files"), "filename", "PR files")
-    require(type(pr.get("changed_files")) is int and len(files) == pr["changed_files"], "PR file pagination incomplete (including API file cap)")
+    require(type(pr.get("changedFiles")) is int and len(files) == pr["changedFiles"],
+            "PR file pagination incomplete (including API file cap)")
     contracts = [f for f in files if f["filename"].startswith(".github/closeout/")]
     require(len(contracts) == 1, "missing/ambiguous changed issue contract; no retrospective sweep")
     file = contracts[0]
     match = re.fullmatch(r"\.github/closeout/issue-([1-9][0-9]*)\.json", file["filename"])
     require(match and file["status"] in ("added", "modified"), "contract must be one added/modified issue-N.json")
     contract = validate_contract(strict_json(api.content(file["filename"], run["head_sha"])), number=int(match[1]))
-    require(pr.get("html_url") == f"https://github.com/{REPO}/pull/{pr['number']}", "PR URL mismatch")
-    return pr, contract
+    return pr_url, contract
 
 
-def evidence_map(contract, run, steps, pr):
+def evidence_map(contract, run, steps, pr_url):
     result = {}
     for evidence in sorted({e for r in contract["requirements"] for e in r["evidence"]}):
         kind, job, step = CATALOG[evidence]
         if job is None:
-            result[evidence] = {"class": kind, "url": pr["html_url"], "result": "Merged source change; criterion mapping reviewed in PR"}
+            result[evidence] = {"class": kind, "url": pr_url, "result": "Merged source change; criterion mapping reviewed in PR"}
         else:
             data = steps[(job, step)]
             result[evidence] = {"class": kind, "url": f"{run['html_url']}/job/{data['job_id']}",
@@ -597,7 +627,7 @@ def execute(api, event, now=None, report=None):
     report = report if report is not None else {}
     report.update(status="pending", writes_attempted=[])
     run, steps = trusted_run(api, event, now)
-    pr, contract = selected_contract(api, run)
+    pr_url, contract = selected_contract(api, run)
     number = contract["issue"]
     report.update(issue=f"https://github.com/{REPO}/issues/{number}", upstream=run["html_url"], attempt=run["run_attempt"])
     deploy = deployment(api, run, steps)
@@ -611,10 +641,10 @@ def execute(api, event, now=None, report=None):
     require(len(matching) <= 1, "duplicate own closeout comments")
     require(len(marked) == len(matching), "different closeout marker exists; manual reconciliation required")
     comment = matching[0] if matching else None
-    evidence = evidence_map(contract, run, steps, pr)
+    evidence = evidence_map(contract, run, steps, pr_url)
     identity = {k: run[k] for k in ("id", "run_attempt", "head_sha", "html_url", "updated_at")}
     payload = {"contract": contract, "run": identity, "deployment": deploy, "evidence": evidence,
-               "pr_url": pr["html_url"]}
+               "pr_url": pr_url}
     if comment:
         require(comment.get("user", {}).get("id") == BOT_ID, "closeout marker was not written by github-actions[bot]")
         encoded = re.findall(r"<!-- closeout-baseline:([A-Za-z0-9+/=]+) -->", comment["body"])
