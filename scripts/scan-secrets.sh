@@ -13,6 +13,20 @@ if ! command -v gitleaks >/dev/null || [[ "$(gitleaks version)" != "8.30.1" ]]; 
 fi
 
 if [[ $# -eq 0 ]]; then
+  # Gitleaks' --no-color flag does not apply to its staged Git subprocess.
+  git_config_count="${GIT_CONFIG_COUNT:-0}"
+  if [[ ! "$git_config_count" =~ ^[0-9]{1,9}$ ]]; then
+    printf 'Invalid GIT_CONFIG_COUNT for staged scan.\n' >&2
+    exit 2
+  fi
+  git_config_count=$((10#$git_config_count))
+  export "GIT_CONFIG_KEY_$git_config_count=color.diff" "GIT_CONFIG_VALUE_$git_config_count=false"
+  export "GIT_CONFIG_COUNT=$((git_config_count + 1))"
+  if ! git_diff_color="$(env -u GIT_CONFIG git config --get color.diff)" ||
+    [[ "$git_diff_color" != "false" ]]; then
+    printf 'Could not disable Git diff color for staged scan.\n' >&2
+    exit 2
+  fi
   printf 'Scanning staged Git changes.\n'
   scan_args=(--pre-commit --staged)
 else

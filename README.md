@@ -295,11 +295,12 @@ npm run scan:dependencies -- --download-offline-databases
 npm run scan:dependencies
 ```
 
-`scan:secrets` checks staged additions. Pass a base ref or SHA to check outgoing
-commits through `HEAD`, including merge diffs against the first parent. Use a
-full checkout and a current base ref. Gitleaks redacts matches, limits targets to
-2 MB, and times out after 30 seconds. Exit 1 indicates a match and exit 2 indicates
-a scan or setup error. Inspect the reported scope and findings locally.
+`scan:secrets` uses Git 2.31 or newer and checks staged additions. Pass a base
+ref or SHA to check outgoing commits through `HEAD`, including merge diffs
+against the first parent. Use a full checkout and a current base ref. Gitleaks
+redacts matches, limits targets to 2 MB, and times out after 30 seconds. Exit 1
+indicates a match and exit 2 indicates a scan or setup error. Inspect the reported
+scope and findings locally.
 
 `scan:dependencies` checks both npm lockfiles against the local OSV database.
 Use `--download-offline-databases` on the first run and to refresh the advisory
