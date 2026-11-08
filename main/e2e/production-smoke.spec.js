@@ -854,6 +854,18 @@ test("client navigation resets forward scroll and preserves history scroll resto
   monitor.assertClean()
 })
 
+async function expectProjectHeadingInView(heading) {
+  await expect.poll(() => heading.evaluate((element) => {
+    const { document, innerHeight } = globalThis
+    const headerBottom = document.querySelector("header").getBoundingClientRect().bottom
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    const lines = Array.from(range.getClientRects())
+    return lines.length > 0 &&
+      lines.every((line) => line.top >= headerBottom && line.bottom <= innerHeight)
+  }), { message: "project heading should be fully visible below sticky navigation" }).toBe(true)
+}
+
 test("project detail links restore focus and selection across reload and history", async ({
   page,
   baseURL,
@@ -870,21 +882,20 @@ test("project detail links restore focus and selection across reload and history
   const jobPath = "/projects/#job-search-aid"
   const campusPath = "/projects/#campus-discovery-service"
   const jobCard = page.locator("#job-search-aid")
-  const jobBack = jobCard.getByRole("button", { name: "Back to summary for Job Search Aid" })
+  const jobHeading = jobCard.getByRole("heading", { name: "Job Search Aid details" })
   const jobDetails = jobCard.getByRole("button", { name: "View details for Job Search Aid" })
-  const campusBack = page.getByRole("button", { name: "Back to summary for Campus Discovery Service" })
+  const campusHeading = page.getByRole("heading", { name: "Campus Discovery Service details" })
   const campusDetails = page.getByRole("button", { name: "View details for Campus Discovery Service" })
   const copyButtons = page.getByRole("button", { name: /^Copy link to / })
 
   await page.goto(jobPath)
-  await expect(jobBack).toBeFocused()
-  await expect.poll(() => jobCard.evaluate((card) =>
-    card.getBoundingClientRect().top - globalThis.document.querySelector("header").getBoundingClientRect().bottom
-  )).toBeGreaterThan(0)
+  await expect(jobHeading).toBeFocused()
+  await expectProjectHeadingInView(jobHeading)
   await expect(jobCard.locator(":scope > div")).toHaveCSS("transform", "none")
 
   await page.reload()
-  await expect(jobBack).toBeFocused()
+  await expect(jobHeading).toBeFocused()
+  await expectProjectHeadingInView(jobHeading)
   await jobCard.getByRole("button", { name: "Copy link to Job Search Aid" }).click()
   await expect(jobCard.getByRole("status")).toHaveText("Copy failed. Select the link and copy it manually.")
   const fallback = jobCard.getByRole("textbox", { name: "Link to Job Search Aid" })
@@ -896,7 +907,7 @@ test("project detail links restore focus and selection across reload and history
 
   await campusDetails.click()
   await expect(page).toHaveURL(new URL(campusPath, baseURL).href)
-  await expect(campusBack).toBeFocused()
+  await expect(campusHeading).toBeFocused()
   await expect(copyButtons).toHaveCount(1)
   await expect(jobDetails).toHaveAttribute("aria-expanded", "false")
 
@@ -906,11 +917,12 @@ test("project detail links restore focus and selection across reload and history
   await expect(copyButtons).toHaveCount(0)
 
   await page.goBack()
-  await expect(campusBack).toBeFocused()
+  await expect(campusHeading).toBeFocused()
+  await expectProjectHeadingInView(campusHeading)
   await page.goBack()
-  await expect(jobBack).toBeFocused()
+  await expect(jobHeading).toBeFocused()
   await page.goForward()
-  await expect(campusBack).toBeFocused()
+  await expect(campusHeading).toBeFocused()
   await page.goForward()
   await expect(campusDetails).toBeFocused()
   await expect(copyButtons).toHaveCount(0)
@@ -920,7 +932,7 @@ test("project detail links restore focus and selection across reload and history
   await expect(page).toHaveURL(/#missing-project$/)
   await expect(jobDetails).toBeVisible()
   await page.evaluate(() => { globalThis.location.hash = "job-search-aid" })
-  await expect(jobBack).toBeFocused()
+  await expect(jobHeading).toBeFocused()
   await expectNoHorizontalOverflow(page)
 
   await page.getByRole("navigation", { name: "Primary navigation" })
@@ -932,20 +944,43 @@ test("project detail links restore focus and selection across reload and history
   monitor.assertClean()
 })
 
+test("linked project heading stays in view on a short landscape screen", async ({ page, baseURL }, testInfo) => {
+  test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  test.skip(testInfo.project.metadata.viewportClass !== "desktop", "Explicit viewport runs once per browser engine")
+  await page.setViewportSize({ width: 667, height: 375 })
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  const monitor = monitorPage(page, baseURL)
+  await page.goto("/projects/#cdc-data-reconciliation")
+  const card = page.locator("#cdc-data-reconciliation")
+  const heading = card.getByRole("heading", { name: "CDC Data Reconciliation details" })
+  await expect(card.locator(":focus")).toBeVisible()
+  await card.locator(":scope > div").evaluate(async (flip) => {
+    await Promise.all(flip.getAnimations().map((animation) => animation.finished))
+  })
+  await expectProjectHeadingInView(heading)
+  await expect(heading).toBeFocused()
+  monitor.assertClean()
+})
+
 test("internal prototype link opens lazy project details and preserves keyboard controls", async ({
   page,
   baseURL,
-}) => {
+}, testInfo) => {
   test.skip(!useLocalPreview, "Project detail links are verified against the loopback build")
+  if (testInfo.project.metadata.viewportClass === "mobile") {
+    await page.setViewportSize({ width: 390, height: 600 })
+  }
   const monitor = monitorPage(page, baseURL)
   await page.goto("/experience/")
   await page.getByRole("link", { name: "Explore the delivery prototype" }).click()
   await expect(page).toHaveURL(/\/projects\/#jira-to-gke-hackathon$/)
   const prototype = page.locator("#jira-to-gke-hackathon")
   const summary = prototype.locator("summary")
+  const heading = prototype.getByRole("heading", { name: "Jira-to-GKE Delivery Prototype" })
   const ownership = prototype.getByRole("heading", { name: "Ownership" })
   await expect(ownership).toBeVisible()
-  await expect(summary).toBeFocused()
+  await expect(heading).toBeFocused()
+  await expectProjectHeadingInView(heading)
   await expect(prototype.getByRole("button", { name: "Copy link to Jira-to-GKE Delivery Prototype" })).toBeVisible()
   await page.keyboard.press("Escape")
   await expect(page).toHaveURL(/\/projects\/$/)
@@ -954,6 +989,7 @@ test("internal prototype link opens lazy project details and preserves keyboard 
   await page.keyboard.press("Space")
   await expect(page).toHaveURL(/\/projects\/#jira-to-gke-hackathon$/)
   await expect(ownership).toBeVisible()
+  await expect(heading).toBeFocused()
   await expectNoHorizontalOverflow(page)
   monitor.assertClean()
 })

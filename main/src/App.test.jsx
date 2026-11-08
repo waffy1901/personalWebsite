@@ -1118,9 +1118,14 @@ describe("App routes", () => {
     const original = HTMLElement.prototype.scrollIntoView
     Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoViewMock })
     try {
+      const expectHeadingFocusedAndScrolled = async () => {
+        const heading = screen.getByRole("heading", { name: hackathonPrototype.title })
+        await waitFor(() => expect(heading).toHaveFocus())
+        expect(scrollIntoViewMock.mock.contexts).toEqual([heading])
+      }
       const view = renderRoute(hackathonPrototype.path)
       expect(await screen.findByRole("heading", { name: "Ownership" })).toBeVisible()
-      await waitFor(() => expect(scrollIntoViewMock.mock.contexts).toContain(document.getElementById(hackathonPrototype.id)))
+      await expectHeadingFocusedAndScrolled()
       view.unmount()
       scrollIntoViewMock.mockClear()
       renderRoute("/experience/")
@@ -1128,8 +1133,7 @@ describe("App routes", () => {
       expect(link).toHaveAttribute("href", hackathonPrototype.path)
       await user.click(link)
       expect(await screen.findByRole("heading", { name: "Ownership" })).toBeVisible()
-      await waitFor(() => expect(scrollIntoViewMock.mock.contexts).toContain(document.getElementById(hackathonPrototype.id)))
-      expect(screen.getByText("Delivery flow, ownership, and limitations")).toHaveFocus()
+      await expectHeadingFocusedAndScrolled()
       expect(getAnalyticsEvents("project_details_open")).toHaveLength(0)
     } finally {
       if (original) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: original })
@@ -1146,8 +1150,8 @@ describe("App routes", () => {
       const details = await screen.findByRole("region", { name: `${title} details` })
       expect(details.closest("article")).toHaveAttribute("id", id)
       expect(screen.getAllByRole("button", { name: /^Back to summary for / })).toHaveLength(1)
-      const back = within(details).getByRole("button", { name: `Back to summary for ${title}` })
-      await waitFor(() => expect(back).toHaveFocus())
+      const heading = within(details).getByRole("heading", { name: `${title} details` })
+      await waitFor(() => expect(heading).toHaveFocus())
       expect(getAnalyticsEvents("project_details_open")).toHaveLength(0)
       expect(getAnalyticsEvents("page_view")).toHaveLength(1)
     }
@@ -1178,9 +1182,15 @@ describe("App routes", () => {
     renderBrowserRoute("/projects/?ref=example#job-search-aid")
 
     const details = await screen.findByRole("region", { name: "Job Search Aid details" })
+    const heading = within(details).getByRole("heading", { name: "Job Search Aid details" })
+    const notes = within(details).getByRole("group", { name: "Job Search Aid technical details" })
     const back = within(details).getByRole("button", { name: "Back to summary for Job Search Aid" })
     const copy = within(details).getByRole("button", { name: "Copy link to Job Search Aid" })
-    await waitFor(() => expect(back).toHaveFocus())
+    await waitFor(() => expect(heading).toHaveFocus())
+    await user.tab()
+    expect(notes).toHaveFocus()
+    await user.tab()
+    expect(back).toHaveFocus()
     await user.tab()
     expect(copy).toHaveFocus()
     await user.keyboard("{Enter}")
@@ -1200,8 +1210,8 @@ describe("App routes", () => {
     renderBrowserRoute("/projects#job-search-aid")
 
     const copy = await screen.findByRole("button", { name: "Copy link to Job Search Aid" })
-    const back = screen.getByRole("button", { name: "Back to summary for Job Search Aid" })
-    await waitFor(() => expect(back).toHaveFocus())
+    const heading = screen.getByRole("heading", { name: "Job Search Aid details" })
+    await waitFor(() => expect(heading).toHaveFocus())
     await user.click(copy)
 
     const link = await screen.findByRole("textbox", { name: "Link to Job Search Aid" })
@@ -1279,8 +1289,8 @@ describe("App routes", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole("button", {
-          name: /back to summary for cdc data reconciliation/i,
+        screen.getByRole("heading", {
+          name: "CDC Data Reconciliation details",
         })
       ).toHaveFocus()
     )

@@ -84,15 +84,9 @@ function Projects({ restoreSummaryFocus }) {
     // Restore the fragment after the lazy route and parent scroll reset commit.
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
-        const target = document.getElementById(targetId);
-        const toggle = target?.querySelector("[data-project-toggle]");
-
-        if (selectedId) {
-          target?.scrollIntoView?.({ block: "start", behavior: "instant" });
-        }
-
-        toggle?.focus({ preventScroll: true });
-        toggle?.scrollIntoView?.({ block: "nearest", behavior: "instant" });
+        const focusTarget = document.getElementById(targetId)?.querySelector("[data-project-focus]");
+        focusTarget?.focus({ preventScroll: true });
+        focusTarget?.scrollIntoView?.({ block: selectedId ? "start" : "nearest", behavior: "instant" });
       });
     });
     return () => cancelAnimationFrame(frame);

@@ -116,7 +116,7 @@ function ProjectCard({
             <button
               type="button"
               onClick={showDetails}
-              data-project-toggle={isFlipped ? undefined : ""}
+              data-project-focus={isFlipped ? undefined : ""}
               tabIndex={isFlipped ? -1 : 0}
               aria-label={`View details for ${title}`}
               aria-expanded={isFlipped}
@@ -137,7 +137,12 @@ function ProjectCard({
           className={`${isFlipped ? "relative" : "absolute inset-0"} mc-project-back mc-panel-dark flex flex-col overflow-hidden border-[#2563EB]/35 p-5`}
         >
           <p className="text-xs font-black uppercase text-[#93B4FF]">Technical notes</p>
-          <h3 id={`${detailsId}-heading`} className="mt-2 break-words text-xl font-black">
+          <h3
+            id={`${detailsId}-heading`}
+            data-project-focus={isFlipped ? "" : undefined}
+            tabIndex={isFlipped ? -1 : undefined}
+            className="mt-2 scroll-mt-36 break-words text-xl font-black"
+          >
             {title} details
           </h3>
           <div
@@ -160,7 +165,6 @@ function ProjectCard({
             <button
               type="button"
               onClick={hideDetails}
-              data-project-toggle={isFlipped ? "" : undefined}
               tabIndex={isFlipped ? 0 : -1}
               aria-label={`Back to summary for ${title}`}
               className="mc-button-secondary scroll-mt-36 py-3 sm:py-2"
