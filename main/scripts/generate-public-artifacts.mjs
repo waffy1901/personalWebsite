@@ -115,6 +115,43 @@ const updateJsonLdScript = (html, scriptText) => {
   })
 }
 
+const updateIdentityMetadata = (html, { siteMetadata }) => {
+  const escapeHtml = (value) => String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+  const fields = [
+    ["name", "description", siteMetadata.defaultDescription],
+    ["name", "keywords", siteMetadata.keywords.join(", ")],
+    ["property", "og:site_name", siteMetadata.siteName],
+    ["property", "og:title", siteMetadata.defaultTitle],
+    ["property", "og:description", siteMetadata.defaultDescription],
+    ["property", "og:image:alt", siteMetadata.imageAlt],
+    ["name", "twitter:title", siteMetadata.defaultTitle],
+    ["name", "twitter:description", siteMetadata.defaultDescription],
+    ["name", "twitter:image:alt", siteMetadata.imageAlt],
+  ]
+
+  if (!/<title>[\s\S]*?<\/title>/i.test(html)) {
+    throw new Error("Missing title element in main/index.html")
+  }
+  let updated = html.replace(/<title>[\s\S]*?<\/title>/i, () =>
+    `<title>${escapeHtml(siteMetadata.defaultTitle)}</title>`
+  )
+  for (const [attribute, value, content] of fields) {
+    const pattern = new RegExp(`<meta\\b(?=[^>]*\\b${attribute}="${value}")[^>]*>`, "i")
+    const tag = updated.match(pattern)?.[0]
+    if (!tag || !/\bcontent="[^"]*"/i.test(tag)) {
+      throw new Error(`Missing meta ${attribute}="${value}" content in main/index.html`)
+    }
+    updated = updated.replace(tag, () =>
+      tag.replace(/\bcontent="[^"]*"/i, () => `content="${escapeHtml(content)}"`)
+    )
+  }
+  return updated
+}
+
 const updateCspHash = (toml, hashToken) => {
   const pattern = /'sha256-[^']+'/
 
@@ -199,6 +236,8 @@ const buildStructuredPortfolio = (model) => {
     person: {
       name: profile.name,
       title: publicPortfolio.person.title,
+      headline: publicPortfolio.person.headline,
+      specialization: publicPortfolio.person.specialization,
       tagline: profile.tagline,
       summary: publicPortfolio.person.summary,
       location: publicPortfolio.person.location,
@@ -357,7 +396,7 @@ const buildLlms = (model, portfolio) => {
     "",
     `> ${portfolio.person.summary}`,
     "",
-    `This site is the professional portfolio for ${profile.name}, a ${currentRoleLabel} and Georgia Tech Computer Science graduate. The strongest signal is production ownership across transaction-critical systems, especially reliability engineering, backend/platform work, and cloud-native operations.`,
+    `This site is the professional portfolio for ${profile.name}, a ${currentRoleLabel} and Georgia Tech Computer Science graduate. Professional positioning: ${portfolio.person.headline}. Production reliability is a supporting specialty, grounded in transaction-critical systems and cloud-native operations.`,
     "",
     ...portfolio.person.currentRole.highlights.map((highlight) => `- ${highlight}`),
     "",
@@ -417,6 +456,8 @@ const buildAiSummary = (model, portfolio) => {
   add(`${profile.name} - AI Portfolio Summary`, "")
   addSection("Canonical Identity")
   add(
+    ...wrapText(portfolio.person.headline),
+    "",
     ...wrapText(
       `${profile.name} is a ${currentRoleLabel} and a Georgia Institute of Technology graduate with a Bachelor of Science in Computer Science (December 2024). His portfolio at ${portfolio.links.site} presents production engineering experience, selected software projects, a resume, and direct contact paths.`
     ),
@@ -718,7 +759,7 @@ const buildOutputs = async () => {
     },
     {
       relPath: "main/index.html",
-      content: updateJsonLdScript(indexHtml, jsonLdScriptText),
+      content: updateIdentityMetadata(updateJsonLdScript(indexHtml, jsonLdScriptText), model),
     },
     {
       relPath: "netlify.toml",

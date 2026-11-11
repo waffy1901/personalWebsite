@@ -26,6 +26,14 @@ export const currentEmployment = {
   ],
 }
 
+const specialization = "Backend & Platform Engineering"
+
+export const professionalIdentity = {
+  specialization,
+  focus: "backend and platform engineering",
+  headline: `${currentEmployment.currentTitle} | ${specialization}`,
+}
+
 export const portfolioUrls = {
   site: "https://waffy.dev",
   aiSummary: "https://waffy.dev/ai-summary.txt",

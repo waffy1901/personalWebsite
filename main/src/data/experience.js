@@ -8,13 +8,14 @@ import hdLogo from "../images/hdLogo.png"
 import hdLogoWebp from "../images/hdLogo.webp"
 import landisGyrLogo from "../images/landisGyrLogo.png"
 import landisGyrLogoWebp from "../images/landisGyrLogo.webp"
-import { currentEmployment } from "./siteIdentity.js"
+import { currentEmployment, professionalIdentity } from "./siteIdentity.js"
 import { currentRoleHighlights } from "./currentRoleHighlights.js"
 
 export { currentRoleHighlights } from "./currentRoleHighlights.js"
 export { currentRoleEvidence } from "./currentRoleEvidence.js"
 
 export const experiencePage = {
+  description: `${currentEmployment.currentTitle} at ${currentEmployment.organization}, specializing in ${professionalIdentity.focus}. Production ownership across more than 60 shared-service repositories, with reliability, deployment automation, observability, and incident response work tied to measurable outcomes.`,
   workHeading: "Work Experience",
   ownershipHeading: "Platform Ownership & Engineering Impact",
   ownershipEyebrow: `${currentEmployment.currentTitle} \u00b7 ${currentEmployment.organization}`,

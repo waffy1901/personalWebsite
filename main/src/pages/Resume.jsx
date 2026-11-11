@@ -16,7 +16,7 @@ function Resume() {
         <SectionHeader
           eyebrow="Resume artifact"
           title="Resume"
-          description="A focused snapshot of platform reliability, production ownership, deployment automation, and full-stack project work."
+          description={resume.introduction}
           align="center"
         />
 

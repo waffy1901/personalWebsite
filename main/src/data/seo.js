@@ -1,20 +1,22 @@
 import { caseStudySeoItems } from "./caseStudySeo.js"
-import { portfolioUrls, profileIdentity } from "./siteIdentity.js"
+import { currentEmployment, portfolioUrls, professionalIdentity, profileIdentity } from "./siteIdentity.js"
 import { currentRoleSummary } from "./currentRoleHighlights.js"
 
 const defaultDescription = currentRoleSummary
 
 export const siteMetadata = {
   siteUrl: portfolioUrls.site,
-  siteName: "Waffy Ahmed | Software Engineer Portfolio",
-  defaultTitle: "Waffy Ahmed | Software Engineer Portfolio",
+  siteName: `${profileIdentity.name} | ${professionalIdentity.headline}`,
+  defaultTitle: `${profileIdentity.name} | ${professionalIdentity.headline}`,
   defaultDescription,
   imagePath: "/og-image-v3.jpg",
   imageType: "image/jpeg",
+  imageAlt: `${profileIdentity.name}'s ${professionalIdentity.focus} portfolio card with a graduation portrait`,
   author: profileIdentity.name,
   keywords: [
     "Waffy Ahmed",
     "software engineer",
+    "backend engineer",
     "platform engineer",
     "reliability engineering",
     "Kubernetes",
@@ -52,7 +54,7 @@ export const routeMetadata = [
     path: "/experience",
     title: "Experience | Waffy Ahmed",
     description:
-      "Professional experience in platform reliability, production recovery, security and CI/CD remediation, infrastructure, cross-team technical guidance, and engineering visibility.",
+      `${currentEmployment.currentTitle} at ${currentEmployment.organization}: ${professionalIdentity.focus}, production reliability, secure CI/CD, infrastructure, and cross-team technical guidance.`,
   },
   {
     path: "/projects",
@@ -64,7 +66,7 @@ export const routeMetadata = [
     path: "/resume",
     title: "Resume | Waffy Ahmed",
     description:
-      "Resume preview, accessible HTML, and PDF download for Waffy Ahmed, covering platform reliability, security remediation, and production engineering.",
+      `Resume preview, accessible HTML, and PDF download for ${profileIdentity.name}, ${currentEmployment.currentTitle} specializing in ${professionalIdentity.focus} and production reliability.`,
   },
   {
     path: "/contact",

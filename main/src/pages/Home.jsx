@@ -23,6 +23,7 @@ import SocialLinks from "../components/SocialLinks";
 import CurrentRoleCaseStudyLinks from "../components/CurrentRoleCaseStudyLinks.jsx";
 import { profile, resume } from "../data/profile";
 import { currentRoleHighlights, currentRoleSummary } from "../data/currentRoleHighlights.js";
+import { professionalIdentity } from "../data/siteIdentity.js";
 import { homeContent } from "../data/home.js";
 import { kubernetesAutoscalingSeo } from "../data/caseStudySeo.js";
 import { trackEvent } from "../utils/analytics";
@@ -161,7 +162,7 @@ function Home() {
             <div className="relative z-10 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,0.85fr)] lg:items-center">
               <div className="mc-rise">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFB077]">
-                  Platform & Reliability Engineering
+                  {professionalIdentity.headline}
                 </p>
                 <div className="mc-line-reveal mt-3 h-px w-40 bg-[#F96302]" aria-hidden="true" />
 

@@ -236,6 +236,13 @@ for (const width of [320, 390, 640, 1024, 1440]) {
       for (const proof of recentOutcomeProof) await expect(outcomes).toContainText(proof)
       const hero = outcomes.locator("xpath=ancestor::section[1]")
       await expect(hero).toContainText("Software Engineer II at The Home Depot")
+      await expect(hero).toContainText("Software Engineer II | Backend & Platform Engineering")
+      const identity = page.getByRole("banner").getByRole("link", {
+        name: /^(?:WA )?Waffy Ahmed Software Engineer II Backend & Platform Engineering$/,
+      })
+      await expect(identity).toContainText("Software Engineer II")
+      await expect(identity).toContainText("Backend & Platform Engineering")
+      await expectContentContained(identity)
       await expectContentContained(hero)
       await expect(hero.getByRole("link", { name: "Download Resume" })).toBeVisible()
       await expect(hero.getByRole("link", { name: "Contact", exact: true })).toBeVisible()
@@ -691,8 +698,7 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
   await page.keyboard.press(focusTraversalKey)
   await expect(
     page.getByRole("link", {
-      name: "WA Waffy Ahmed Platform reliability engineer",
-      exact: true,
+      name: /^(?:WA )?Waffy Ahmed Software Engineer II Backend & Platform Engineering$/,
     })
   ).toBeFocused()
   await page.keyboard.press(focusTraversalKey)
@@ -867,9 +873,16 @@ async function expectProjectHeadingInView(heading) {
     const range = document.createRange()
     range.selectNodeContents(element)
     const lines = Array.from(range.getClientRects())
-    return lines.length > 0 &&
-      lines.every((line) => line.top >= headerBottom && line.bottom <= innerHeight)
-  }), { message: "project heading should be fully visible below sticky navigation" }).toBe(true)
+    return {
+      hasPaintedText: lines.length > 0,
+      clippedLines: lines
+        .filter((line) => line.top < headerBottom || line.bottom > innerHeight)
+        .map(({ top, bottom }) => ({ top, bottom, headerBottom, viewportBottom: innerHeight })),
+    }
+  }), { message: "project heading should be fully visible below sticky navigation" }).toEqual({
+    hasPaintedText: true,
+    clippedLines: [],
+  })
 }
 
 test("project detail links restore focus and selection across reload and history", async ({
@@ -985,6 +998,12 @@ test("linked project heading clears sticky navigation at 200% root font", async 
     location.hash = "job-search-aid"
   })
   await expect(page.locator("html")).toHaveCSS("font-size", "32px")
+  const identity = page.getByRole("banner").getByRole("link", {
+    name: "Waffy Ahmed Software Engineer II Backend & Platform Engineering",
+    exact: true,
+  })
+  await expectContentContained(identity)
+  await expectNoHorizontalOverflow(page)
   const heading = card.getByRole("heading", { name: "Job Search Aid details" })
   await expect(heading).toBeFocused()
   await expectProjectHeadingInView(heading)
