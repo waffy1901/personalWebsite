@@ -74,6 +74,26 @@ async function inspectTextBounds(article) {
   })
 }
 
+async function captureBeforeFocus(page, testInfo) {
+  const { width, height } = await page.evaluate(() => ({
+    width: globalThis.document.documentElement.scrollWidth,
+    height: globalThis.document.documentElement.scrollHeight,
+  }))
+  // Enlarged text can make the document taller than WebKit's 32767px limit.
+  // Capture every section without scrolling or changing the unfocused layout.
+  const tileHeight = 16_000
+  for (let y = 0, tile = 1; y < height; y += tileHeight, tile += 1) {
+    const path = testInfo.outputPath(`resume-before-focus-${tile}.png`)
+    await page.screenshot({
+      path,
+      fullPage: true,
+      scale: "css",
+      clip: { x: 0, y, width, height: Math.min(tileHeight, height - y) },
+    })
+    await testInfo.attach(`resume-before-focus-${tile}`, { path, contentType: "image/png" })
+  }
+}
+
 for (const profile of profiles) {
   test(`HTML resume reflows at ${profile.width}px with ${profile.enlargement} enlargement`, async ({
     page, baseURL, browserName, externalRequests,
@@ -104,12 +124,12 @@ for (const profile of profiles) {
 
     expect(await page.evaluate(() => globalThis.document.activeElement === globalThis.document.body)).toBe(true)
     const geometry = await inspectTextBounds(article)
-    expect(geometry.checkedTextNodes).toBeGreaterThan(50)
-    // Screenshot the initial unfocused layout even when the geometry assertion fails.
-    await page.screenshot({ path: testInfo.outputPath("resume-before-focus.png"), fullPage: true })
     await testInfo.attach("pre-focus-text-geometry", {
       body: JSON.stringify(geometry, null, 2), contentType: "application/json",
     })
+    // Retain the initial layout even when a geometry assertion fails.
+    await captureBeforeFocus(page, testInfo)
+    expect(geometry.checkedTextNodes).toBeGreaterThan(50)
     expect(geometry.failures.length, JSON.stringify(geometry.failures.slice(0, 12), null, 2)).toBe(0)
     expect(await page.evaluate(() => globalThis.document.documentElement.scrollWidth <= globalThis.innerWidth)).toBe(true)
 
