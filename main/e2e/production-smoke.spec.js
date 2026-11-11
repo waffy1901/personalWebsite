@@ -873,9 +873,16 @@ async function expectProjectHeadingInView(heading) {
     const range = document.createRange()
     range.selectNodeContents(element)
     const lines = Array.from(range.getClientRects())
-    return lines.length > 0 &&
-      lines.every((line) => line.top >= headerBottom && line.bottom <= innerHeight)
-  }), { message: "project heading should be fully visible below sticky navigation" }).toBe(true)
+    return {
+      hasPaintedText: lines.length > 0,
+      clippedLines: lines
+        .filter((line) => line.top < headerBottom || line.bottom > innerHeight)
+        .map(({ top, bottom }) => ({ top, bottom, headerBottom, viewportBottom: innerHeight })),
+    }
+  }), { message: "project heading should be fully visible below sticky navigation" }).toEqual({
+    hasPaintedText: true,
+    clippedLines: [],
+  })
 }
 
 test("project detail links restore focus and selection across reload and history", async ({

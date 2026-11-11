@@ -76,9 +76,10 @@ function Navbar() {
     }
   };
 
+  // Keep padding and gaps compact on narrow screens as the identity text grows.
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-900/10 bg-[#F4F1EA]/92 px-4 py-3 shadow-[0_12px_30px_rgba(11,18,32,0.08)] backdrop-blur">
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <header className="sticky top-0 z-50 border-b border-slate-900/10 bg-[#F4F1EA]/92 px-4 py-3 shadow-[0_12px_30px_rgba(11,18,32,0.08)] backdrop-blur max-sm:px-[16px] max-sm:py-[12px]">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 max-sm:gap-[12px] sm:flex-row sm:items-center sm:justify-between">
         <NavLink
           to="/"
           className="group inline-flex min-w-0 items-center gap-3 text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
