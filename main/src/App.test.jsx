@@ -20,17 +20,18 @@ import { recentCaseStudies } from "./data/recentCaseStudies.js"
 import { currentRoleCaseStudyLinks } from "./data/caseStudySeo.js"
 import { projects } from "./data/projects.js"
 import { hackathonPrototype } from "./data/hackathonPrototype.js"
-import { currentRoleEvidence, currentRoleHighlights, workExperiences } from "./data/experience.js"
+import { currentRoleEvidence, currentRoleHighlights, experiencePage, workExperiences } from "./data/experience.js"
 import { currentRoleSummary } from "./data/currentRoleHighlights.js"
 import { homeContent } from "./data/home.js"
 import { publicPortfolio } from "./data/publicPortfolio.js"
 import { portfolioUrls, resume, socialLinks } from "./data/profile.js"
 import { resumeDocument } from "./data/resume.mjs"
-import { currentEmployment } from "./data/siteIdentity.js"
+import { currentEmployment, professionalIdentity } from "./data/siteIdentity.js"
 import {
   defaultRouteMetadata,
   getRouteMetadata,
   routeMetadata,
+  siteMetadata,
   sitemapRoutes,
   toCanonicalRoutePath,
   toCanonicalRouteUrl,
@@ -206,6 +207,15 @@ describe("App routes", () => {
     expect(
       screen.getByText(currentRoleSummary)
     ).toBeInTheDocument()
+    expect(screen.getByText(professionalIdentity.headline)).toBeVisible()
+    expect(screen.getByText("I build production systems that stay reliable under pressure.")).toBeVisible()
+    const identityLink = screen.getByRole("banner").querySelector('a[href="/"]')
+    expect(identityLink).toHaveTextContent(currentEmployment.currentTitle)
+    expect(identityLink).toHaveTextContent(professionalIdentity.specialization)
+    await waitFor(() => expect(document.title).toBe(siteMetadata.defaultTitle))
+    for (const selector of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) {
+      expect(document.querySelector(selector)).toHaveAttribute("content", currentRoleSummary)
+    }
     const profileImage = screen.getByRole("img", { name: /waffy ahmed/i })
     const profileWebpSource = profileImage
       .closest("picture")
@@ -684,6 +694,10 @@ describe("App routes", () => {
     expect(
       await screen.findByRole("heading", { name: /work experience/i })
     ).toBeInTheDocument()
+    expect(screen.getByText(experiencePage.description)).toBeVisible()
+    expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
+      "content", getRouteMetadata("/experience").description
+    )
   })
 
   it("renders the case studies route", async () => {
@@ -1255,7 +1269,7 @@ describe("App routes", () => {
     expect(readme).toContain(`[${hackathonPrototype.title}](https://waffy.dev${hackathonPrototype.path})`)
     expect(readme).not.toContain("](undefined)")
     expect(summary).not.toContain("Repository: undefined")
-    expect(portfolio.contentLastReviewed).toBe("2026-11-03")
+    expect(portfolio.contentLastReviewed).toBe(publicPortfolio.contentLastReviewed)
   })
 
   it("tracks project source and details interactions", async () => {
@@ -1675,12 +1689,29 @@ describe("App routes", () => {
       "@id": "https://waffy.dev/#person",
     })
     expect(person.jobTitle).toBe("Software Engineer II")
+    expect(person.worksFor.name).toBe("The Home Depot")
+    expect(profilePage.description).toBe(currentRoleSummary)
+    expect(indexDocument.title).toBe(siteMetadata.defaultTitle)
+    for (const selector of ['meta[property="og:title"]', 'meta[name="twitter:title"]']) {
+      expect(indexDocument.querySelector(selector).getAttribute("content")).toBe(siteMetadata.defaultTitle)
+    }
+    for (const selector of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) {
+      expect(indexDocument.querySelector(selector).getAttribute("content")).toBe(currentRoleSummary)
+    }
+    for (const selector of ['meta[property="og:image:alt"]', 'meta[name="twitter:image:alt"]']) {
+      expect(indexDocument.querySelector(selector).getAttribute("content")).toBe(siteMetadata.imageAlt)
+    }
   })
 
   it("publishes structured portfolio JSON for AI-readable profile data", () => {
     const portfolioJson = readJsonFile("public/portfolio.json")
 
     expect(portfolioJson.person.name).toBe("Waffy Ahmed")
+    expect(portfolioJson.person.title).toBe("Software Engineer II")
+    expect(portfolioJson.person.headline).toBe(professionalIdentity.headline)
+    expect(portfolioJson.person.specialization).toBe(professionalIdentity.specialization)
+    expect(portfolioJson.roleFit.join(" ")).not.toMatch(/Site Reliability Engineer|\bSRE\b/)
+    expect(portfolioJson.skills).toEqual(expect.arrayContaining(["Incident response", "Observability"]))
     expect(portfolioJson.schemaVersion).toBe("2.0")
     expect(portfolioJson.person.currentRole).toMatchObject({
       title: "Software Engineer II",
@@ -1941,6 +1972,10 @@ describe("App routes", () => {
       "href",
       "/waffyAhmedResume.pdf"
     )
+    expect(screen.getByText(resume.introduction)).toBeVisible()
+    expect(document.querySelector('meta[name="description"]')).toHaveAttribute(
+      "content", getRouteMetadata("/resume").description
+    )
     const resumePreview = screen.getByRole("img", {
       name: /preview of waffy ahmed's resume/i,
     })
@@ -2034,7 +2069,7 @@ describe("App routes", () => {
     expect(
       screen.getByText("Open channel", { selector: "span.inline-flex" })
     ).toHaveClass("text-[#86EFAC]", "border-[#86EFAC]/40")
-    expect(screen.getByText("Platform reliability engineer")).toHaveClass(
+    expect(screen.getByText(professionalIdentity.specialization)).toHaveClass(
       "text-slate-600"
     )
     expect(screen.getByText("WA")).toHaveClass("group-hover:text-[#0B1220]")

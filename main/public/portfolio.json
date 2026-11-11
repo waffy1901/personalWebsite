@@ -1,11 +1,13 @@
 {
   "schemaVersion": "2.0",
-  "contentLastReviewed": "2026-11-03",
+  "contentLastReviewed": "2026-11-10",
   "person": {
     "name": "Waffy Ahmed",
     "title": "Software Engineer II",
-    "tagline": "Software Engineer II | Georgia Tech",
-    "summary": "Software Engineer II at The Home Depot, focused on secure CI/CD modernization, production order reconciliation on GKE and Cloud Spanner, and technical leadership in AI-assisted payment triage.",
+    "headline": "Software Engineer II | Backend & Platform Engineering",
+    "specialization": "Backend & Platform Engineering",
+    "tagline": "Software Engineer II | Backend & Platform Engineering",
+    "summary": "Software Engineer II at The Home Depot, focused on backend and platform engineering through secure CI/CD modernization, production order reconciliation on GKE and Cloud Spanner, and technical leadership in AI-assisted payment triage.",
     "location": "United States",
     "education": {
       "institution": "Georgia Institute of Technology",
@@ -149,7 +151,6 @@
   "roleFit": [
     "Backend Software Engineer",
     "Platform Engineer",
-    "Site Reliability Engineer / Production Engineer",
     "Infrastructure or Cloud-Native Software Engineer",
     "Distributed Systems Engineer",
     "Full-stack engineer when the role values data systems, backend ownership, and production reliability"

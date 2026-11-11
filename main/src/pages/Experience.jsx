@@ -150,7 +150,7 @@ function Experience() {
         <SectionHeader
           eyebrow="Career story"
           title={experiencePage.workHeading}
-          description="Production ownership across more than 60 shared-service repositories, with reliability, deployment automation, observability, and incident response work tied to measurable outcomes."
+          description={experiencePage.description}
         />
 
         <ImpactBand items={impactMetrics} />

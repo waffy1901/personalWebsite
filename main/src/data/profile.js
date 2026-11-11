@@ -7,15 +7,16 @@ import {
   currentEmployment,
   portfolioUrls,
   profileIdentity,
+  professionalIdentity,
 } from "./siteIdentity.js"
 
 export { portfolioUrls }
 
 export const profile = {
   name: profileIdentity.name,
-  tagline: `${currentEmployment.currentTitle} | Georgia Tech`,
+  tagline: professionalIdentity.headline,
   intro:
-    `I'm a ${currentEmployment.currentTitle} at ${currentEmployment.organization}, productionizing reconciliation workflows as secure Kubernetes CronJobs and adapting data-access paths from Cloud SQL to Cloud Spanner with Workload Identity and cross-project IAM. I also lead security and CI/CD remediation through framework upgrades and pipeline fixes across production services. Across my Home Depot tenure, I've owned operational health across 60+ repositories supporting transaction-critical services. Previously, I interned at The Home Depot twice and led a team of six building a data reconciliation platform for the CDC. I'm a Georgia Tech graduate focused on reliability engineering and building systems that don\u2019t page you at 2 AM.`,
+    `I'm a ${currentEmployment.currentTitle} at ${currentEmployment.organization}, productionizing reconciliation workflows as secure Kubernetes CronJobs and adapting data-access paths from Cloud SQL to Cloud Spanner with Workload Identity and cross-project IAM. I also lead security and CI/CD remediation through framework upgrades and pipeline fixes across production services. Across my Home Depot tenure, I've owned operational health across 60+ repositories supporting transaction-critical services. Previously, I interned at The Home Depot twice and led a team of six building a data reconciliation platform for the CDC. I'm a Georgia Tech graduate focused on ${professionalIdentity.focus}, with a production reliability specialty and a drive to build systems that don\u2019t page you at 2 AM.`,
   profilePicture,
   profilePictureSources: {
     webp: `${profilePicture450Webp} 450w, ${profilePicture675Webp} 675w`,
@@ -24,6 +25,7 @@ export const profile = {
 }
 
 export const resume = {
+  introduction: `${currentEmployment.currentTitle} at ${currentEmployment.organization}, specializing in ${professionalIdentity.focus}. A focused snapshot of production reliability, deployment automation, and full-stack project work.`,
   pdf: "/waffyAhmedResume.pdf",
   preview: "/resume-preview.png",
   optimizedPreview: "/resume-preview.webp",

@@ -236,6 +236,14 @@ for (const width of [320, 390, 640, 1024, 1440]) {
       for (const proof of recentOutcomeProof) await expect(outcomes).toContainText(proof)
       const hero = outcomes.locator("xpath=ancestor::section[1]")
       await expect(hero).toContainText("Software Engineer II at The Home Depot")
+      await expect(hero).toContainText("Software Engineer II | Backend & Platform Engineering")
+      const identity = page.getByRole("banner").getByRole("link", {
+        name: "WA Waffy Ahmed Software Engineer II Backend & Platform Engineering",
+        exact: true,
+      })
+      await expect(identity).toContainText("Software Engineer II")
+      await expect(identity).toContainText("Backend & Platform Engineering")
+      await expectContentContained(identity)
       await expectContentContained(hero)
       await expect(hero.getByRole("link", { name: "Download Resume" })).toBeVisible()
       await expect(hero.getByRole("link", { name: "Contact", exact: true })).toBeVisible()
@@ -691,7 +699,7 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
   await page.keyboard.press(focusTraversalKey)
   await expect(
     page.getByRole("link", {
-      name: "WA Waffy Ahmed Platform reliability engineer",
+      name: "WA Waffy Ahmed Software Engineer II Backend & Platform Engineering",
       exact: true,
     })
   ).toBeFocused()
