@@ -238,8 +238,7 @@ for (const width of [320, 390, 640, 1024, 1440]) {
       await expect(hero).toContainText("Software Engineer II at The Home Depot")
       await expect(hero).toContainText("Software Engineer II | Backend & Platform Engineering")
       const identity = page.getByRole("banner").getByRole("link", {
-        name: "WA Waffy Ahmed Software Engineer II Backend & Platform Engineering",
-        exact: true,
+        name: /^(?:WA )?Waffy Ahmed Software Engineer II Backend & Platform Engineering$/,
       })
       await expect(identity).toContainText("Software Engineer II")
       await expect(identity).toContainText("Backend & Platform Engineering")
@@ -699,8 +698,7 @@ test("mobile keyboard navigation keeps every primary-nav focus ring visible", as
   await page.keyboard.press(focusTraversalKey)
   await expect(
     page.getByRole("link", {
-      name: "WA Waffy Ahmed Software Engineer II Backend & Platform Engineering",
-      exact: true,
+      name: /^(?:WA )?Waffy Ahmed Software Engineer II Backend & Platform Engineering$/,
     })
   ).toBeFocused()
   await page.keyboard.press(focusTraversalKey)
@@ -993,6 +991,12 @@ test("linked project heading clears sticky navigation at 200% root font", async 
     location.hash = "job-search-aid"
   })
   await expect(page.locator("html")).toHaveCSS("font-size", "32px")
+  const identity = page.getByRole("banner").getByRole("link", {
+    name: "Waffy Ahmed Software Engineer II Backend & Platform Engineering",
+    exact: true,
+  })
+  await expectContentContained(identity)
+  await expectNoHorizontalOverflow(page)
   const heading = card.getByRole("heading", { name: "Job Search Aid details" })
   await expect(heading).toBeFocused()
   await expectProjectHeadingInView(heading)

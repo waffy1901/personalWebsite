@@ -83,7 +83,7 @@ function Navbar() {
           to="/"
           className="group inline-flex min-w-0 items-center gap-3 text-[#0B1220] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
         >
-          <span className="flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-md border border-[#0B1220] bg-[#0B1220] px-1 py-1 font-black text-white transition group-hover:border-[#F96302] group-hover:bg-[#F96302] group-hover:text-[#0B1220]">
+          <span className="hidden min-h-10 min-w-10 shrink-0 items-center justify-center rounded-md border border-[#0B1220] bg-[#0B1220] px-1 py-1 font-black text-white transition group-hover:border-[#F96302] group-hover:bg-[#F96302] group-hover:text-[#0B1220] sm:flex">
             WA
           </span>
           <span className="min-w-0 break-words leading-tight">
