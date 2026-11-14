@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Offline API fixtures: closeout must not write until all gates have passed."""
 import base64
+from contextlib import redirect_stdout
 import copy
 from datetime import datetime, timezone
+import io
 import json
+import os
 from pathlib import Path
 import re
 import sys
+from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 sys.dont_write_bytecode = True
 import post_deploy_closeout as c
@@ -55,6 +60,7 @@ class FakeAPI:
                               "steps": [{"name": name, "number": n, "status": "completed", "conclusion": "success",
                                          "started_at": STAMP, "completed_at": "2026-11-05T01:20:00Z"} for n, name in enumerate(steps, 1)]})
         self.pr = {"number": 456, "merged": True, "mergeCommit": {"oid": SHA}, "mergedAt": STAMP,
+                   "body": "Refs #123",
                    "baseRefName": "main", "changedFiles": 2, "baseRepository": {"nameWithOwner": c.REPO},
                    "headRepository": {"nameWithOwner": c.REPO}, "url": f"https://github.com/{c.REPO}/pull/456"}
         self.files = [{"filename": ".github/closeout/issue-123.json", "status": "added"}, {"filename": "main/src/App.jsx", "status": "modified"}]
@@ -87,6 +93,17 @@ class FakeAPI:
             return self.read("tag", {"object": self.tag})
         if path.startswith("git/tags/"):
             return self.read("tag", {"object": {"type": "commit", "sha": SHA}})
+        if path == "pulls/456":
+            return self.read("pr", {
+                "number": self.pr["number"], "html_url": self.pr["url"],
+                "body": self.pr["body"], "changed_files": self.pr["changedFiles"],
+                "base": {"ref": self.pr["baseRefName"], "sha": "b" * 40,
+                         "repo": {"full_name": self.pr["baseRepository"]["nameWithOwner"]}},
+                "head": {"sha": SHA, "repo": self.pr["headRepository"] and {
+                    "full_name": self.pr["headRepository"]["nameWithOwner"]}},
+            })
+        if path == "issues/123":
+            return self.read("read-only issue", {**self.issue_value, "html_url": self.issue_value["url"]})
         raise AssertionError(path)
 
     def pages(self, path, key=None):
@@ -296,6 +313,18 @@ class CloseoutTests(unittest.TestCase):
         self.api.files[0]["filename"] = "unrelated.json"
         self.assert_pending_without_writes()
 
+    def test_manual_and_issue_free_merges_stop_before_provider_or_issue_reads(self):
+        for body, status in (("Refs #340.\nManual closeout: Owner review and browser evidence.", "manual"),
+                             ("Dependency release notes mention https://github.com/upstream/lib/pull/340.", "no_issue")):
+            with self.subTest(status=status):
+                self.api = FakeAPI()
+                self.api.pr["body"] = body
+                self.api.files[0]["filename"] = "unrelated.json"
+                result = self.run_closeout()
+                self.assertEqual(status, result["status"])
+                self.assertFalse(self.api.writes)
+                self.assertTrue({"issue", "project", "site", "releases"}.isdisjoint(self.api.reads))
+
     def test_manually_closed_issue_is_never_reclosed(self):
         self.api.issue_value["state"] = "CLOSED"
         self.assert_pending_without_writes()
@@ -319,6 +348,36 @@ class CloseoutTests(unittest.TestCase):
                 api.site_value["published_deploy"]["id"] = "different"
         self.api.hook = change
         self.assert_pending_without_writes()
+
+    def test_pr_body_edit_during_evidence_reads_prevents_first_write(self):
+        def change(method, api):
+            if method == "site":
+                api.pr["body"] = "Refs #123\nManual closeout: Owner needs to review the evidence."
+
+        self.api.hook = change
+        with self.assertRaisesRegex(c.Pending, "merged PR identity or body changed"):
+            self.run_closeout()
+        self.assertEqual([], self.api.writes)
+        self.assertEqual([], self.report["writes_attempted"])
+
+    def test_pr_edit_between_writes_stops_remaining_stages(self):
+        for written, expected in (
+            (["comment"], ["evidence comment"]),
+            (["comment", "close"], ["evidence comment", "issue body and completed closure"]),
+        ):
+            with self.subTest(written=written):
+                self.api = FakeAPI()
+
+                def change(method, api):
+                    if api.writes == written:
+                        api.pr["body"] = "Refs #123\nManual closeout: Owner will reconcile the issue and Project."
+
+                self.api.hook = change
+                with self.assertRaisesRegex(c.Pending, "merged PR identity or body changed"):
+                    self.run_closeout()
+                self.assertEqual(written, self.api.writes)
+                self.assertEqual(expected, self.report["writes_attempted"])
+                self.assertEqual("Validation", self.api.project_value["fields"]["Status"]["name"])
 
     def test_comment_readback_mismatch_stops_closure(self):
         self.api.fail = "comment readback"
@@ -422,6 +481,179 @@ class CloseoutTests(unittest.TestCase):
         self.assertEqual([], self.api.writes)
 
 
+class PreparationTests(unittest.TestCase):
+    def setUp(self):
+        self.api = FakeAPI()
+        self.event = {"action": "opened", "repository": {"full_name": c.REPO},
+                      "number": 456, "pull_request": {"head": {"sha": SHA}}}
+
+    def remove_contract(self):
+        self.api.files[0]["filename"] = "unrelated.json"
+
+    def test_pr_346_without_changed_contract_fails_preflight(self):
+        self.api.pr["body"] = "Final phrasing awaits owner review. Refs #340."
+        self.remove_contract()
+        with self.assertRaisesRegex(c.NotPrepared, "needs one changed contract"):
+            c.preflight(self.api, self.event)
+        self.assertFalse(self.api.writes)
+
+    def test_manual_disposition_on_body_edit_does_not_read_issue(self):
+        self.event["action"] = "edited"
+        self.api.pr["body"] = ("Refs #340\n\n"
+                               "Manual closeout: Owner must approve the wording and browser evidence.")
+        self.remove_contract()
+        self.assertEqual(("manual", [340]), c.preflight(self.api, self.event))
+        self.assertNotIn("read-only issue", self.api.reads)
+        self.assertFalse(self.api.writes)
+
+    def test_issue_free_maintenance_and_dependabot_bodies(self):
+        self.remove_contract()
+        for body in (None, "Routine maintenance. See PR #456.", (
+            "Bumps library from 2.0.0 to 2.1.0.\n"
+            "Fixed upstream/library#123, see [pull request](https://github.com/upstream/library/pull/123).\n"
+            "Notes reference upstream/library#123 and https://github.com/upstream/library/issues/123.\n"
+            "<!-- Refs #999 -->\n> Refs #999\n```md\nRefs #999\n```"
+        )):
+            with self.subTest(body=body):
+                self.api.pr["body"] = body
+                self.assertEqual(("no_issue", []), c.preflight(self.api, self.event))
+        self.assertFalse(self.api.writes)
+
+    def test_code_and_html_quotes_are_examples_not_issue_declarations(self):
+        self.remove_contract()
+        for body in (
+            "Routine tooling docs: use `Refs #123` for issue work.",
+            "Never write `Fixes #123` in the implementation PR.",
+            "Use ``example `Refs #123` and Fixes #124``.",
+            "Use `Refs\n#123` as a non-closing reference.",
+            "<blockquote>Fixes #123</blockquote>",
+            "<BLOCKQUOTE title='A > B'>\nRefs #123\n<blockquote>Fixes #124</blockquote>\nRefs #125\n</BLOCKQUOTE>",
+            f"Example issue URL: `https://github.com/{c.REPO}/issues/123`",
+        ):
+            with self.subTest(body=body):
+                self.api.pr["body"] = body
+                self.assertEqual(("no_issue", []), c.preflight(self.api, self.event))
+
+    def test_plain_reference_outside_code_and_quotes_is_still_required(self):
+        self.remove_contract()
+        self.api.pr["body"] = (
+            "<blockquote>Fixes #123</blockquote> Refs #340.\n"
+            "See the docs for why to avoid `Closes #345`."
+        )
+        with self.assertRaisesRegex(c.NotPrepared, "needs one changed contract"):
+            c.preflight(self.api, self.event)
+        self.api.pr["body"] += "\nManual closeout: Owner must review enlarged text."
+        self.assertEqual(("manual", [340]), c.preflight(self.api, self.event))
+
+    def test_automatic_uses_current_issue_body_and_head_sha(self):
+        self.api.pr["body"] = f"Refs #{123}. See https://github.com/{c.REPO}/issues/123."
+        self.assertEqual(("automatic", [123]), c.preflight(self.api, self.event))
+        self.assertEqual(SHA, self.api.assert_sha)
+        self.assertIn("read-only issue", self.api.reads)
+        self.api.issue_value["body"] += "A new criterion."
+        with self.assertRaisesRegex(c.Pending, "body/criteria changed"):
+            c.preflight(self.api, self.event)
+        self.assertFalse(self.api.writes)
+
+    def test_current_body_must_be_fully_covered(self):
+        self.api.contract["context_lines"] = []
+        with self.assertRaisesRegex(c.Pending, "every nonblank issue line"):
+            c.preflight(self.api, self.event)
+
+    def test_preparation_rejects_bad_or_ambiguous_inputs(self):
+        contract_file = {"filename": ".github/closeout/issue-123.json", "status": "added"}
+        for body, files, reason in (
+            ("Refs #123, #124", [contract_file], "sole PR issue"),
+            ("Refs #124", [contract_file], "sole PR issue"),
+            ("Refs #123", [contract_file, {"filename": ".github/closeout/issue-124.json", "status": "added"}], "exactly one"),
+            ("Refs #123", [{**contract_file, "status": "removed"}], "added/modified"),
+            ("Refs #123", [{"filename": "renamed.json", "previous_filename": contract_file["filename"], "status": "renamed"}], "added/modified"),
+            ("Refs #123\nManual closeout:", [], "provide a reason"),
+            ("Refs #123\nManual closeout: Owner review\nManual closeout: Browser evidence", [], "use one"),
+            ("Refs #123\nManual closeout: Owner review", [contract_file], "choose one"),
+            ("Manual closeout: Owner review", [], "requires an issue reference"),
+            ("Closes #123", [], "closing keywords"),
+        ):
+            with self.subTest(body=body, reason=reason):
+                with self.assertRaisesRegex(c.NotPrepared, reason):
+                    c.pull_preparation(self.api, body, files, SHA, True)
+        self.api.contract["evidence_needed"] = ["Browser"]
+        with self.assertRaisesRegex(c.NotPrepared, "requires manual closeout"):
+            c.preflight(self.api, self.event)
+        self.api.content = lambda *args: "{ invalid json"
+        with self.assertRaisesRegex(c.NotPrepared, "invalid changed issue contract"):
+            c.preflight(self.api, self.event)
+
+    def test_forks_can_use_manual_but_cannot_supply_automatic_contracts(self):
+        self.api.pr["headRepository"] = {"nameWithOwner": "fork/repository"}
+        with self.assertRaisesRegex(c.NotPrepared, "same-repository"):
+            c.preflight(self.api, self.event)
+        self.remove_contract()
+        self.api.pr["body"] += "\nManual closeout: Needs owner review."
+        self.assertEqual(("manual", [123]), c.preflight(self.api, self.event))
+
+    def test_stale_head_and_body_edits_during_check_fail(self):
+        self.event["pull_request"]["head"]["sha"] = "b" * 40
+        with self.assertRaisesRegex(c.Pending, "head changed"):
+            c.preflight(self.api, self.event)
+        self.event["pull_request"]["head"]["sha"] = SHA
+        self.api.hook = lambda method, api: api.pr.update(body="Refs #340") if method == "read-only issue" else None
+        with self.assertRaisesRegex(c.Pending, "PR changed during"):
+            c.preflight(self.api, self.event)
+
+    def test_preflight_cli_requires_only_read_credentials(self):
+        with TemporaryDirectory() as directory:
+            event_path = Path(directory) / "event.json"
+            event_path.write_text(json.dumps(self.event))
+            env = {"GITHUB_EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": c.REPO, "GITHUB_TOKEN": "read-token"}
+            self.remove_contract()
+            for body, expected_exit, message in (
+                ("Final phrasing awaits owner review. Refs #340.", 1, "needs one changed contract"),
+                ("Refs #340\nManual closeout: %0A::error::do not print me", 0, "Manual closeout declared for #340"),
+                ("Routine maintenance.", 0, "No closeout issue declared"),
+            ):
+                with self.subTest(body=body), patch.dict(os.environ, env, clear=True), \
+                        patch.object(c, "RepositoryReads", return_value=self.api) as read_client, \
+                        patch.object(c, "API") as write_client, patch.object(sys, "argv", ["closeout", "--check-pr", str(event_path)]), \
+                        redirect_stdout(io.StringIO()) as output:
+                    self.api.pr["body"] = body
+                    self.assertEqual(expected_exit, c.main())
+                    self.assertIn(message, output.getvalue())
+                    self.assertNotIn("do not print me", output.getvalue())
+                    read_client.assert_called_once_with("read-token")
+                    write_client.assert_not_called()
+
+    def test_runtime_cli_reports_distinct_outcomes_and_persists_artifact(self):
+        with TemporaryDirectory() as directory:
+            event_path = Path(directory) / "event.json"
+            report_path = Path(directory) / "report.json"
+            summary_path = Path(directory) / "summary"
+            env = {"GITHUB_EVENT_NAME": "workflow_run", "GITHUB_REPOSITORY": c.REPO,
+                   "GITHUB_STEP_SUMMARY": str(summary_path)}
+            for body, status, expected_exit, annotation in (
+                ("Final phrasing awaits owner review. Refs #340.", "not_prepared", 1, "::error::"),
+                ("Refs #340\nManual closeout: Owner and browser review.", "manual", 0, ""),
+                ("Routine maintenance.", "no_issue", 0, ""),
+            ):
+                api = FakeAPI()
+                api.pr["body"] = body
+                api.files[0]["filename"] = "unrelated.json"
+                event_path.write_text(json.dumps(api.event))
+                argv = ["closeout", "--event", str(event_path), "--report", str(report_path)]
+                with self.subTest(status=status), patch.dict(os.environ, env, clear=True), \
+                        patch.object(sys, "argv", argv), patch.object(c, "API", return_value=api), \
+                        patch.object(c, "datetime", wraps=datetime) as clock, redirect_stdout(io.StringIO()) as output:
+                    clock.now.return_value = NOW
+                    self.assertEqual(expected_exit, c.main())
+                    report = json.loads(report_path.read_text())
+                    self.assertEqual(status, report["status"])
+                    self.assertEqual([], report["writes_attempted"])
+                    self.assertEqual(api.pr["url"], report["pull_request"])
+                    self.assertTrue(output.getvalue().startswith(f"{annotation}Post-deploy closeout: {status}."))
+                    self.assertIn(f"Post-deploy closeout: {status}.", summary_path.read_text())
+                    self.assertFalse(api.writes)
+
+
 class DataAndPaginationTests(unittest.TestCase):
     def test_line_mapping_is_complete_and_checklists_cannot_be_context(self):
         data = contract()
@@ -511,7 +743,9 @@ class DataAndPaginationTests(unittest.TestCase):
             raise AssertionError(path)
 
         api.request = request
-        self.assertEqual((fixture.pr["url"], fixture.contract), c.selected_contract(api, fixture.run))
+        pr = c.merged_pull(api, fixture.run)
+        files = c.pull_files(api, pr["number"], pr["changedFiles"])
+        self.assertEqual(("automatic", [123], fixture.contract), c.pull_preparation(api, pr["body"], files, SHA, True))
         self.assertEqual([("GET", associated_path), ("POST", "/graphql"),
                           ("GET", files_path), ("GET", contract_path)], calls)
 
