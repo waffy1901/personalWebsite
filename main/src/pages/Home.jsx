@@ -25,33 +25,10 @@ import { profile, resume } from "../data/profile";
 import { currentRoleHighlights, currentRoleSummary } from "../data/currentRoleHighlights.js";
 import { professionalIdentity } from "../data/siteIdentity.js";
 import { homeContent } from "../data/home.js";
+import { autoscalingLatencyImpact } from "../data/impactMetrics.js";
 import { kubernetesAutoscalingSeo } from "../data/caseStudySeo.js";
 import { trackEvent } from "../utils/analytics";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
-
-const impactMetrics = [
-  {
-    value: "40%",
-    label: "lower latency",
-    detail: "Validated autoscaling under production load.",
-  },
-  {
-    value: "89%",
-    label: "fewer errors",
-    detail: "Measured after autoscaling rollout on a core service.",
-    tone: "orange",
-  },
-  {
-    value: "60+",
-    label: "repositories supported",
-    detail: "Shared-service ownership across platform work.",
-  },
-  {
-    value: "5000+",
-    label: "estimated CDC hours saved annually",
-    detail: "Public health case-count reconciliation, separate from production order reconciliation.",
-  },
-];
 
 const focusAreas = [
   "Kubernetes automation",
@@ -254,7 +231,9 @@ function Home() {
 
       <section className="bg-[#F4F1EA]">
         <PageContainer className="space-y-8">
-          <ImpactBand items={impactMetrics} />
+          <div className="mc-home-impact">
+            <ImpactBand items={homeContent.impactMetrics} className="mc-home-impact-band" />
+          </div>
 
           <CurrentRoleCaseStudyLinks />
 
@@ -302,10 +281,11 @@ function Home() {
               caption="The rollout connected traffic baselines, Kubernetes scaling behavior, and observability signals before declaring the outcome."
             />
             <ImpactBand
+              label="Kubernetes autoscaling metrics"
               surface="dark"
               className="mc-impact-band-compact mt-5 lg:grid-cols-4"
               items={[
-                { value: "40%", label: "lower latency" },
+                { value: autoscalingLatencyImpact.value, label: autoscalingLatencyImpact.label },
                 { value: "89%", label: "fewer errors", tone: "orange" },
                 { value: "26%", label: "lower CPU" },
                 { value: "50-100", label: "dynamic pods" },

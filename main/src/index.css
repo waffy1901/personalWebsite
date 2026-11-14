@@ -246,6 +246,27 @@
     @apply grid overflow-hidden rounded-lg border border-slate-200 bg-white px-5 py-3 text-[#0B1220] shadow-[0_18px_50px_rgba(11,18,32,0.08)] sm:grid-cols-2 lg:grid-cols-4;
   }
 
+  .mc-home-impact {
+    container: home-impact / inline-size;
+  }
+
+  .mc-home-impact-band {
+    @apply grid-cols-1;
+    overflow-wrap: anywhere;
+  }
+
+  @container home-impact (min-width: 36rem) {
+    .mc-home-impact-band {
+      @apply grid-cols-2;
+    }
+  }
+
+  @container home-impact (min-width: 58rem) {
+    .mc-home-impact-band {
+      @apply grid-cols-4;
+    }
+  }
+
   .mc-impact-band-dark {
     @apply border-white/10 bg-white/5 text-white shadow-none;
   }

@@ -10,6 +10,7 @@ import landisGyrLogo from "../images/landisGyrLogo.png"
 import landisGyrLogoWebp from "../images/landisGyrLogo.webp"
 import { currentEmployment, professionalIdentity } from "./siteIdentity.js"
 import { currentRoleHighlights } from "./currentRoleHighlights.js"
+import { bookingSecurityImpact } from "./impactMetrics.js"
 
 export { currentRoleHighlights } from "./currentRoleHighlights.js"
 export { currentRoleEvidence } from "./currentRoleEvidence.js"
@@ -32,7 +33,7 @@ export const workExperiences = [
     date: currentEmployment.roleHistory[0].date,
     highlights: currentRoleHighlights,
     bullets: [
-      "Led security and CI/CD remediation across approximately 15 booking services: 10 directly remediated and five assisted. Removed 66 unique critical/high CVE IDs from release builds; the owner-reported build-gate pass improved from 33% to a final 100% across that service scope. Running-production image remediation is not established here.",
+      `Led security and CI/CD remediation across approximately 15 booking services, directly remediating 10 and assisting with five. The owner reports ${bookingSecurityImpact.value} ${bookingSecurityImpact.label} and a separate build-gate improvement from 33% to a final 100% across that service scope.`,
       "Led a four-person team, including myself, from design through stakeholder validation and handoff of AI-assisted triage across 7 payment applications. Implemented a little over half of the tool, with three other engineers contributing; combined code/config tracing, BigQuery, store telemetry, baselines, citations, and coverage checks. The receiving team now owns and actively uses it.",
       "Drove JFrog OIDC adoption across 2 teams and approximately 20 repositories, replacing shared Maven/Docker credentials with short-lived, job-scoped tokens. Resolved a reported 1,100+ scanning findings tied to plaintext token output in CI logs; findings are not distinct credentials, and scan methodology is not specified here.",
       "Productionized daily order reconciliation with a Kubernetes workload via cdk8s, Terraform, and Spinnaker, replacing laptop scripts and database tunnels. Implemented Workload Identity, least-privilege IAM, and Secret Manager/External Secrets, replacing human credentials for this workflow.",
@@ -131,7 +132,7 @@ export const ownershipAreas = [
     summary:
       "Gate production releases by reviewing deployment changes before they reach shared environments, connecting Spinnaker, Kubernetes, and rollout standards to safer launches.",
     details: [
-      "Led framework upgrades and CI/CD remediation across approximately 15 booking services, directly remediating 10 and assisting with five. Removed 66 unique critical/high CVE IDs from release builds; the owner reports a final 100% build-gate pass across that service scope, up from 33%.",
+      `Led framework upgrades and CI/CD remediation across approximately 15 booking services, directly remediating 10 and assisting with five. The owner reports ${bookingSecurityImpact.value} ${bookingSecurityImpact.label} and a separate final 100% build-gate pass across that service scope, up from 33%.`,
       "Prevent misconfigurations across multi-service rollouts by reviewing Spinnaker pipelines and Kubernetes manifests.",
       "Enforce deployment safety standards across 15+ microservices spanning multiple GCP environments.",
       "Coordinate staged rollouts for high-risk changes, reducing regression risk while maintaining operational consistency.",

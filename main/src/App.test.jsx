@@ -714,7 +714,16 @@ describe("App routes", () => {
       "/case-studies/kubernetes-autoscaling/"
     )
     expect(screen.getAllByRole("link", { name: /read case study/i })).toHaveLength(7)
-    expect(screen.getByText("unique critical/high CVE IDs removed from release builds")).toBeVisible()
+    expect(screen.getByText("unique critical/high CVE IDs removed from production workloads")).toBeVisible()
+  })
+
+  it("reports booking production CVE removal separately from the final build-gate result", async () => {
+    renderRoute("/case-studies/booking-security-cicd-recovery/")
+
+    expect(await screen.findByText("unique critical/high CVE IDs removed from production workloads")).toBeVisible()
+    expect(screen.getByText(/The owner reports 66 unique critical\/high CVE IDs removed from production workloads/))
+      .toHaveTextContent(/16 code\/SAST findings.*separately reports a final 100% build-gate pass.*up from 33%/)
+    expect(screen.getByText(/^owner-reported: 66 unique critical\/high CVE IDs removed from production workloads/)).toBeVisible()
   })
 
   it("renders a case study detail route", async () => {
@@ -1040,6 +1049,19 @@ describe("App routes", () => {
     const hero = outcomes.closest("section")
     expect(within(hero).getByRole("link", { name: "Download Resume" })).toHaveAttribute("href", resume.pdf)
     expect(within(hero).getByRole("link", { name: "Contact" })).toHaveAttribute("href", "/contact/")
+  })
+
+  it("shows four scoped engineering outcomes in the first Home impact band", async () => {
+    renderRoute("/")
+    const band = await screen.findByRole("region", { name: "Impact metrics" })
+    const metrics = [...band.children]
+
+    expect(metrics).toHaveLength(4)
+    expect(metrics[0]).toHaveTextContent(/66.*unique critical\/high CVE IDs removed from production workloads.*about 15 booking services in 2026/)
+    expect(metrics[1]).toHaveTextContent(/~2,200.*backlog items reprocessed.*October 2026 production order-reconciliation queue fix/)
+    expect(metrics[2]).toHaveTextContent(/7.*payment applications in AI-assisted triage.*2026 handoff.*actively uses the tool/)
+    expect(metrics[3]).toHaveTextContent(/40%.*lower mean latency.*121 ms to 72 ms.*2025 Kubernetes HPA rollout for one service/)
+    expect(screen.getByRole("region", { name: "Kubernetes autoscaling metrics" })).toBeVisible()
   })
 
   it("opens current Experience from the Home hero and preloads on focus", async () => {
