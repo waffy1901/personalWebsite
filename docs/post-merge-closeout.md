@@ -3,8 +3,9 @@
 `Post-deploy issue closeout` follows a successful `Create deployment release`
 **push** run on `main`. It can close one issue from that exact merged PR, after
 checking every required criterion, the exact production deployment, and the
-existing Project 2 item. Missing evidence leaves the issue open and produces a
-pending result in the workflow summary/artifact. It does not post gap comments.
+existing Project 2 item. The workflow reports its disposition in the summary and
+retained result artifact. Missing evidence leaves the issue open. The workflow
+does not post gap comments.
 
 The repository owner approved this bounded automatic path as standing permission.
 That permission belongs only to `.github/workflows/post-deploy-closeout.yml` and
@@ -16,17 +17,36 @@ release, deploy, remediate, or close another issue. Manual closeout retains the
 
 ## Preparing an implementation PR
 
-The implementation and publisher skills prepare `.github/closeout/issue-N.json`
-as part of normal scoped issue work, without another permission prompt. Read the
-current issue's full body and Project 2 `Evidence needed`; map each required
-criterion to checks that actually exercise it. Use `Refs #N`, not closing keywords,
-so merge cannot bypass deployment validation. Have the reviewer inspect the map
-alongside the source and tests. No live contract is included with this automation.
+For issue work, add `Refs #N` to the PR body. A direct URL to an issue in this
+repository also declares that issue. Use non-closing references so merging cannot
+bypass deployment validation. Bare numbers, PR links, and links to other
+repositories do not declare a closeout target. Put the declaration in the PR's
+own prose. The check ignores examples in code spans, fenced code, comments,
+and blockquotes.
 
-Version 1 processes exactly one added or modified contract in the exact merged
-PR's complete changed-file list. Renames, removals, multiple contracts, multiple
-exact associated PRs, missing contracts, forks, or incomplete pagination stay
-pending. Existing unchanged contracts are never swept retrospectively.
+- For automatic closeout, declare exactly one issue and add or modify its
+  `.github/closeout/issue-N.json` in the same-repository PR. Read the current
+  issue body and Project 2 `Evidence needed` and map every required criterion to
+  a check that exercises it. Have the reviewer inspect the map with the source
+  and tests.
+- For manual closeout, declare the issue or issues and add one plain
+  `Manual closeout: <reason>` line outside quotes, comments, and code blocks.
+  Name what remains to be verified or done, for example
+  `Manual closeout: Owner must approve the wording and verify enlarged text in a browser.`
+  Omit a contract. The disposition records the follow-up and prevents automatic
+  writes. Manual closure still needs its own authorization.
+- Issue-free maintenance and dependency PRs need neither field.
+
+The required `Validate portfolio surfaces` job checks preparation on PR opens,
+reopens, pushes, and description edits. It reads the current PR metadata and
+complete changed-file list. For an automatic contract it checks the data schema,
+issue body fingerprint, and line coverage with a read-only GitHub token. The
+reviewer still checks the semantic mapping. Project fields, upstream evidence,
+current production identity, and write access are checked after merge.
+
+Version 1 accepts exactly one added or modified contract. Renames, removals,
+multiple contracts, and a contract for a different issue fail preparation.
+An unchanged contract from an earlier PR is never swept retrospectively.
 
 Example issue body (including its final newline):
 
@@ -71,9 +91,8 @@ rtk proxy python3 scripts/post_deploy_closeout.py --validate-contracts .github/c
 rtk proxy python3 scripts/test_post_deploy_closeout.py
 ```
 
-PR checks validate schema and offline guard behavior. Runtime also validates the
-fresh issue fingerprint and full line coverage. A schema pass is not evidence
-that the mapping is semantically correct.
+The focused fixture job validates schema and offline guard behavior. Runtime
+also checks the fresh issue fingerprint and line coverage before writes.
 
 ## Evidence catalog and limits
 
@@ -100,10 +119,9 @@ or accessibility claims.
 
 Version 1 has no trusted Browser or External account evidence IDs. Such a required
 class in the issue/map or Project `Evidence needed` blocks automatic closure.
-The advisory production browser job is deliberately excluded. It cannot establish
-arbitrary layout behavior, mobile Safari/iOS, analytics receipt, or real contact
-delivery. Do not relabel those requirements to fit the catalog; leave them pending
-for ordinary evidence collection and separately authorized manual closeout.
+The advisory production browser job is excluded from the catalog. Use manual
+closeout for requirements such as layout behavior, mobile Safari/iOS, analytics
+receipt, and real contact delivery.
 
 Every declared evidence class must be supplied by the mapped IDs and exactly
 match the current Project 2 `Evidence needed`. Required evidence in the issue's
@@ -164,11 +182,28 @@ extra fields, and membership are compared against the saved expectation. Final
 independent requests verify the exact comment/body, issue state/reason, metadata,
 membership and field values. Mutation responses alone are never success.
 
-Closeout jobs are serialized. Fresh issue/comment/Project reads precede each
-write; changes stop further writes. GitHub does not offer a transaction across
-these resources, so an edit between the last read and the issue update could be
-overwritten. Independent readback checks the resulting values. A partial failure
-produces a failed job and records the attempted stages in the artifact.
+Closeout jobs are serialized. Before each write the helper rechecks the PR
+identity and body, the issue, comments, and Project item. Changes stop further
+writes. GitHub does not offer a transaction across these resources, so a change
+can still race with a write. Independent readback checks the resulting values.
+A partial failure produces a failed job and records the attempted stages in the
+artifact.
+
+The summary and result artifact report these outcomes:
+
+| Status | Meaning |
+| --- | --- |
+| `verified` | Closure and Project status passed independent readback. |
+| `manual` | The exact merged PR declared manual follow-up. See its body for the reason. |
+| `no_issue` | The exact merged PR declared no closeout issue. |
+| `not_prepared` | The PR lacked the required disposition or its changed contract was invalid. The job fails before any write. |
+| `pending` | Provenance, access, or evidence checks stopped the run before a write attempt. The job records a warning with the reason. |
+| `partial` | The job failed after attempting a write. Review the recorded stages. |
+
+PR [#346](https://github.com/waffy1901/personalWebsite/pull/346) declared
+`Refs #340` and needed owner and browser verification. It had neither a changed
+contract nor a manual disposition. The preparation check now fails that case,
+and runtime records `not_prepared` if it reaches production.
 
 Rerunning the **closeout workflow's existing run** can reuse its exact bot-authored
 comment and original expectation. An independent GitHub edit-history check

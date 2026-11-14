@@ -32,6 +32,22 @@ UPSTREAM_HASH = "0a0c22bae41f851ddcd83d887b7bd76e825bf7aa613c84d8da3e188b25353fe
 BOT_ID = 41898282  # GitHub's github-actions[bot], not a contract-supplied identity.
 SHA = re.compile(r"[0-9a-f]{40}")
 TASK = re.compile(r"^(\s*(?:[-*+] |[0-9]+[.)] )\[)([ xX])(\].*)$")
+CONTRACT_PATH = re.compile(r"\.github/closeout/issue-([1-9][0-9]{0,9})\.json")
+ISSUE_URL = re.compile(rf"https://github\.com/{re.escape(REPO)}/issues/([0-9]+)\b", re.IGNORECASE)
+LOCAL_REFERENCE = rf"(?:{re.escape(REPO)})?\#[0-9]+\b"
+REFERENCES = re.compile(
+    rf"\b(?:refs?|references?)\b[ \t]*:?[ \t]+"
+    rf"({LOCAL_REFERENCE}(?:(?:[ \t]*,[ \t]*|[ \t]+and[ \t]+){LOCAL_REFERENCE})*)",
+    re.IGNORECASE,
+)
+CLOSING_REFERENCE = re.compile(
+    rf"\b(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\b[ \t]*:?[ \t]+"
+    rf"(?:{LOCAL_REFERENCE}|{ISSUE_URL.pattern})",
+    re.IGNORECASE,
+)
+MANUAL_DISPOSITION = re.compile(r"^ {0,3}Manual closeout\b([^\r\n]*)", re.IGNORECASE | re.MULTILINE)
+INLINE_CODE = re.compile(r"(?<!`)(`+)(?!`)(?:(?!\n[ \t]*\n)[\s\S])+?(?<!`)\1(?!`)")
+HTML_BLOCKQUOTE = re.compile(r"""<(/?)blockquote(?=[\s>])(?:[^>"']|"[^"]*"|'[^']*')*>""", re.IGNORECASE)
 CATALOG = {
     "source.merged_pr": ("Source", None, None),
     "checks.lint": ("Local checks", "Verify app", "Lint"),
@@ -56,6 +72,10 @@ REQUIRED_STEPS = {
 
 class Pending(Exception):
     """Missing evidence, changed state, or unsupported schema: do not infer success."""
+
+
+class NotPrepared(Pending):
+    """The PR is missing a valid automatic contract or manual disposition."""
 
 
 def require(condition, message):
@@ -153,17 +173,18 @@ class NoRedirect(HTTPRedirectHandler):
         raise Pending("API redirect rejected")
 
 
-class API:
-    """Fixed-origin HTTP API client; no commands or arbitrary contract URLs."""
-    def __init__(self, github_token, project_token, netlify_token, site_id):
-        require(all((github_token, project_token, netlify_token, site_id)),
-                "GITHUB_TOKEN, CLOSEOUT_PROJECT_TOKEN, NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID are required")
-        require(re.fullmatch(r"[A-Za-z0-9_-]+", site_id), "invalid Netlify site ID")
-        self.tokens = {"repo": github_token, "project": project_token, "netlify": netlify_token}
-        self.site_id = site_id
+class RepositoryReads:
+    """Fixed-origin GitHub REST reads for the pull request preparation check."""
+    def __init__(self, github_token):
+        require(github_token, "GITHUB_TOKEN is required for repository reads")
+        self.tokens = {"repo": github_token}
         self.opener = build_opener(NoRedirect)
 
     def request(self, method, path, body=None, credential="repo"):
+        require(method == "GET" and credential == "repo", "preflight only performs repository reads")
+        return self._request(method, path, body, credential)
+
+    def _request(self, method, path, body, credential):
         origin = "https://api.netlify.com" if credential == "netlify" else "https://api.github.com"
         require(path.startswith("/") and not path.startswith("//"), "unsafe API path")
         headers = {"Authorization": f"Bearer {self.tokens[credential]}", "Accept": "application/vnd.github+json",
@@ -210,17 +231,31 @@ class API:
             next_path = parsed.path + "?" + parsed.query
         raise Pending("REST pagination exceeded bound")
 
-    def graphql(self, query, variables, credential="project"):
-        data = self.request("POST", "/graphql", {"query": query, "variables": variables}, credential)[0]
-        require(not data.get("errors") and isinstance(data.get("data"), dict), "GraphQL access/schema failure")
-        return data["data"]
-
     def content(self, path, sha):
         data = self.get(f"contents/{quote(path, safe='/')}?ref={sha}")
         require(data.get("type") == "file" and data.get("encoding") == "base64", "contract/source is not a file")
         raw = base64.b64decode(data["content"].replace("\n", ""), validate=True)
         require(len(raw) <= 1_000_000, "source file too large")
         return raw.decode("utf-8")
+
+
+class API(RepositoryReads):
+    """Privileged client used only after the trusted workflow_run context check."""
+    def __init__(self, github_token, project_token, netlify_token, site_id):
+        require(all((github_token, project_token, netlify_token, site_id)),
+                "GITHUB_TOKEN, CLOSEOUT_PROJECT_TOKEN, NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID are required")
+        require(re.fullmatch(r"[A-Za-z0-9_-]+", site_id), "invalid Netlify site ID")
+        super().__init__(github_token)
+        self.tokens.update(project=project_token, netlify=netlify_token)
+        self.site_id = site_id
+
+    def request(self, method, path, body=None, credential="repo"):
+        return self._request(method, path, body, credential)
+
+    def graphql(self, query, variables, credential="project"):
+        data = self.request("POST", "/graphql", {"query": query, "variables": variables}, credential)[0]
+        require(not data.get("errors") and isinstance(data.get("data"), dict), "GraphQL access/schema failure")
+        return data["data"]
 
     def site(self):
         return self.request("GET", f"/api/v1/sites/{self.site_id}", credential="netlify")[0]
@@ -504,13 +539,95 @@ def check_pointer(api, deploy):
     require(result["decision"] == "published" and result["deploy_url"] == deploy["url"], "exact deployment is no longer published")
 
 
-def selected_contract(api, run):
-    pulls = unique(api.pages(f"commits/{run['head_sha']}/pulls"), "number", "associated PRs")
+def pull_files(api, number, changed_files):
+    files = unique(api.pages(f"pulls/{number}/files"), "filename", "PR files")
+    require(type(changed_files) is int and len(files) == changed_files,
+            "PR file pagination incomplete (including API file cap)")
+    return files
+
+
+def pull_prose(body):
+    prose = re.sub(r"<!--.*?(?:-->|\Z)", "", body, flags=re.DOTALL)
+    # Quoted replies and fenced examples are not this PR's disposition.
+    lines, fence = [], ""
+    for line in prose.splitlines():
+        delimiter = re.match(r"^ {0,3}(`{3,}|~{3,})", line)
+        if fence:
+            if delimiter and delimiter[1].startswith(fence) and not line[delimiter.end():].strip():
+                fence = ""
+        elif delimiter:
+            fence = delimiter[1]
+            lines.extend(("", ""))
+        elif not line.lstrip().startswith(">"):
+            lines.append(line)
+        else:
+            lines.append("")
+    # Preserve line boundaries and a separator where an example interrupts prose.
+    prose = INLINE_CODE.sub(lambda match: re.sub(r"[^\n]+", "`...`", match[0]), "\n".join(lines))
+    fragments, depth, start = [], 0, 0
+    for tag in HTML_BLOCKQUOTE.finditer(prose):
+        if tag[1]:
+            if depth:
+                depth -= 1
+                if not depth:
+                    start = tag.end()
+        else:
+            if not depth:
+                fragments.extend((prose[start:tag.start()], "\n"))
+            depth += 1
+    if not depth:
+        fragments.append(prose[start:])
+    return "".join(fragments)
+
+
+def pull_preparation(api, body, files, sha, same_repository):
+    """Interpret a PR's declared issue targets and select at most one contract."""
+    require(body is None or isinstance(body, str), "PR body unavailable")
+    prose = pull_prose(body or "")
+    try:
+        require(not CLOSING_REFERENCE.search(prose),
+                "replace GitHub closing keywords with Refs #N so merge cannot close an issue")
+        raw_numbers = ISSUE_URL.findall(prose)
+        for match in REFERENCES.finditer(prose):
+            raw_numbers.extend(re.findall(r"#([0-9]+)", match[1]))
+        require(all(re.fullmatch(r"[1-9][0-9]{0,9}", n) and int(n) <= 2147483647 for n in raw_numbers),
+                "invalid issue number in PR body")
+        issues = sorted({int(n) for n in raw_numbers})
+        manual = MANUAL_DISPOSITION.findall(prose)
+        require(len(manual) <= 1, "use one Manual closeout: <reason> line")
+        if manual:
+            reason = manual[0].strip()
+            require(reason.startswith(":") and reason[1:].strip(), "provide a reason on the Manual closeout: <reason> line")
+            require(issues, "Manual closeout requires an issue reference in the PR body")
+        contracts = [f for f in files if f["filename"].startswith(".github/closeout/") or
+                     (f.get("previous_filename") or "").startswith(".github/closeout/")]
+        if not contracts:
+            if manual:
+                return "manual", issues, None
+            require(not issues, "issue-linked PR needs one changed contract or Manual closeout: <reason>; no retrospective sweep")
+            return "no_issue", issues, None
+        require(not manual, "choose one automatic contract or a manual disposition")
+        require(len(contracts) == 1, "expected exactly one changed issue contract")
+        file = contracts[0]
+        match = CONTRACT_PATH.fullmatch(file["filename"])
+        require(match and file["status"] in ("added", "modified"), "contract must be one added/modified issue-N.json")
+        number = int(match[1])
+        require(issues == [number], "the sole PR issue reference must match the contract filename")
+        require(same_repository, "automatic closeout requires a same-repository PR")
+        contract = validate_contract(strict_json(api.content(file["filename"], sha)), number=number)
+        return "automatic", issues, contract
+    except Pending as error:
+        raise NotPrepared(str(error)) from error
+    except (ValueError, KeyError, TypeError, AttributeError) as error:
+        raise NotPrepared("invalid changed issue contract or PR file metadata") from error
+
+
+def pull_snapshot(api, number):
     query = """
         query($owner: String!, $name: String!, $number: Int!) {
             repository(owner: $owner, name: $name) {
                 pullRequest(number: $number) {
-                    number merged mergedAt baseRefName changedFiles url
+                    number merged mergedAt baseRefName changedFiles url body
                     mergeCommit { oid }
                     baseRepository { nameWithOwner }
                     headRepository { nameWithOwner }
@@ -519,15 +636,20 @@ def selected_contract(api, run):
         }
     """
     owner, name = REPO.split("/")
+    require(type(number) is int and number > 0, "invalid associated PR number")
+    data = api.graphql(query, {"owner": owner, "name": name, "number": number}, credential="repo")
+    repository = data.get("repository")
+    pr = repository.get("pullRequest") if isinstance(repository, dict) else None
+    require(isinstance(pr, dict) and type(pr.get("number")) is int and pr["number"] == number,
+            "associated PR identity unavailable")
+    return pr
+
+
+def merged_pull(api, run):
+    pulls = unique(api.pages(f"commits/{run['head_sha']}/pulls"), "number", "associated PRs")
     candidates = []
     for item in pulls:
-        number = item["number"]
-        require(type(number) is int and number > 0, "invalid associated PR number")
-        data = api.graphql(query, {"owner": owner, "name": name, "number": number}, credential="repo")
-        repository = data.get("repository")
-        pr = repository.get("pullRequest") if isinstance(repository, dict) else None
-        require(isinstance(pr, dict) and type(pr.get("number")) is int and pr["number"] == number,
-                "associated PR identity unavailable")
+        pr = pull_snapshot(api, item["number"])
         require(type(pr.get("merged")) is bool and isinstance(pr.get("baseRefName"), str),
                 "associated PR merge state unavailable")
         if not pr["merged"] or pr["baseRefName"] != "main":
@@ -537,25 +659,47 @@ def selected_contract(api, run):
         require(isinstance(oid, str) and SHA.fullmatch(oid), "merged PR commit identity unavailable")
         if oid != run["head_sha"]:
             continue
-        for field in ("baseRepository", "headRepository"):
-            repo = pr.get(field)
-            require(isinstance(repo, dict) and repo.get("nameWithOwner") == REPO, "foreign PR not eligible")
+        base_repository = pr.get("baseRepository")
+        require(isinstance(base_repository, dict) and base_repository.get("nameWithOwner") == REPO,
+                "foreign base repository not eligible")
         candidates.append(pr)
     require(len(candidates) == 1, "no single exact merged PR for upstream SHA")
     pr = candidates[0]
     pr_url = f"https://github.com/{REPO}/pull/{pr['number']}"
     require(pr.get("url") == pr_url, "PR URL mismatch")
     require(instant(pr.get("mergedAt")) <= instant(run["run_started_at"]), "PR merge postdates upstream run")
-    files = unique(api.pages(f"pulls/{pr['number']}/files"), "filename", "PR files")
-    require(type(pr.get("changedFiles")) is int and len(files) == pr["changedFiles"],
-            "PR file pagination incomplete (including API file cap)")
-    contracts = [f for f in files if f["filename"].startswith(".github/closeout/")]
-    require(len(contracts) == 1, "missing/ambiguous changed issue contract; no retrospective sweep")
-    file = contracts[0]
-    match = re.fullmatch(r"\.github/closeout/issue-([1-9][0-9]*)\.json", file["filename"])
-    require(match and file["status"] in ("added", "modified"), "contract must be one added/modified issue-N.json")
-    contract = validate_contract(strict_json(api.content(file["filename"], run["head_sha"])), number=int(match[1]))
-    return pr_url, contract
+    require("body" in pr, "PR body unavailable")
+    return pr
+
+
+def preflight(api, event):
+    require(event.get("repository", {}).get("full_name") == REPO, "unexpected repository for closeout preflight")
+    require(event.get("action") in {"opened", "synchronize", "reopened", "edited"}, "unexpected pull request action")
+    number = event.get("number")
+    require(type(number) is int and number > 0, "invalid pull request number")
+    sha = event["pull_request"]["head"]["sha"]
+    require(isinstance(sha, str) and SHA.fullmatch(sha), "invalid pull request head SHA")
+
+    def snapshot():
+        pr = api.get(f"pulls/{number}")
+        require(pr.get("number") == number and pr.get("html_url") == f"https://github.com/{REPO}/pull/{number}"
+                and pr["base"]["ref"] == "main" and pr["base"]["repo"]["full_name"] == REPO,
+                "PR identity or target changed")
+        require(pr["head"]["sha"] == sha, "PR head changed; use the check for the latest commit")
+        return pr["body"], pr["changed_files"], pr["base"]["sha"], (pr["head"].get("repo") or {}).get("full_name")
+
+    pr = snapshot()
+    body, changed_files, _, head_repository = pr
+    files = pull_files(api, number, changed_files)
+    disposition, issues, contract = pull_preparation(api, body, files, sha, head_repository == REPO)
+    if contract:
+        issue = api.get(f"issues/{contract['issue']}")
+        require(issue.get("number") == contract["issue"] and "pull_request" not in issue
+                and issue.get("html_url") == f"https://github.com/{REPO}/issues/{contract['issue']}"
+                and isinstance(issue.get("body"), str), "current issue identity or body unavailable")
+        validate_contract(contract, issue["body"], contract["issue"])
+    require(snapshot() == pr, "PR changed during closeout preflight; rerun for its current metadata")
+    return disposition, issues
 
 
 def evidence_map(contract, run, steps, pr_url):
@@ -627,9 +771,24 @@ def execute(api, event, now=None, report=None):
     report = report if report is not None else {}
     report.update(status="pending", writes_attempted=[])
     run, steps = trusted_run(api, event, now)
-    pr_url, contract = selected_contract(api, run)
+    report.update(upstream=run["html_url"], attempt=run["run_attempt"], merge_sha=run["head_sha"])
+    pr = merged_pull(api, run)
+    pr_url = pr["url"]
+    report["pull_request"] = pr_url
+    files = pull_files(api, pr["number"], pr["changedFiles"])
+    head_repository = pr.get("headRepository")
+    disposition, issues, contract = pull_preparation(
+        api, pr["body"], files, run["head_sha"],
+        isinstance(head_repository, dict) and head_repository.get("nameWithOwner") == REPO,
+    )
+    if disposition == "manual":
+        report.update(status="manual", issues=issues, note="Manual follow-up declared in the PR body. No writes.")
+        return report
+    if disposition == "no_issue":
+        report.update(status="no_issue", note="No closeout issue declared. No writes.")
+        return report
     number = contract["issue"]
-    report.update(issue=f"https://github.com/{REPO}/issues/{number}", upstream=run["html_url"], attempt=run["run_attempt"])
+    report["issue"] = f"https://github.com/{REPO}/issues/{number}"
     deploy = deployment(api, run, steps)
     current_issue = api.issue(number)
     require(current_issue["number"] == number, "issue number changed")
@@ -692,6 +851,9 @@ def execute(api, event, now=None, report=None):
                 "Project membership/schema/metadata changed during closeout")
         if issue_closed:
             require(comment and api.closed_by_bot(number, comment["created_at"]), "issue was closed by someone else; no further writes")
+        # The selected contract is immutable at the merge SHA. The PR body and its
+        # manual/automatic disposition can change after merge.
+        require(pull_snapshot(api, pr["number"]) == pr, "merged PR identity or body changed during closeout; no further writes")
         # Read the production pointer last, directly before a possible mutation.
         check_pointer(api, deploy)
         return observed_issue, observed_project, project_done
@@ -722,17 +884,53 @@ def execute(api, event, now=None, report=None):
     return report
 
 
+def publish_summary(summary, annotation=None):
+    if annotation:
+        escaped = summary.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::{annotation}::{escaped}")
+    else:
+        print(summary)
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as stream:
+            stream.write(summary + "\n")
+
+
+def check_pull_request(event_path):
+    try:
+        require(os.environ.get("GITHUB_EVENT_NAME") == "pull_request" and os.environ.get("GITHUB_REPOSITORY") == REPO,
+                "closeout preflight requires this repository's pull_request context")
+        api = RepositoryReads(os.environ.get("GITHUB_TOKEN"))
+        disposition, issues = preflight(api, strict_json(event_path.read_text()))
+    except (Pending, ValueError, KeyError, TypeError, AttributeError, OSError) as error:
+        reason = str(error) if isinstance(error, Pending) else f"Malformed or unavailable input ({type(error).__name__})"
+        publish_summary(f"Closeout preparation check failed. {reason}", "error")
+        return 1
+    issue_labels = ", ".join(f"#{n}" for n in issues)
+    if disposition == "automatic":
+        publish_summary(f"Closeout preparation for {issue_labels} passed schema and current issue-body checks. "
+                        "Review criterion mappings in the PR. Project, evidence and deployment checks run after merge.")
+    elif disposition == "manual":
+        publish_summary(f"Manual closeout declared for {issue_labels}. See the PR body for the reason and follow-up.")
+    else:
+        publish_summary("No closeout issue declared.")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--event", type=Path)
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--event", type=Path)
+    mode.add_argument("--check-pr", type=Path, metavar="EVENT")
+    mode.add_argument("--validate-contracts", type=Path)
     parser.add_argument("--report", type=Path, default=Path("closeout-report.json"))
-    parser.add_argument("--validate-contracts", type=Path)
     args = parser.parse_args()
+    if args.check_pr:
+        return check_pull_request(args.check_pr)
     if args.validate_contracts:
         try:
             files = sorted(args.validate_contracts.glob("issue-*.json"))
             for file in files:
-                match = re.fullmatch(r"issue-([1-9][0-9]*)\.json", file.name)
+                match = CONTRACT_PATH.fullmatch(f".github/closeout/{file.name}")
                 require(match, "invalid contract filename")
                 validate_contract(strict_json(file.read_text()), number=int(match[1]))
             print(f"Validated {len(files)} closeout contract(s); no provider reads or writes.")
@@ -749,16 +947,19 @@ def main():
         api = API(os.environ.get("GITHUB_TOKEN"), os.environ.get("CLOSEOUT_PROJECT_TOKEN"),
                   os.environ.get("NETLIFY_AUTH_TOKEN"), os.environ.get("NETLIFY_SITE_ID"))
         execute(api, event, report=report)
+    except NotPrepared as error:
+        report.update(status="not_prepared", reason=str(error))
     except (Pending, ValueError, KeyError, TypeError, AttributeError, OSError) as error:
         report["status"] = "partial" if report["writes_attempted"] else "pending"
         report["reason"] = str(error) if isinstance(error, Pending) else f"Malformed or unavailable evidence ({type(error).__name__}); no further writes"
     args.report.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")
     summary = "Post-deploy closeout: " + report["status"] + ". " + report.get("reason", report.get("note", ""))
-    print(summary)
-    if os.environ.get("GITHUB_STEP_SUMMARY"):
-        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as stream:
-            stream.write(summary + "\n")
-    return 1 if report["status"] == "partial" else 0
+    if report.get("pull_request"):
+        summary += " PR: " + report["pull_request"]
+    failed = report["status"] in {"not_prepared", "partial"}
+    annotation = "error" if failed else "warning" if report["status"] == "pending" else None
+    publish_summary(summary, annotation)
+    return int(failed)
 
 
 if __name__ == "__main__":
