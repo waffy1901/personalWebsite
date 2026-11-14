@@ -1,4 +1,5 @@
 import { recentCaseStudySummaries } from "./recentCaseStudySummaries.js"
+import { bookingSecurityImpact } from "./impactMetrics.js"
 
 // Public narratives use owner-reported facts. Examples describe concepts and are
 // deliberately illustrative, not copies of employer configuration or runbooks.
@@ -71,11 +72,11 @@ export const recentCaseStudies = [
         "The consequential tradeoff was the additional validation burden of changing several layers in an estate with already-blocked releases. Compatibility checks mattered alongside vulnerability results because the change had to recover delivery as well as improve the release inputs.",
       ] },
       { heading: "Verification and recovery", paragraphs: [
-        "Changes went through staged validation, and PR scanning was added across seven applications. Release-build vulnerability results, code/SAST findings, and build-gate status provided distinct evidence. The failure mode to guard against was a cleaner scan paired with an application or pipeline that could no longer release.",
-        "Release paths blocked for roughly 11 months were restored. The supported security result concerns release builds; deployed-image remediation requires its own runtime evidence.",
+        "Changes went through staged validation, and PR scanning was added across seven applications. Release-build vulnerability checks, code/SAST findings, and build-gate status provided distinct evidence. The failure mode to guard against was a cleaner scan paired with an application or pipeline that could no longer release.",
+        "Release paths blocked for roughly 11 months were restored. The production workload remediation and the recovery of those release paths were separate outcomes.",
       ] },
       { heading: "Outcome and lesson", paragraphs: [
-        "The reported result was removal of 66 unique critical/high CVE IDs from release builds and remediation of 16 code/SAST findings, including four critical findings. The owner confirmed a final 100% build-gate pass across approximately 15 services, compared with the earlier reported 33%. Exact observation dates and a build-attempt denominator are unavailable; this is an owner-reported service-estate result.",
+        `The owner reports ${bookingSecurityImpact.value} ${bookingSecurityImpact.label} and 16 code/SAST findings addressed, including four critical findings. The owner separately reports a final 100% build-gate pass across approximately 15 services, up from 33%. Exact observation dates and a build-attempt denominator for the gate figures are unavailable.`,
         "My lesson was to keep security and delivery evidence separate while solving them together. In future reporting, I would retain per-service before/after build artifacts and exact observation windows to distinguish release-build remediation, gate recovery, and deployed-runtime status.",
       ] },
     ],
@@ -86,18 +87,18 @@ export const recentCaseStudies = [
       description: "A conceptual evidence chain, not a claim that every service had identical pipeline stages.",
       steps: [
         { title: "Framework and container inputs", detail: "Spring Boot, Quarkus, container, and build modernization change the release inputs.", relationship: "Changed inputs require compatibility evidence" },
-        { title: "Staged validation and scanning", detail: "Build behavior, release-build CVEs, and code/SAST findings require separate checks.", relationship: "Validation supports release-path recovery" },
-        { title: "Restored release path", detail: "A passing build gate supports delivery; deployed runtime remediation requires further evidence." },
+        { title: "Staged validation and scanning", detail: "Build behavior, release-build vulnerabilities, and code/SAST findings require separate checks.", relationship: "Validation supports release-path recovery" },
+        { title: "Restored release path", detail: "A passing build gate supports delivery of remediated workloads." },
       ],
-      feedback: "Scan success is not interchangeable with a deployable application or verification of every running production image.",
+      feedback: "The owner reported production workload CVE removal and final build-gate performance as distinct results.",
     },
     configurationExample: {
       afterSection: "Verification and recovery",
       title: "Illustrative evidence ledger",
       description: "Sanitized conceptual ledger separating the reported result types. This is not an internal scanner export or a per-service historical record.",
       examples: [
-        { title: "Security evidence", code: "release builds: 66 unique critical/high CVE IDs removed\ncode/SAST: 16 findings, including 4 critical\nPR scanning: added across 7 applications" },
-        { title: "Delivery evidence", code: "contribution: 10 services direct + 5 assisted\nfinal build-gate pass: owner-reported 100%\nrunning production images: not established here" },
+        { title: "Security evidence", code: `owner-reported: ${bookingSecurityImpact.value} ${bookingSecurityImpact.label}\ncode/SAST: 16 findings, including 4 critical\nPR scanning: added across 7 applications` },
+        { title: "Delivery evidence", code: "contribution: 10 services direct + 5 assisted\nfinal build-gate pass: owner-reported 100%, up from 33%" },
       ],
     },
     stack: ["Java", "Spring Boot", "Quarkus", "Docker", "CI/CD", "SAST", "PR scanning"],

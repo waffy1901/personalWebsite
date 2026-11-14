@@ -205,6 +205,7 @@ export function MetricTile({
 
 export function ImpactBand({
   items,
+  label = "Impact metrics",
   className = "",
   surface = "light",
 }) {
@@ -212,7 +213,7 @@ export function ImpactBand({
 
   return (
     <section
-      aria-label="Impact metrics"
+      aria-label={label}
       className={`mc-impact-band ${isDark ? "mc-impact-band-dark" : ""} ${className}`}
     >
       {items.map((item, index) => (

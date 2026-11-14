@@ -7,6 +7,7 @@ import {
   kubernetesAutoscalingSeo,
   legacyDeploymentRecoverySeo,
 } from "./caseStudySeo.js"
+import { autoscalingLatencyImpact } from "./impactMetrics.js"
 
 export const caseStudiesPage = {
   title: "Selected engineering case studies",
@@ -41,11 +42,7 @@ export const legacyCaseStudies = [
     logoWebp: hdLogoWebp,
     logoTheme: "home-depot",
     metrics: [
-      {
-        value: "40%",
-        label: "lower mean latency",
-        detail: "Mean latency moved from 121 ms to 72 ms after rollout.",
-      },
+      autoscalingLatencyImpact,
       {
         value: "89%",
         label: "fewer errors",
