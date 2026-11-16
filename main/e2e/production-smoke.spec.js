@@ -307,7 +307,7 @@ const canonicalRouteExpectations = [
   { path: "/", heading: "Waffy Ahmed" },
   { path: "/projects/", heading: "Practical builds for real workflows" },
   { path: "/experience/", heading: "Work Experience" },
-  { path: "/case-studies/", heading: "Selected engineering case studies" },
+  { path: "/case-studies/", heading: "Case studies" },
   {
     path: "/case-studies/kubernetes-autoscaling/",
     heading: "Kubernetes Autoscaling for Transaction-Critical Services",
@@ -327,7 +327,7 @@ const canonicalRouteExpectations = [
 const delayedLazyRouteExpectations = [
   { path: "/projects/", heading: "Practical builds for real workflows", chunk: "Projects" },
   { path: "/experience/", heading: "Work Experience", chunk: "Experience" },
-  { path: "/case-studies/", heading: "Selected engineering case studies", chunk: "CaseStudies" },
+  { path: "/case-studies/", heading: "Case studies", chunk: "CaseStudies" },
   { path: "/resume/", heading: "Resume", chunk: "Resume" },
   { path: "/contact/", heading: "Let's connect", chunk: "Contact" },
 ]

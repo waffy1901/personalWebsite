@@ -101,7 +101,7 @@ const routeCards = [
   },
 ];
 
-const featuredCasePath = `/case-studies/${kubernetesAutoscalingSeo.slug}/`;
+const autoscalingCasePath = `/case-studies/${kubernetesAutoscalingSeo.slug}/`;
 
 // Match the hero's lg side-by-side layout before creating its only image element.
 const desktopHeroQuery = "(min-width: 1024px)";
@@ -254,7 +254,7 @@ function Home() {
       <section className="mc-blue-section text-white">
         <PageContainer className="grid gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center">
           <div>
-            <StatusBadge tone="orange" surface="dark">Featured case study</StatusBadge>
+            <StatusBadge tone="orange" surface="dark">Production reliability case study</StatusBadge>
             <h2 className="mt-5 text-4xl font-black leading-tight sm:text-5xl">
               Kubernetes autoscaling for transaction-critical services.
             </h2>
@@ -264,8 +264,8 @@ function Home() {
               under production traffic.
             </p>
             <Link
-              to={featuredCasePath}
-              {...createRouteIntentHandlers(featuredCasePath)}
+              to={autoscalingCasePath}
+              {...createRouteIntentHandlers(autoscalingCasePath)}
               className="mc-button-primary mt-7"
             >
               Read the Kubernetes autoscaling case study

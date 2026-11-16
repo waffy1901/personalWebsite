@@ -1,6 +1,7 @@
 export const kubernetesAutoscalingSeo = {
   slug: "kubernetes-autoscaling",
   title: "Kubernetes Autoscaling for Transaction-Critical Services",
+  featured: true,
   summary:
     "Validated and deployed Horizontal Pod Autoscaling (HPA) for a high-throughput service previously capped at static capacity, improving latency, errors, throughput, and CPU efficiency under production traffic.",
 }
@@ -29,6 +30,7 @@ export const orderReconciliationSeo = {
 export const bookingSecuritySeo = {
   slug: "booking-security-cicd-recovery",
   title: "Booking Security and CI/CD Recovery",
+  featured: true,
   summary:
     "Modernized release builds across approximately 15 booking services, directly remediating 10 and assisting with five, while restoring delivery paths blocked for roughly 11 months.",
 }
@@ -47,20 +49,26 @@ export const jfrogOidcSeo = {
     "Drove a move from shared Maven and Docker credentials to short-lived, job-scoped authentication across two teams and approximately 20 repositories.",
 }
 
-// Lightweight entry points: Home and Experience must not import the narratives.
-export const currentRoleCaseStudyLinks = [
-  { ...orderReconciliationSeo, label: "Order reconciliation: GKE and Spanner" },
-  { ...bookingSecuritySeo, label: "Booking security and release recovery" },
-  { ...paymentTriageSeo, label: "AI-assisted payment triage" },
-  { ...jfrogOidcSeo, label: "JFrog OIDC and CI credentials" },
-]
-
+// Lead with recent security and delivery ownership, paired with measured production
+// reliability. Follow with current production and CI work, then earlier evidence.
 export const caseStudySeoItems = [
+  bookingSecuritySeo,
   kubernetesAutoscalingSeo,
+  orderReconciliationSeo,
+  jfrogOidcSeo,
+  paymentTriageSeo,
   legacyDeploymentRecoverySeo,
   cdcDataReconciliationSeo,
-  orderReconciliationSeo,
-  bookingSecuritySeo,
-  paymentTriageSeo,
-  jfrogOidcSeo,
 ]
+
+const currentRoleLinkLabels = {
+  [bookingSecuritySeo.slug]: "Booking security and release recovery",
+  [orderReconciliationSeo.slug]: "Order reconciliation: GKE and Spanner",
+  [jfrogOidcSeo.slug]: "JFrog OIDC and CI credentials",
+  [paymentTriageSeo.slug]: "AI-assisted payment triage",
+}
+
+// Home and Experience follow library order using lightweight link metadata.
+export const currentRoleCaseStudyLinks = caseStudySeoItems
+  .filter(({ slug }) => Object.hasOwn(currentRoleLinkLabels, slug))
+  .map((item) => ({ ...item, label: currentRoleLinkLabels[item.slug] }))
