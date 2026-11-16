@@ -24,6 +24,7 @@ export const recentCaseStudySummaries = [
     ...bookingSecuritySeo,
     timeframe: "September - October 2026",
     category: "Security and Delivery Recovery",
+    metricsLabel: "Owner-reported outcomes",
     metrics: [
       bookingSecurityImpact,
       { value: "10 + 5", label: "services directly remediated + assisted", detail: "Approximately 15 booking services in the September-October effort." },

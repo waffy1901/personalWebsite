@@ -269,6 +269,132 @@
   ],
   "caseStudies": [
     {
+      "slug": "booking-security-cicd-recovery",
+      "title": "Booking Security and CI/CD Recovery",
+      "organization": "The Home Depot",
+      "timeframe": "September - October 2026",
+      "category": "Security and Delivery Recovery",
+      "summary": "Modernized release builds across approximately 15 booking services, directly remediating 10 and assisting with five, while restoring delivery paths blocked for roughly 11 months.",
+      "url": "https://waffy.dev/case-studies/booking-security-cicd-recovery/",
+      "metrics": [
+        "66 unique critical/high CVE IDs removed from production workloads",
+        "10 + 5 services directly remediated + assisted",
+        "100% owner-reported final build-gate pass",
+        "16 code/SAST findings addressed"
+      ],
+      "stack": [
+        "Java",
+        "Spring Boot",
+        "Quarkus",
+        "Docker",
+        "CI/CD",
+        "SAST",
+        "PR scanning"
+      ],
+      "engineeringPath": [
+        {
+          "title": "Repair release inputs",
+          "detail": "Modernize frameworks, containers, and build behavior across the service estate."
+        },
+        {
+          "title": "Validate changes",
+          "detail": "Use staged validation to distinguish security findings from delivery failures."
+        },
+        {
+          "title": "Restore delivery",
+          "detail": "Recover release paths that had been blocked for roughly 11 months."
+        }
+      ],
+      "sections": [
+        {
+          "heading": "Problem and ownership",
+          "paragraphs": [
+            "Security remediation was entangled with unhealthy delivery paths across approximately 15 booking services. Framework, container, and pipeline changes had to produce usable release builds; fixing a dependency finding alone would not restore a blocked release path.",
+            "I directly remediated 10 services and assisted with five others during September-October 2026. The work included Spring Boot and Quarkus modernization, container and build changes, code/SAST remediation, and pipeline recovery. The direct and assisted contributions reflect different levels of implementation ownership."
+          ]
+        },
+        {
+          "heading": "Decision and tradeoff",
+          "paragraphs": [
+            "The alternative was to seek security exceptions. I chose to fix the underlying framework, container, and delivery problems so the release path could pass its gates through remediation. That choice does not mean an exception was requested or granted. Framework and container changes can remove vulnerable build inputs while also introducing compatibility failures, so validation had to cover both security and delivery.",
+            "The consequential tradeoff was the additional validation burden of changing several layers in an estate with already-blocked releases. Compatibility checks mattered alongside vulnerability results because the change had to recover delivery as well as improve the release inputs."
+          ]
+        },
+        {
+          "heading": "Verification and recovery",
+          "paragraphs": [
+            "Changes went through staged validation, and PR scanning was added across seven applications. Release-build vulnerability checks, code/SAST findings, and build-gate status provided distinct evidence. The failure mode to guard against was a cleaner scan paired with an application or pipeline that could no longer release.",
+            "Release paths blocked for roughly 11 months were restored. The production workload remediation and the recovery of those release paths were separate outcomes."
+          ]
+        },
+        {
+          "heading": "Outcome and lesson",
+          "paragraphs": [
+            "The owner reports 66 unique critical/high CVE IDs removed from production workloads and 16 code/SAST findings addressed, including four critical findings. The owner separately reports a final 100% build-gate pass across approximately 15 services, up from 33%. Exact observation dates and a build-attempt denominator for the gate figures are unavailable.",
+            "My lesson was to keep security and delivery evidence separate while solving them together. In future reporting, I would retain per-service before/after build artifacts and exact observation windows to distinguish release-build remediation, gate recovery, and deployed-runtime status."
+          ]
+        }
+      ],
+      "metricDetails": [
+        {
+          "value": "66",
+          "label": "unique critical/high CVE IDs removed from production workloads",
+          "detail": "Owner-reported across about 15 booking services in 2026. I remediated 10 directly and assisted with five."
+        },
+        {
+          "value": "10 + 5",
+          "label": "services directly remediated + assisted",
+          "detail": "Approximately 15 booking services in the September-October effort."
+        },
+        {
+          "value": "100%",
+          "label": "owner-reported final build-gate pass",
+          "detail": "Across approximately 15 services; initial reported figure was 33%. Build-attempt denominator and exact observation dates are unavailable."
+        },
+        {
+          "value": "16",
+          "label": "code/SAST findings addressed",
+          "detail": "Includes four critical findings. PR scanning was added across seven applications."
+        }
+      ],
+      "causalDiagram": {
+        "title": "From remediation to a usable release path",
+        "sequenceLabel": "Security and delivery validation sequence",
+        "description": "A conceptual evidence chain, not a claim that every service had identical pipeline stages.",
+        "steps": [
+          {
+            "title": "Framework and container inputs",
+            "detail": "Spring Boot, Quarkus, container, and build modernization change the release inputs.",
+            "relationship": "Changed inputs require compatibility evidence"
+          },
+          {
+            "title": "Staged validation and scanning",
+            "detail": "Build behavior, release-build vulnerabilities, and code/SAST findings require separate checks.",
+            "relationship": "Validation supports release-path recovery"
+          },
+          {
+            "title": "Restored release path",
+            "detail": "A passing build gate supports delivery of remediated workloads."
+          }
+        ],
+        "feedback": "The owner reported production workload CVE removal and final build-gate performance as distinct results."
+      },
+      "configurationExample": {
+        "title": "Illustrative evidence ledger",
+        "description": "Sanitized conceptual ledger separating the reported result types. This is not an internal scanner export or a per-service historical record.",
+        "examples": [
+          {
+            "title": "Security evidence",
+            "code": "owner-reported: 66 unique critical/high CVE IDs removed from production workloads\ncode/SAST: 16 findings, including 4 critical\nPR scanning: added across 7 applications"
+          },
+          {
+            "title": "Delivery evidence",
+            "code": "contribution: 10 services direct + 5 assisted\nfinal build-gate pass: owner-reported 100%, up from 33%"
+          }
+        ]
+      }
+    },
+    {
       "slug": "kubernetes-autoscaling",
       "title": "Kubernetes Autoscaling for Transaction-Critical Services",
       "organization": "The Home Depot",
@@ -278,7 +404,7 @@
       "url": "https://waffy.dev/case-studies/kubernetes-autoscaling/",
       "metrics": [
         "40% lower mean latency",
-        "89% fewer errors",
+        "89% fewer errors (reported)",
         "34.8M weekly requests",
         "26% lower average CPU"
       ],
@@ -356,7 +482,7 @@
         },
         {
           "value": "89%",
-          "label": "fewer errors",
+          "label": "fewer errors (reported)",
           "detail": "Reported 89% reduction; error count versus rate remains unconfirmed."
         },
         {
@@ -415,54 +541,6 @@
           }
         ]
       }
-    },
-    {
-      "slug": "legacy-deployment-recovery",
-      "title": "Legacy Deployment Recovery and Credential Rotation",
-      "organization": "The Home Depot",
-      "timeframe": "2026",
-      "category": "Deployment Automation",
-      "summary": "Rebuilt deployment workflows for abandoned Java 1.8 Tomcat services so mission-critical repositories could support zero-downtime Cassandra credential rotation.",
-      "url": "https://waffy.dev/case-studies/legacy-deployment-recovery/",
-      "metrics": [
-        "8 repositories recovered",
-        "0 planned downtime",
-        "Java 1.8 legacy runtime",
-        "CI/CD rebuilt path"
-      ],
-      "stack": [
-        "Java 1.8",
-        "Tomcat",
-        "Cassandra",
-        "CI/CD",
-        "Spinnaker",
-        "Docker",
-        "Artifactory"
-      ]
-    },
-    {
-      "slug": "cdc-data-reconciliation",
-      "title": "CDC Data Reconciliation Platform",
-      "organization": "Centers for Disease Control and Prevention",
-      "timeframe": "2023-2024",
-      "category": "Full-Stack Data Systems",
-      "summary": "Led a team of six building a full-stack reconciliation platform for infectious disease case-count discrepancies between state health departments and CDC datasets.",
-      "url": "https://waffy.dev/case-studies/cdc-data-reconciliation/",
-      "metrics": [
-        "5000+ hours saved annually",
-        "50 state health departments",
-        "25+ stakeholders",
-        "6 team members"
-      ],
-      "stack": [
-        "Python",
-        "FastAPI",
-        "SQLite",
-        "React",
-        "Tailwind CSS",
-        "Data reconciliation",
-        "Stakeholder demos"
-      ]
     },
     {
       "slug": "production-order-reconciliation",
@@ -593,127 +671,121 @@
       }
     },
     {
-      "slug": "booking-security-cicd-recovery",
-      "title": "Booking Security and CI/CD Recovery",
+      "slug": "jfrog-oidc-adoption",
+      "title": "JFrog OIDC and CI Credential Lifecycle",
       "organization": "The Home Depot",
-      "timeframe": "September - October 2026",
-      "category": "Security and Delivery Recovery",
-      "summary": "Modernized release builds across approximately 15 booking services, directly remediating 10 and assisting with five, while restoring delivery paths blocked for roughly 11 months.",
-      "url": "https://waffy.dev/case-studies/booking-security-cicd-recovery/",
+      "timeframe": "October 2026",
+      "category": "CI Trust and Authentication",
+      "summary": "Drove a move from shared Maven and Docker credentials to short-lived, job-scoped authentication across two teams and approximately 20 repositories.",
+      "url": "https://waffy.dev/case-studies/jfrog-oidc-adoption/",
       "metrics": [
-        "66 unique critical/high CVE IDs removed from production workloads",
-        "10 + 5 services directly remediated + assisted",
-        "100% owner-reported final build-gate pass",
-        "16 code/SAST findings addressed"
+        "2 teams adoption scope",
+        "~20 repositories in scope",
+        "1,100+ reported scanning findings resolved"
       ],
       "stack": [
-        "Java",
-        "Spring Boot",
-        "Quarkus",
+        "JFrog",
+        "OIDC",
+        "Maven",
         "Docker",
         "CI/CD",
-        "SAST",
-        "PR scanning"
+        "Short-lived credentials"
       ],
       "engineeringPath": [
         {
-          "title": "Repair release inputs",
-          "detail": "Modernize frameworks, containers, and build behavior across the service estate."
+          "title": "Identify exposure",
+          "detail": "Shared credentials and plaintext token output created a CI credential-lifecycle problem."
         },
         {
-          "title": "Validate changes",
-          "detail": "Use staged validation to distinguish security findings from delivery failures."
+          "title": "Adapt authentication",
+          "detail": "Use short-lived job-scoped Maven/Docker authentication through JFrog OIDC."
         },
         {
-          "title": "Restore delivery",
-          "detail": "Recover release paths that had been blocked for roughly 11 months."
+          "title": "Verify adoption",
+          "detail": "Validate pipeline authentication in stages across the repository estate."
         }
       ],
       "sections": [
         {
           "heading": "Problem and ownership",
           "paragraphs": [
-            "Security remediation was entangled with unhealthy delivery paths across approximately 15 booking services. Framework, container, and pipeline changes had to produce usable release builds; fixing a dependency finding alone would not restore a blocked release path.",
-            "I directly remediated 10 services and assisted with five others during September-October 2026. The work included Spring Boot and Quarkus modernization, container and build changes, code/SAST remediation, and pipeline recovery. The direct and assisted contributions reflect different levels of implementation ownership."
+            "Shared Maven and Docker credentials crossed repository and job boundaries. The owner reported plaintext token output in CI logs across approximately 20 repositories, linked to more than 1,100 scanning findings. The finding count describes scanner results, not 1,100 distinct leaked secrets.",
+            "I drove JFrog OIDC adoption across two teams in October 2026, including CI pipeline adaptations for short-lived, job-scoped authentication. My role was to drive that cross-team change; participating repository work was shared."
           ]
         },
         {
-          "heading": "Decision and tradeoff",
+          "heading": "Decision and trust boundary",
           "paragraphs": [
-            "The alternative was to seek security exceptions. I chose to fix the underlying framework, container, and delivery problems so the release path could pass its gates through remediation. That choice does not mean an exception was requested or granted. Framework and container changes can remove vulnerable build inputs while also introducing compatibility failures, so validation had to cover both security and delivery.",
-            "The consequential tradeoff was the additional validation burden of changing several layers in an estate with already-blocked releases. Compatibility checks mattered alongside vulnerability results because the change had to recover delivery as well as improve the release inputs."
+            "The alternative I considered was a service account and password with custom masking. I chose OIDC and short-lived job-scoped tokens: masking addresses output handling, while job identity and temporary authentication also change how credentials are distributed and how long they remain usable. This made the identity-to-access boundary part of pipeline reliability.",
+            "The tradeoff is that artifact operations now depend on the OIDC exchange and its trust configuration. A failed exchange can block a build even when the application code is healthy. The public account omits private issuer, audience, subject, trust-policy, permission, and token-lifetime settings; the diagram illustrates the boundary without supplying deployable provider configuration."
           ]
         },
         {
-          "heading": "Verification and recovery",
+          "heading": "Verification and recovery limits",
           "paragraphs": [
-            "Changes went through staged validation, and PR scanning was added across seven applications. Release-build vulnerability checks, code/SAST findings, and build-gate status provided distinct evidence. The failure mode to guard against was a cleaner scan paired with an application or pipeline that could no longer release.",
-            "Release paths blocked for roughly 11 months were restored. The production workload remediation and the recovery of those release paths were separate outcomes."
+            "The work included CI adaptations and staged verification of Maven/Docker authentication. Authentication and artifact-operation checks serve different purposes: accepting an identity is not, by itself, evidence that the job can complete its required artifact operation. Short-lived tokens also do not make printing tokens safe.",
+            "A future rollout should document recovery from a failed exchange without reintroducing shared secrets or logging token material. That is a recommended improvement; the historical recovery procedure is not documented here."
           ]
         },
         {
           "heading": "Outcome and lesson",
           "paragraphs": [
-            "The owner reports 66 unique critical/high CVE IDs removed from production workloads and 16 code/SAST findings addressed, including four critical findings. The owner separately reports a final 100% build-gate pass across approximately 15 services, up from 33%. Exact observation dates and a build-attempt denominator for the gate figures are unavailable.",
-            "My lesson was to keep security and delivery evidence separate while solving them together. In future reporting, I would retain per-service before/after build artifacts and exact observation windows to distinguish release-build remediation, gate recovery, and deployed-runtime status."
+            "The owner reports adoption across two teams and approximately 20 repositories, replacing shared credentials with short-lived, job-scoped tokens and resolving more than 1,100 findings tied to plaintext token output in CI logs. The scan tool, observation window, and deduplication method are unspecified; the finding count is not a distinct-secret count or a numerical measure of risk reduction.",
+            "I was the first to adopt this approach within my engineering organization and established it as the standard there. I reinforced that direction in a later engineer's migration PR review, explaining the implementation already in place and the rationale before approving. The reported implementation scope remains two teams and approximately 20 repositories; this is not a company-wide standard claim.",
+            "The lesson was to treat credential lifetime, job identity, pipeline usability, and logging behavior as related boundaries. A future evidence package should preserve redacted artifact-operation results and repeatable scan definitions so adoption and exposure reduction can be assessed independently."
           ]
         }
       ],
       "metricDetails": [
         {
-          "value": "66",
-          "label": "unique critical/high CVE IDs removed from production workloads",
-          "detail": "Owner-reported across about 15 booking services in 2026. I remediated 10 directly and assisted with five."
+          "value": "2 teams",
+          "label": "adoption scope",
+          "detail": "Owner-reported October 2026 JFrog authentication work."
         },
         {
-          "value": "10 + 5",
-          "label": "services directly remediated + assisted",
-          "detail": "Approximately 15 booking services in the September-October effort."
+          "value": "~20",
+          "label": "repositories in scope",
+          "detail": "Maven and Docker CI authentication moved away from shared credentials."
         },
         {
-          "value": "100%",
-          "label": "owner-reported final build-gate pass",
-          "detail": "Across approximately 15 services; initial reported figure was 33%. Build-attempt denominator and exact observation dates are unavailable."
-        },
-        {
-          "value": "16",
-          "label": "code/SAST findings addressed",
-          "detail": "Includes four critical findings. PR scanning was added across seven applications."
+          "value": "1,100+",
+          "label": "reported scanning findings resolved",
+          "detail": "Findings tied to plaintext token output in CI logs across approximately 20 repositories; not a count of distinct credentials."
         }
       ],
       "causalDiagram": {
-        "title": "From remediation to a usable release path",
-        "sequenceLabel": "Security and delivery validation sequence",
-        "description": "A conceptual evidence chain, not a claim that every service had identical pipeline stages.",
+        "title": "Job identity to artifact access",
+        "sequenceLabel": "CI authentication trust sequence",
+        "description": "Illustrative trust sequence only. Internal provider policies, permission values, and exchange endpoints are intentionally omitted.",
         "steps": [
           {
-            "title": "Framework and container inputs",
-            "detail": "Spring Boot, Quarkus, container, and build modernization change the release inputs.",
-            "relationship": "Changed inputs require compatibility evidence"
+            "title": "CI job identity",
+            "detail": "A job presents identity for an OIDC-based authentication flow.",
+            "relationship": "Identity is evaluated at the trust boundary"
           },
           {
-            "title": "Staged validation and scanning",
-            "detail": "Build behavior, release-build vulnerabilities, and code/SAST findings require separate checks.",
-            "relationship": "Validation supports release-path recovery"
+            "title": "JFrog authentication boundary",
+            "detail": "Trust configuration determines whether the identity can obtain artifact access.",
+            "relationship": "Accepted identity enables scoped authentication"
           },
           {
-            "title": "Restored release path",
-            "detail": "A passing build gate supports delivery of remediated workloads."
+            "title": "Short-lived job token",
+            "detail": "The job uses temporary authentication for its Maven or Docker artifact operations."
           }
         ],
-        "feedback": "The owner reported production workload CVE removal and final build-gate performance as distinct results."
+        "feedback": "An accepted exchange, a successful artifact operation, and absence of plaintext token output are separate verification concerns."
       },
       "configurationExample": {
-        "title": "Illustrative evidence ledger",
-        "description": "Sanitized conceptual ledger separating the reported result types. This is not an internal scanner export or a per-service historical record.",
+        "title": "Illustrative credential-boundary checklist",
+        "description": "Conceptual review aid, not JFrog API syntax, internal CI configuration, or a historical test log. It contains no usable credentials or policy values.",
         "examples": [
           {
-            "title": "Security evidence",
-            "code": "owner-reported: 66 unique critical/high CVE IDs removed from production workloads\ncode/SAST: 16 findings, including 4 critical\nPR scanning: added across 7 applications"
+            "title": "Authentication and use",
+            "code": "job identity -> trust evaluation\naccepted exchange -> short-lived job token\njob token -> Maven / Docker operation"
           },
           {
-            "title": "Delivery evidence",
-            "code": "contribution: 10 services direct + 5 assisted\nfinal build-gate pass: owner-reported 100%, up from 33%"
+            "title": "Separate evidence questions",
+            "code": "Can the intended job authenticate?\nCan its artifact operation complete?\nDoes output avoid plaintext token material?\nWhat does each scanner finding count?"
           }
         ]
       }
@@ -839,124 +911,52 @@
       }
     },
     {
-      "slug": "jfrog-oidc-adoption",
-      "title": "JFrog OIDC and CI Credential Lifecycle",
+      "slug": "legacy-deployment-recovery",
+      "title": "Legacy Deployment Recovery and Credential Rotation",
       "organization": "The Home Depot",
-      "timeframe": "October 2026",
-      "category": "CI Trust and Authentication",
-      "summary": "Drove a move from shared Maven and Docker credentials to short-lived, job-scoped authentication across two teams and approximately 20 repositories.",
-      "url": "https://waffy.dev/case-studies/jfrog-oidc-adoption/",
+      "timeframe": "2026",
+      "category": "Deployment Automation",
+      "summary": "Rebuilt deployment workflows for abandoned Java 1.8 Tomcat services so mission-critical repositories could support zero-downtime Cassandra credential rotation.",
+      "url": "https://waffy.dev/case-studies/legacy-deployment-recovery/",
       "metrics": [
-        "2 teams adoption scope",
-        "~20 repositories in scope",
-        "1,100+ reported scanning findings resolved"
+        "8 repositories recovered",
+        "0 planned downtime",
+        "Java 1.8 legacy runtime",
+        "CI/CD rebuilt path"
       ],
       "stack": [
-        "JFrog",
-        "OIDC",
-        "Maven",
-        "Docker",
+        "Java 1.8",
+        "Tomcat",
+        "Cassandra",
         "CI/CD",
-        "Short-lived credentials"
+        "Spinnaker",
+        "Docker",
+        "Artifactory"
+      ]
+    },
+    {
+      "slug": "cdc-data-reconciliation",
+      "title": "CDC Data Reconciliation Platform",
+      "organization": "Centers for Disease Control and Prevention",
+      "timeframe": "2023-2024",
+      "category": "Full-Stack Data Systems",
+      "summary": "Led a team of six building a full-stack reconciliation platform for infectious disease case-count discrepancies between state health departments and CDC datasets.",
+      "url": "https://waffy.dev/case-studies/cdc-data-reconciliation/",
+      "metrics": [
+        "5000+ estimated hours saved annually",
+        "50 state health departments",
+        "25+ stakeholders",
+        "6 team members"
       ],
-      "engineeringPath": [
-        {
-          "title": "Identify exposure",
-          "detail": "Shared credentials and plaintext token output created a CI credential-lifecycle problem."
-        },
-        {
-          "title": "Adapt authentication",
-          "detail": "Use short-lived job-scoped Maven/Docker authentication through JFrog OIDC."
-        },
-        {
-          "title": "Verify adoption",
-          "detail": "Validate pipeline authentication in stages across the repository estate."
-        }
-      ],
-      "sections": [
-        {
-          "heading": "Problem and ownership",
-          "paragraphs": [
-            "Shared Maven and Docker credentials crossed repository and job boundaries. The owner reported plaintext token output in CI logs across approximately 20 repositories, linked to more than 1,100 scanning findings. The finding count describes scanner results, not 1,100 distinct leaked secrets.",
-            "I drove JFrog OIDC adoption across two teams in October 2026, including CI pipeline adaptations for short-lived, job-scoped authentication. My role was to drive that cross-team change; participating repository work was shared."
-          ]
-        },
-        {
-          "heading": "Decision and trust boundary",
-          "paragraphs": [
-            "The alternative I considered was a service account and password with custom masking. I chose OIDC and short-lived job-scoped tokens: masking addresses output handling, while job identity and temporary authentication also change how credentials are distributed and how long they remain usable. This made the identity-to-access boundary part of pipeline reliability.",
-            "The tradeoff is that artifact operations now depend on the OIDC exchange and its trust configuration. A failed exchange can block a build even when the application code is healthy. The public account omits private issuer, audience, subject, trust-policy, permission, and token-lifetime settings; the diagram illustrates the boundary without supplying deployable provider configuration."
-          ]
-        },
-        {
-          "heading": "Verification and recovery limits",
-          "paragraphs": [
-            "The work included CI adaptations and staged verification of Maven/Docker authentication. Authentication and artifact-operation checks serve different purposes: accepting an identity is not, by itself, evidence that the job can complete its required artifact operation. Short-lived tokens also do not make printing tokens safe.",
-            "A future rollout should document recovery from a failed exchange without reintroducing shared secrets or logging token material. That is a recommended improvement; the historical recovery procedure is not documented here."
-          ]
-        },
-        {
-          "heading": "Outcome and lesson",
-          "paragraphs": [
-            "The owner reports adoption across two teams and approximately 20 repositories, replacing shared credentials with short-lived, job-scoped tokens and resolving more than 1,100 findings tied to plaintext token output in CI logs. The scan tool, observation window, and deduplication method are unspecified; the finding count is not a distinct-secret count or a numerical measure of risk reduction.",
-            "I was the first to adopt this approach within my engineering organization and established it as the standard there. I reinforced that direction in a later engineer's migration PR review, explaining the implementation already in place and the rationale before approving. The reported implementation scope remains two teams and approximately 20 repositories; this is not a company-wide standard claim.",
-            "The lesson was to treat credential lifetime, job identity, pipeline usability, and logging behavior as related boundaries. A future evidence package should preserve redacted artifact-operation results and repeatable scan definitions so adoption and exposure reduction can be assessed independently."
-          ]
-        }
-      ],
-      "metricDetails": [
-        {
-          "value": "2 teams",
-          "label": "adoption scope",
-          "detail": "Owner-reported October 2026 JFrog authentication work."
-        },
-        {
-          "value": "~20",
-          "label": "repositories in scope",
-          "detail": "Maven and Docker CI authentication moved away from shared credentials."
-        },
-        {
-          "value": "1,100+",
-          "label": "reported scanning findings resolved",
-          "detail": "Findings tied to plaintext token output in CI logs across approximately 20 repositories; not a count of distinct credentials."
-        }
-      ],
-      "causalDiagram": {
-        "title": "Job identity to artifact access",
-        "sequenceLabel": "CI authentication trust sequence",
-        "description": "Illustrative trust sequence only. Internal provider policies, permission values, and exchange endpoints are intentionally omitted.",
-        "steps": [
-          {
-            "title": "CI job identity",
-            "detail": "A job presents identity for an OIDC-based authentication flow.",
-            "relationship": "Identity is evaluated at the trust boundary"
-          },
-          {
-            "title": "JFrog authentication boundary",
-            "detail": "Trust configuration determines whether the identity can obtain artifact access.",
-            "relationship": "Accepted identity enables scoped authentication"
-          },
-          {
-            "title": "Short-lived job token",
-            "detail": "The job uses temporary authentication for its Maven or Docker artifact operations."
-          }
-        ],
-        "feedback": "An accepted exchange, a successful artifact operation, and absence of plaintext token output are separate verification concerns."
-      },
-      "configurationExample": {
-        "title": "Illustrative credential-boundary checklist",
-        "description": "Conceptual review aid, not JFrog API syntax, internal CI configuration, or a historical test log. It contains no usable credentials or policy values.",
-        "examples": [
-          {
-            "title": "Authentication and use",
-            "code": "job identity -> trust evaluation\naccepted exchange -> short-lived job token\njob token -> Maven / Docker operation"
-          },
-          {
-            "title": "Separate evidence questions",
-            "code": "Can the intended job authenticate?\nCan its artifact operation complete?\nDoes output avoid plaintext token material?\nWhat does each scanner finding count?"
-          }
-        ]
-      }
+      "stack": [
+        "Python",
+        "FastAPI",
+        "SQLite",
+        "React",
+        "Tailwind CSS",
+        "Data reconciliation",
+        "Stakeholder demos"
+      ]
     }
   ],
   "projects": [

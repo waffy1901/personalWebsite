@@ -17,7 +17,7 @@ import { SubmissionError } from "@formspree/core"
 import App, { DelayedRoutePendingIndicator } from "./App.jsx"
 import { caseStudies } from "./data/caseStudies.js"
 import { recentCaseStudies } from "./data/recentCaseStudies.js"
-import { currentRoleCaseStudyLinks } from "./data/caseStudySeo.js"
+import { currentRoleCaseStudyLinks, legacyDeploymentRecoverySeo } from "./data/caseStudySeo.js"
 import { projects } from "./data/projects.js"
 import { hackathonPrototype } from "./data/hackathonPrototype.js"
 import { currentRoleEvidence, currentRoleHighlights, experiencePage, workExperiences } from "./data/experience.js"
@@ -36,6 +36,16 @@ import {
   toCanonicalRoutePath,
   toCanonicalRouteUrl,
 } from "./data/seo.js"
+
+const curatedCaseStudySlugs = [
+  "booking-security-cicd-recovery",
+  "kubernetes-autoscaling",
+  "production-order-reconciliation",
+  "jfrog-oidc-adoption",
+  "ai-assisted-payment-triage",
+  "legacy-deployment-recovery",
+  "cdc-data-reconciliation",
+]
 
 const formspreeSubmitMock = vi.hoisted(() =>
   vi.fn((event) => event?.preventDefault?.())
@@ -610,7 +620,7 @@ describe("App routes", () => {
     const [caseStudyLink] = await screen.findAllByRole("link", { name: /read case study/i })
     fireEvent.pointerEnter(caseStudyLink)
     expect(routePreloadMock).toHaveBeenLastCalledWith(
-      "/case-studies/kubernetes-autoscaling/"
+      "/case-studies/booking-security-cicd-recovery/"
     )
 
     routePreloadMock.mockClear()
@@ -656,7 +666,7 @@ describe("App routes", () => {
 
     expect(screen.getByText("Explore")).toHaveClass("mc-eyebrow")
     expect(
-      screen.getByText("Featured case study", { selector: "span.inline-flex" })
+      screen.getByText("Production reliability case study", { selector: "span.inline-flex" })
     ).toHaveClass("text-[#FFB077]", "border-[#FFB077]/40")
 
     const stylesheet = readFileSync("src/index.css", "utf8")
@@ -700,21 +710,29 @@ describe("App routes", () => {
     )
   })
 
-  it("renders the case studies route", async () => {
+  it("leads the case-study library with booking recovery and autoscaling outcomes", async () => {
     renderRoute("/case-studies")
 
     expect(
-      await screen.findByRole("heading", { name: /selected engineering case studies/i })
+      await screen.findByRole("heading", { level: 1, name: "Case studies" })
     ).toBeInTheDocument()
-    const [firstCaseStudyLink] = screen.getAllByRole("link", {
-      name: /read case study/i,
-    })
-    expect(firstCaseStudyLink).toHaveAttribute(
-      "href",
-      "/case-studies/kubernetes-autoscaling/"
+    const links = screen.getAllByRole("link", { name: /^read case study on /i })
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(
+      curatedCaseStudySlugs.map((slug) => `/case-studies/${slug}/`)
     )
-    expect(screen.getAllByRole("link", { name: /read case study/i })).toHaveLength(7)
-    expect(screen.getByText("unique critical/high CVE IDs removed from production workloads")).toBeVisible()
+    const featured = within(screen.getByRole("region", { name: "Featured case studies" }))
+    const [booking, autoscaling] = featured.getAllByRole("article")
+    expect(featured.getAllByRole("article")).toHaveLength(2)
+    expect(booking).toHaveAccessibleName("Booking Security and CI/CD Recovery")
+    expect(booking).toHaveTextContent(/directly remediating 10 and assisting with five.*blocked for roughly 11 months/i)
+    const reportedOutcomes = within(booking).getByRole("list", { name: "Owner-reported outcomes" })
+    expect(reportedOutcomes).toHaveTextContent("unique critical/high CVE IDs removed from production workloads")
+    expect(reportedOutcomes).toHaveTextContent("final build-gate pass")
+    expect(autoscaling).toHaveAccessibleName("Kubernetes Autoscaling for Transaction-Critical Services")
+    expect(autoscaling).toHaveTextContent("Horizontal Pod Autoscaling (HPA)")
+    expect(autoscaling).toHaveTextContent("lower mean latency")
+    expect(autoscaling).toHaveTextContent("fewer errors (reported)")
+    expect(autoscaling).toHaveTextContent("weekly requests")
   })
 
   it("reports booking production CVE removal separately from the final build-gate result", async () => {
@@ -763,9 +781,9 @@ describe("App routes", () => {
     await screen.findByRole("heading", { name: recentCaseStudies[1].title })
     expect(screen.queryByRole("heading", { name: recentCaseStudies[3].title })).not.toBeInTheDocument()
     await user.click(screen.getByRole("link", { name: "Read legacy deployment recovery" }))
-    await screen.findByRole("heading", { name: caseStudies[1].title })
+    await screen.findByRole("heading", { name: legacyDeploymentRecoverySeo.title })
     expect(screen.queryByRole("heading", { name: recentCaseStudies[1].title })).not.toBeInTheDocument()
-    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute("href", `https://waffy.dev/case-studies/${caseStudies[1].slug}/`)
+    expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute("href", `https://waffy.dev/case-studies/${legacyDeploymentRecoverySeo.slug}/`)
   })
 
   it.each([
@@ -783,6 +801,12 @@ describe("App routes", () => {
   it.each(["/", "/experience/"])("offers all four recent stories from %s without replacing the HPA proof route", async (path) => {
     renderRoute(path)
     const navigation = await screen.findByRole("navigation", { name: "Recent SWE II case studies" })
+    expect(within(navigation).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([
+      "/case-studies/booking-security-cicd-recovery/",
+      "/case-studies/production-order-reconciliation/",
+      "/case-studies/jfrog-oidc-adoption/",
+      "/case-studies/ai-assisted-payment-triage/",
+    ])
     for (const item of currentRoleCaseStudyLinks) {
       expect(within(navigation).getByRole("link", { name: item.label })).toHaveAttribute("href", `/case-studies/${item.slug}/`)
     }
@@ -1758,15 +1782,7 @@ describe("App routes", () => {
       "https://waffy.dev/waffyAhmedResume.pdf"
     )
     expect(portfolioJson).not.toHaveProperty("analyticsEvents")
-    expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.slug)).toEqual([
-      "kubernetes-autoscaling",
-      "legacy-deployment-recovery",
-      "cdc-data-reconciliation",
-      "production-order-reconciliation",
-      "booking-security-cicd-recovery",
-      "ai-assisted-payment-triage",
-      "jfrog-oidc-adoption",
-    ])
+    expect(portfolioJson.caseStudies.map((caseStudy) => caseStudy.slug)).toEqual(curatedCaseStudySlugs)
   })
 
   it("keeps generated public artifacts current", () => {

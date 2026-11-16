@@ -10,26 +10,9 @@ import {
 import { autoscalingLatencyImpact } from "./impactMetrics.js"
 
 export const caseStudiesPage = {
-  title: "Selected engineering case studies",
+  title: "Case studies",
   description:
-    "Seven engineering stories spanning reliability, production data workflows, release security, AI-assisted investigation, and CI trust, with ownership, technical decisions, and evidence limits.",
-  stats: [
-    {
-      id: "production-scale",
-      value: "34.8M",
-      label: "weekly requests after autoscaling validation",
-    },
-    {
-      id: "legacy-services",
-      value: "8",
-      label: "legacy repositories recovered for credential rotation",
-    },
-    {
-      id: "manual-hours",
-      value: "5000+",
-      label: "estimated CDC reconciliation hours saved annually",
-    },
-  ],
+    "Engineering decisions and outcomes in secure delivery, production reliability, and data systems.",
 }
 
 export const legacyCaseStudies = [
@@ -45,7 +28,7 @@ export const legacyCaseStudies = [
       autoscalingLatencyImpact,
       {
         value: "89%",
-        label: "fewer errors",
+        label: "fewer errors (reported)",
         detail: "Reported 89% reduction; error count versus rate remains unconfirmed.",
       },
       {
@@ -281,7 +264,7 @@ export const legacyCaseStudies = [
     metrics: [
       {
         value: "5000+",
-        label: "hours saved annually",
+        label: "estimated hours saved annually",
         detail: "Manual reconciliation work was converted into repeatable comparison workflows.",
       },
       {

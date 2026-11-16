@@ -1,7 +1,11 @@
+import { caseStudySeoItems } from "./caseStudySeo.js"
 import { legacyCaseStudies } from "./legacyCaseStudies.js"
 import { recentCaseStudySummaries } from "./recentCaseStudySummaries.js"
 
+const caseStudiesBySlug = new Map(
+  [...legacyCaseStudies, ...recentCaseStudySummaries].map((caseStudy) => [caseStudy.slug, caseStudy])
+)
+
 export { caseStudiesPage } from "./legacyCaseStudies.js"
-export const caseStudies = [...legacyCaseStudies, ...recentCaseStudySummaries]
-export const getCaseStudyBySlug = (slug) =>
-  caseStudies.find((caseStudy) => caseStudy.slug === slug)
+export const getCaseStudyBySlug = (slug) => caseStudiesBySlug.get(slug)
+export const caseStudies = caseStudySeoItems.map(({ slug }) => getCaseStudyBySlug(slug))
