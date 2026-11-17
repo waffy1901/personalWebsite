@@ -10,6 +10,7 @@ import landisGyrLogo from "../images/landisGyrLogo.png"
 import landisGyrLogoWebp from "../images/landisGyrLogo.webp"
 import { currentEmployment, professionalIdentity } from "./siteIdentity.js"
 import { currentRoleHighlights } from "./currentRoleHighlights.js"
+import { currentRoleCaseStudyLinks } from "./caseStudySeo.js"
 import { bookingSecurityImpact } from "./impactMetrics.js"
 
 export { currentRoleHighlights } from "./currentRoleHighlights.js"
@@ -32,6 +33,11 @@ export const workExperiences = [
     location: currentEmployment.location,
     date: currentEmployment.roleHistory[0].date,
     highlights: currentRoleHighlights,
+    highlightCaseStudies: [
+      "booking-security-cicd-recovery",
+      "production-order-reconciliation",
+      "ai-assisted-payment-triage",
+    ].map((slug) => currentRoleCaseStudyLinks.find((study) => study.slug === slug)),
     bullets: [
       `Led security and CI/CD remediation across approximately 15 booking services, directly remediating 10 and assisting with five. The owner reports ${bookingSecurityImpact.value} ${bookingSecurityImpact.label} and a separate build-gate improvement from 33% to a final 100% across that service scope.`,
       "Led a four-person team, including myself, from design through stakeholder validation and handoff of AI-assisted triage across 7 payment applications. Implemented a little over half of the tool, with three other engineers contributing; combined code/config tracing, BigQuery, store telemetry, baselines, citations, and coverage checks. The receiving team now owns and actively uses it.",

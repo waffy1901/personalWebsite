@@ -2279,7 +2279,7 @@ describe("App routes", () => {
     const evidence = await screen.findByRole("region", {
       name: currentRoleEvidence.heading,
     })
-    expect(screen.queryByRole("region", { name: /experience details/i })).not.toBeInTheDocument()
+    expect(screen.getByText("Full experience details")).not.toBeVisible()
 
     const links = within(evidence).getAllByRole("link").filter((link) => link.getAttribute("href").startsWith("#"))
     for (const link of links) {
@@ -2304,74 +2304,86 @@ describe("App routes", () => {
     })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  it("reveals experience details with an accessible control", async () => {
+  it("keeps current-role outcomes visible and discloses the complete canonical record", async () => {
     const user = userEvent.setup()
     const clipboardWriteMock = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
-      value: {
-        writeText: clipboardWriteMock,
-      },
+      value: { writeText: clipboardWriteMock },
     })
-    renderRoute("/experience")
-
-    await screen.findByRole("heading", { name: /work experience/i })
-    expect(
-      screen.queryByRole("region", { name: /experience details/i })
-    ).not.toBeInTheDocument()
-
-    expect(screen.getByText("July 2026 - Present")).toBeInTheDocument()
-    expect(screen.getByText("January 2025 - July 2026")).toBeInTheDocument()
-
-    const detailsButton = screen.getByRole("button", {
-      name: /view details for software engineer ii at the home depot/i,
-    })
-    const currentCard = detailsButton.closest("article")
+    renderBrowserRoute("/experience/")
+    const currentCard = (await screen.findByRole("heading", { name: "Software Engineer II", exact: true })).closest("article")
     const outcomes = within(currentCard).getByRole("list", { name: "Recent engineering outcomes" })
-    currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
+    const disclosure = currentCard.querySelector("details")
+    const summary = currentCard.querySelector("summary")
+    const initialUrl = window.location.href
+    const initialHistoryLength = window.history.length
+    expect(summary).toHaveTextContent("Full accomplishments for Software Engineer II at The Home Depot")
+    expect(disclosure).not.toHaveAttribute("open")
+    expect(within(currentCard).getByLabelText("Copy full accomplishments for Software Engineer II at The Home Depot")).not.toBeVisible()
     expect(within(outcomes).getAllByRole("listitem")).toHaveLength(3)
-    expect(currentCard.querySelector('button[aria-label="Copy Software Engineer II details"]')).toHaveAttribute("tabindex", "-1")
-    await user.click(detailsButton)
-
-    const detailsRegion = screen.getByRole("region", {
-      name: /experience details/i,
-    })
-    const backButton = screen.getByRole("button", {
-      name: /back to summary for software engineer ii at the home depot/i,
-    })
-    const copyButton = screen.getByRole("button", {
-      name: /copy software engineer ii details/i,
+    currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
+    workExperiences[0].highlightCaseStudies.forEach((study) => {
+      expect(within(outcomes).getByText(study.label)).toBeVisible()
+      expect(within(outcomes).getByRole("link", { name: `Read ${study.title}` })).toHaveAttribute("href", `/case-studies/${study.slug}/`)
     })
 
-    expect(detailsRegion).toBeInTheDocument()
-    expect(
-      within(detailsRegion).getByText(/productionized daily order reconciliation/i)
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        /re-architected order reconciliation from cloud sql to cloud spanner/i
-      )
-    ).toBeInTheDocument()
-    expect(screen.getByText(/owner reports 7 weekly CronJob executions/i)).toBeInTheDocument()
-    expect(
-      screen.getByText(/drove jfrog oidc adoption across 2 teams and approximately 20 repositories/i)
-    ).toBeInTheDocument()
-    expect(screen.getByText(/nodeport usage/i)).toBeInTheDocument()
-    await waitFor(() => expect(backButton).toHaveFocus())
-
-    await user.click(copyButton)
-
+    summary.focus()
+    // Native keyboard activation belongs to real-browser coverage, not JSDOM.
+    await user.click(summary)
+    expect(disclosure).toHaveAttribute("open")
+    expect(summary).toHaveFocus()
+    const details = within(currentCard).getByRole("region", { name: "Full experience details" })
+    expect(within(details).getAllByRole("listitem")).toHaveLength(6)
+    workExperiences[0].bullets.forEach((bullet) => expect(within(details).getByText(bullet)).toBeVisible())
+    currentRoleHighlights.forEach((highlight) => expect(within(outcomes).getByText(highlight)).toBeVisible())
+    await user.click(within(details).getByRole("button", { name: "Copy full accomplishments for Software Engineer II at The Home Depot" }))
     expect(clipboardWriteMock).toHaveBeenCalledWith(workExperiences[0].bullets.join("\n"))
-    expect(screen.getByRole("status")).toHaveTextContent(
-      /software engineer ii details copied/i
-    )
+    expect(within(details).getByRole("status")).toHaveTextContent("Software Engineer II details copied.")
 
-    await user.keyboard("{Escape}")
+    await user.click(summary)
+    expect(disclosure).not.toHaveAttribute("open")
+    expect(summary).toHaveFocus()
+    expect(window.location.href).toBe(initialUrl)
+    expect(window.history.length).toBe(initialHistoryLength)
+    expect(screen.getByText("July 2026 - Present")).toBeVisible()
+    expect(screen.getByText("January 2025 - July 2026")).toBeVisible()
+  })
 
-    await waitFor(() => expect(detailsButton).toHaveFocus())
-    expect(
-      screen.queryByRole("region", { name: /experience details/i })
-    ).not.toBeInTheDocument()
+  it("announces current-role copy failure and restores the disclosure after bottom collapse or Escape", async () => {
+    const user = userEvent.setup()
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: vi.fn().mockRejectedValue(new Error("Denied")) },
+    })
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView
+    const scrollIntoViewMock = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: scrollIntoViewMock })
+    try {
+      renderBrowserRoute(`/experience/#${currentRoleEvidence.id}`)
+      const currentCard = (await screen.findByRole("heading", { name: "Software Engineer II", exact: true })).closest("article")
+      const summary = currentCard.querySelector("summary")
+      const disclosure = currentCard.querySelector("details")
+      const initialUrl = window.location.href
+      const initialHistoryLength = window.history.length
+      await user.click(summary)
+      await user.click(within(currentCard).getByRole("button", { name: "Copy full accomplishments for Software Engineer II at The Home Depot" }))
+      expect(within(currentCard).getByRole("status")).toHaveTextContent("Software Engineer II details could not be copied.")
+      await user.click(within(currentCard).getByRole("button", { name: "Collapse full accomplishments" }))
+      expect(disclosure).not.toHaveAttribute("open")
+      expect(summary).toHaveFocus()
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: "center", behavior: "instant" })
+      await user.click(summary)
+      await user.tab()
+      await user.keyboard("{Escape}")
+      expect(disclosure).not.toHaveAttribute("open")
+      expect(summary).toHaveFocus()
+      expect(window.location.href).toBe(initialUrl)
+      expect(window.history.length).toBe(initialHistoryLength)
+    } finally {
+      if (originalScrollIntoView) Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: originalScrollIntoView })
+      else delete HTMLElement.prototype.scrollIntoView
+    }
   })
 
   it("places Software Engineer I above Fintech and expands its full accomplishments", async () => {

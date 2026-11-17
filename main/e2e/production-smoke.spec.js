@@ -15,15 +15,27 @@ async function expectContentContained(container) {
       rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1 &&
       rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1
 
-    for (const child of element.querySelectorAll("h1, h2, h3, p, li, a, button, img")) {
-      if (child.closest('[aria-hidden="true"], .sr-only, [role="group"]')) continue
+    // Closed details can still report layout rectangles in browser engines.
+    // Only their first direct summary and its descendants remain visible;
+    // inspect every ancestor so a nested disclosure cannot bypass its parent.
+    const hiddenByClosedDetails = (node) => {
+      for (let ancestor = node; ancestor; ancestor = ancestor.parentElement) {
+        if (ancestor.tagName !== "DETAILS" || ancestor.open) continue
+        const summary = Array.from(ancestor.children).find((child) => child.tagName === "SUMMARY")
+        if (!summary?.contains(node)) return true
+      }
+      return false
+    }
+
+    for (const child of element.querySelectorAll("h1, h2, h3, h4, p, li, a, button, summary, img")) {
+      if (hiddenByClosedDetails(child) || !child.getClientRects().length || child.closest('[aria-hidden="true"], .sr-only, [role="group"]')) continue
       if (!contained(child.getBoundingClientRect())) failures.push(child.textContent || child.tagName)
     }
     // Element boxes alone can miss text painting outside a clipped container.
     const walker = globalThis.document.createTreeWalker(element, globalThis.NodeFilter.SHOW_TEXT)
     while (walker.nextNode()) {
       const node = walker.currentNode
-      if (!node.textContent.trim() || node.parentElement.closest('[aria-hidden="true"], .sr-only, [role="group"]')) continue
+      if (!node.textContent.trim() || hiddenByClosedDetails(node.parentElement) || node.parentElement.closest('[aria-hidden="true"], .sr-only, [role="group"]')) continue
       const range = globalThis.document.createRange()
       range.selectNodeContents(node)
       for (const rect of range.getClientRects()) {
@@ -96,9 +108,9 @@ for (const width of [320, 390]) {
         const proof = highlights.locator("li > span:last-child")
         await expect(proof).toHaveCount(3)
         for (let index = 0; index < 3; index += 1) {
-          await expectProofTextWithinClippingPanel(proof.nth(index), route === "/" ? ".mc-presentation-panel" : '[aria-hidden="false"]')
+          await expectProofTextWithinClippingPanel(proof.nth(index), ".mc-presentation-panel")
         }
-        if (route === "/experience/") await expect(buttons).toHaveAttribute("aria-expanded", "false")
+        if (route === "/experience/") await expect(page.locator("details").first()).not.toHaveAttribute("open")
       } else {
         for (let index = 0; index < 3; index += 1) {
           const button = buttons.nth(index)
@@ -118,7 +130,7 @@ for (const width of [320, 390]) {
 async function cardLogoGeometry(card) {
   return card.evaluate((element) => {
     const cardBounds = element.getBoundingClientRect()
-    const buttonBounds = element.querySelector('button[aria-label^="View details for "]').getBoundingClientRect()
+    const buttonBounds = element.querySelector('button[aria-label^="View details for "], summary').getBoundingClientRect()
     const image = element.querySelector("picture img")
     const imageBounds = image.getBoundingClientRect()
     return {
@@ -150,7 +162,9 @@ for (const width of [320, 390]) {
 
       try {
         await page.goto(route, { waitUntil: "domcontentloaded" })
-        const buttons = page.locator('button[aria-label^="View details for "]')
+        const buttons = route === "/experience/"
+          ? page.locator("summary").filter({ hasText: "Full accomplishments for Software Engineer II" })
+          : page.locator('button[aria-label^="View details for "]')
         const cardCount = route === "/projects/" ? 3 : 1
         await expect(buttons).toHaveCount(cardCount)
         await page.evaluate(() => globalThis.document.fonts.ready)
@@ -170,7 +184,7 @@ for (const width of [320, 390]) {
           expect(geometry.imageHeight, "The unloaded logo should reserve its height").toBeGreaterThan(0)
         }
         expect(await page.evaluate(() => globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches)).toBe(false)
-        await expect(cards[0].locator(":scope > div")).toHaveCSS("transition-duration", "0.5s")
+        if (route === "/projects/") await expect(cards[0].locator(":scope > div")).toHaveCSS("transition-duration", "0.5s")
 
         // Release image bytes between pointer down and up: a shifting button
         // previously discarded this activation in WebKit at narrow widths.
@@ -196,14 +210,16 @@ for (const width of [320, 390]) {
         for (let index = 0; index < cardCount; index += 1) {
           const button = buttons.nth(index)
           if (index > 0) await button.click()
-          await expect(button).toHaveAttribute("aria-expanded", "true")
-          const back = cards[index].getByRole("button", { name: /^Back to summary for / })
-          const focusTarget = route === "/projects/"
-            ? cards[index].getByRole("region").getByRole("heading", { level: 3 })
-            : back
-          await expect(focusTarget).toBeFocused()
-          await back.click()
-          await expect(button).toHaveAttribute("aria-expanded", "false")
+          if (route === "/experience/") {
+            await expect(cards[index].locator("details")).toHaveAttribute("open")
+            await cards[index].getByRole("button", { name: "Collapse full accomplishments" }).click()
+            await expect(cards[index].locator("details")).not.toHaveAttribute("open")
+          } else {
+            await expect(button).toHaveAttribute("aria-expanded", "true")
+            await expect(cards[index].getByRole("region").getByRole("heading", { level: 3 })).toBeFocused()
+            await cards[index].getByRole("button", { name: /^Back to summary for / }).click()
+            await expect(button).toHaveAttribute("aria-expanded", "false")
+          }
           await expect(button).toBeFocused()
         }
       } finally {
@@ -253,8 +269,26 @@ for (const width of [320, 390, 640, 1024, 1440]) {
 
       for (const route of ["/experience/", "/projects/"]) {
         await page.goto(route, { waitUntil: "domcontentloaded" })
+        if (route === "/experience/") {
+          const card = page.getByRole("article", { name: "Software Engineer II", exact: true })
+          await expect(card).toBeVisible()
+          await page.evaluate(() => globalThis.document.fonts.ready)
+          if (textScale === 2) await enlargeText(page)
+          await expectContentContained(card)
+          const outcomes = card.getByRole("list", { name: "Recent engineering outcomes" })
+          for (const proof of recentOutcomeProof) await expect(outcomes).toContainText(proof)
+          const summary = card.locator("summary")
+          await summary.click()
+          await expect(card.locator("details")).toHaveAttribute("open")
+          await expectContentContained(card)
+          await expect(card.getByRole("region").getByRole("listitem")).toHaveCount(6)
+          await card.getByRole("button", { name: "Collapse full accomplishments" }).click()
+          await expect(summary).toBeFocused()
+          await expect(card.locator("details")).not.toHaveAttribute("open")
+          continue
+        }
         const buttons = page.locator('button[aria-label^="View details for "]')
-        await expect(buttons).toHaveCount(route === "/experience/" ? 1 : 3)
+        await expect(buttons).toHaveCount(3)
         await page.evaluate(() => globalThis.document.fonts.ready)
         if (textScale === 2) await enlargeText(page)
 
@@ -264,24 +298,16 @@ for (const width of [320, 390, 640, 1024, 1440]) {
           const face = card.locator('[aria-hidden="false"]').first()
           await expectContentContained(face)
           await expect(button).toBeVisible()
-          if (route === "/experience/") {
-            const experienceOutcomes = card.getByRole("list", { name: "Recent engineering outcomes" })
-            for (const proof of recentOutcomeProof) await expect(experienceOutcomes).toContainText(proof)
-          } else {
-            const projectProof = [
-              ["Automated infectious-disease case-count reconciliation", "Saved 5000+ hours"],
-              ["Android job-search support application", "Fetches Adzuna jobs"],
-              ["Campus event discovery and registration", "event capacities, details, and waitlists"],
-            ][index]
-            for (const proof of projectProof) await expect(face).toContainText(proof)
-            await expect(card.getByRole("link", { name: "Source Code" })).toBeVisible()
-          }
+          const projectProof = [
+            ["Automated infectious-disease case-count reconciliation", "Saved 5000+ hours"],
+            ["Android job-search support application", "Fetches Adzuna jobs"],
+            ["Campus event discovery and registration", "event capacities, details, and waitlists"],
+          ][index]
+          for (const proof of projectProof) await expect(face).toContainText(proof)
+          await expect(card.getByRole("link", { name: "Source Code" })).toBeVisible()
           await button.click()
           const details = card.getByRole("region")
-          const focusTarget = route === "/projects/"
-            ? details.getByRole("heading", { level: 3 })
-            : card.getByRole("button", { name: /^Back to summary for / })
-          await expect(focusTarget).toBeFocused()
+          await expect(details.getByRole("heading", { level: 3 })).toBeFocused()
           await expectContentContained(details)
           await expect(button).toHaveAttribute("tabindex", "-1")
           const group = card.getByRole("group")
@@ -299,6 +325,56 @@ for (const width of [320, 390, 640, 1024, 1440]) {
           await expect(button).toHaveAttribute("aria-expanded", "false")
         }
       }
+    })
+  }
+}
+
+for (const width of [320, 390, 1440]) {
+  for (const textScale of [2, 4]) {
+    test(`current-role disclosure stays readable at ${width}px / ${textScale * 100}% text`, async ({ page }, testInfo) => {
+      test.skip(!useLocalPreview, "Disclosure layout checks use the isolated loopback build")
+      test.skip(testInfo.project.metadata.viewportClass !== "desktop", "Explicit width profiles run once per browser engine")
+      await page.setViewportSize({ width, height: 1000 })
+      await page.emulateMedia({ reducedMotion: textScale === 4 ? "reduce" : "no-preference" })
+      await page.goto("/experience/#recent-engineering-work", { waitUntil: "domcontentloaded" })
+      const card = page.getByRole("article", { name: "Software Engineer II", exact: true })
+      await expect(card).toBeVisible()
+      await page.evaluate(() => globalThis.document.fonts.ready)
+      await page.evaluate((scale) => {
+        const sizes = Array.from(globalThis.document.querySelectorAll("body *"), (element) =>
+          [element, parseFloat(globalThis.getComputedStyle(element).fontSize)]
+        )
+        for (const [element, size] of sizes) element.style.fontSize = `${size * scale}px`
+      }, textScale)
+      const summary = card.locator("summary")
+      const disclosure = card.locator("details")
+      const originalLocation = page.url()
+      const originalHistoryLength = await page.evaluate(() => globalThis.history.length)
+      await expect(disclosure).not.toHaveAttribute("open")
+      await expect(card.getByRole("list", { name: "Recent engineering outcomes" }).getByRole("listitem")).toHaveCount(3)
+      await expectContentContained(card)
+      await summary.focus()
+      await page.keyboard.press("Enter")
+      await expect(disclosure).toHaveAttribute("open")
+      await expect(summary).toBeFocused()
+      const details = card.getByRole("region", { name: "Full experience details" })
+      await expect(details.getByRole("listitem")).toHaveCount(6)
+      await expectContentContained(card)
+      expect(await details.evaluate((element) => {
+        const style = globalThis.getComputedStyle(element)
+        return { overflowY: style.overflowY, clipped: element.scrollHeight > element.clientHeight + 1 }
+      })).toEqual({ overflowY: "visible", clipped: false })
+      await card.getByRole("button", { name: "Collapse full accomplishments" }).click()
+      await expect(disclosure).not.toHaveAttribute("open")
+      await expect(summary).toBeFocused()
+      await expect(summary).toBeInViewport()
+      await page.keyboard.press("Space")
+      await expect(disclosure).toHaveAttribute("open")
+      await page.keyboard.press("Escape")
+      await expect(disclosure).not.toHaveAttribute("open")
+      await expect(summary).toBeFocused()
+      expect(page.url()).toBe(originalLocation)
+      expect(await page.evaluate(() => globalThis.history.length)).toBe(originalHistoryLength)
     })
   }
 }
