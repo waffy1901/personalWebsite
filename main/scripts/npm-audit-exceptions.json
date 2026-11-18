@@ -1,0 +1,82 @@
+[
+  {
+    "package": "picomatch",
+    "advisory": "https://github.com/advisories/GHSA-fc5q-39xc-vjpf",
+    "affectedRange": "<=4.0.7",
+    "severity": "high",
+    "owner": "@waffy1901",
+    "tracker": "https://github.com/waffy1901/personalWebsite/issues/352",
+    "reason": "No patched picomatch release is available. npm suggests changing the development toolchain.",
+    "createdAt": "2026-11-18T00:31:39Z",
+    "reviewedAt": "2026-11-18T00:31:39Z",
+    "expiresAt": "2026-11-25T00:00:00Z",
+    "nodes": {
+      "node_modules/@vitejs/plugin-react": {
+        "version": "6.3.0",
+        "npmFixSuggestions": [
+          {
+            "name": "@vitejs/plugin-react",
+            "version": "5.2.0",
+            "isSemVerMajor": true
+          }
+        ]
+      },
+      "node_modules/tinyglobby/node_modules/fdir": {
+        "version": "6.5.0",
+        "npmFixSuggestions": [
+          true
+        ]
+      },
+      "node_modules/picomatch": {
+        "version": "4.0.7",
+        "npmFixSuggestions": [
+          {
+            "name": "vite",
+            "version": "6.2.7",
+            "isSemVerMajor": true
+          },
+          {
+            "name": "vitest",
+            "version": "3.1.4",
+            "isSemVerMajor": true
+          }
+        ]
+      },
+      "node_modules/tinyglobby": {
+        "version": "0.2.17",
+        "npmFixSuggestions": [
+          {
+            "name": "vite",
+            "version": "6.2.7",
+            "isSemVerMajor": true
+          },
+          {
+            "name": "vitest",
+            "version": "3.1.4",
+            "isSemVerMajor": true
+          }
+        ]
+      },
+      "node_modules/vite": {
+        "version": "8.3.8",
+        "npmFixSuggestions": [
+          {
+            "name": "vite",
+            "version": "6.2.7",
+            "isSemVerMajor": true
+          }
+        ]
+      },
+      "node_modules/vitest": {
+        "version": "5.1.0",
+        "npmFixSuggestions": [
+          {
+            "name": "vitest",
+            "version": "3.1.4",
+            "isSemVerMajor": true
+          }
+        ]
+      }
+    }
+  }
+]
