@@ -2372,7 +2372,7 @@ describe("App routes", () => {
       await user.click(within(currentCard).getByRole("button", { name: "Collapse full accomplishments" }))
       expect(disclosure).not.toHaveAttribute("open")
       expect(summary).toHaveFocus()
-      expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: "center", behavior: "instant" })
+      expect(scrollIntoViewMock).toHaveBeenCalledWith({ block: "end", behavior: "instant" })
       await user.click(summary)
       await user.tab()
       await user.keyboard("{Escape}")

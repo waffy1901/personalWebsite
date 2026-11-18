@@ -348,6 +348,19 @@ for (const width of [320, 390, 1440]) {
       }, textScale)
       const summary = card.locator("summary")
       const disclosure = card.locator("details")
+      const expectSummaryUnobscured = async () => {
+        await expect.poll(() => summary.evaluate((element) => {
+          const bounds = element.getBoundingClientRect()
+          if (bounds.top < 0 || bounds.bottom > globalThis.innerHeight) return false
+          const x = bounds.left + bounds.width / 2
+          // A focused summary can be inside the viewport but behind the header.
+          // Check the first, middle and final lines against actual hit targets.
+          return [bounds.top + 1, bounds.top + bounds.height / 2, bounds.bottom - 1].every((y) => {
+            const target = globalThis.document.elementFromPoint(x, y)
+            return target === element || element.contains(target)
+          })
+        }), { message: "Restored summary focus must remain visible and unobscured by the header" }).toBe(true)
+      }
       const originalLocation = page.url()
       const originalHistoryLength = await page.evaluate(() => globalThis.history.length)
       await expect(disclosure).not.toHaveAttribute("open")
@@ -364,15 +377,19 @@ for (const width of [320, 390, 1440]) {
         const style = globalThis.getComputedStyle(element)
         return { overflowY: style.overflowY, clipped: element.scrollHeight > element.clientHeight + 1 }
       })).toEqual({ overflowY: "visible", clipped: false })
-      await card.getByRole("button", { name: "Collapse full accomplishments" }).click()
+      const collapse = card.getByRole("button", { name: "Collapse full accomplishments" })
+      // Normal pointer actionability must succeed, including at 320px/400% text.
+      await collapse.click()
       await expect(disclosure).not.toHaveAttribute("open")
       await expect(summary).toBeFocused()
       await expect(summary).toBeInViewport()
+      await expectSummaryUnobscured()
       await page.keyboard.press("Space")
       await expect(disclosure).toHaveAttribute("open")
       await page.keyboard.press("Escape")
       await expect(disclosure).not.toHaveAttribute("open")
       await expect(summary).toBeFocused()
+      await expectSummaryUnobscured()
       expect(page.url()).toBe(originalLocation)
       expect(await page.evaluate(() => globalThis.history.length)).toBe(originalHistoryLength)
     })

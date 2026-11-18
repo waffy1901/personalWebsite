@@ -41,7 +41,7 @@ const ExperienceCard = ({
   const collapseDetails = () => {
     disclosureRef.current.open = false;
     summaryRef.current?.focus({ preventScroll: true });
-    summaryRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
+    summaryRef.current?.scrollIntoView({ block: "end", behavior: "instant" });
   };
 
   const handleKeyDown = (event) => {
@@ -129,7 +129,7 @@ const ExperienceCard = ({
       </ul>
 
       <details ref={disclosureRef} className="mt-6 border-t border-white/15 pt-4">
-        <summary ref={summaryRef} className="cursor-pointer rounded-sm text-sm font-black text-[#93B4FF] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#111827]">
+        <summary ref={summaryRef} className="scroll-mb-3 cursor-pointer rounded-sm text-sm font-black text-[#93B4FF] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#111827]">
           Full accomplishments for {title} at {company}
         </summary>
         <div role="region" aria-labelledby={`${cardId}-details-heading`} className="mt-5">
