@@ -174,25 +174,22 @@ test("expanded experience content remains accessible", async ({
   const route = "/experience/"
   await openRoute(page, route)
 
-  const experienceDetails = page.locator(
-    'button[aria-label^="View details for "][aria-label*=" at "]'
-  )
-  await expect(experienceDetails).toHaveCount(1)
-  await focusByKeyboard(page, experienceDetails)
+  const summary = page.locator("summary").filter({ hasText: "Full accomplishments for Software Engineer II at The Home Depot" })
+  const disclosure = summary.locator("..")
+  await expect(disclosure).not.toHaveAttribute("open")
+  await expect(page.getByRole("list", { name: "Recent engineering outcomes" }).getByRole("listitem")).toHaveCount(3)
+  await focusByKeyboard(page, summary)
   await page.keyboard.press("Enter")
-  await expect(experienceDetails).toHaveAttribute("aria-expanded", "true")
-
-  const experienceScrollRegion = page.getByRole("group", {
-    name: / accomplishments at /,
-    includeHidden: true,
-  })
-  await expect(experienceScrollRegion).toHaveCount(1)
-  expect(
-    await exerciseOverflowingExpandedRegion(
-      page, experienceScrollRegion, experienceDetails, { reverse: true }
-    ),
-    "experience details should expose an overflowing keyboard-scrollable region"
-  ).toBe(true)
+  await expect(disclosure).toHaveAttribute("open")
+  await expect(summary).toBeFocused()
+  const details = page.getByRole("region", { name: "Full experience details" })
+  await expect(details.getByRole("listitem")).toHaveCount(6)
+  expect(await details.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(false)
+  await page.keyboard.press("Space")
+  await expect(disclosure).not.toHaveAttribute("open")
+  await expect(summary).toBeFocused()
+  await page.keyboard.press("Space")
+  await expect(disclosure).toHaveAttribute("open")
 
   const accomplishmentButtons = page.locator(
     'button[aria-label^="View all accomplishments for "]'
@@ -216,6 +213,10 @@ test("expanded experience content remains accessible", async ({
     state: "details-and-accomplishments-expanded",
     testInfo,
   })
+  await page.getByRole("button", { name: "Collapse full accomplishments" }).click()
+  await expect(disclosure).not.toHaveAttribute("open")
+  await expect(summary).toBeFocused()
+
 })
 
 test("native-invalid contact state remains accessible without a provider request", async ({

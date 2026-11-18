@@ -146,7 +146,7 @@ function Experience() {
 
   return (
     <PageShell>
-      <PageContainer className="space-y-12">
+      <PageContainer className="space-y-12 px-[min(1rem,4vw,16px)]">
         <SectionHeader
           eyebrow="Career story"
           title={experiencePage.workHeading}
@@ -158,10 +158,10 @@ function Experience() {
         {currentRole ? (
           <PresentationPanel
             aria-labelledby="current-role-heading"
-            className="p-5 text-white sm:p-7"
+            className="px-[min(1.25rem,4vw,20px)] py-5 text-white sm:px-[min(1.75rem,28px)] sm:py-7"
           >
-            <div className="relative z-10 grid gap-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(24rem,1.02fr)] lg:items-stretch">
-              <div>
+            <div className="relative z-10 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.98fr)_minmax(0,1.02fr)] lg:items-stretch">
+              <div className="min-w-0 [overflow-wrap:anywhere]">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-[#FFB077]">
                   {experiencePage.ownershipEyebrow}
                 </p>
@@ -206,7 +206,7 @@ function Experience() {
                 </div>
               </div>
 
-              <ExperienceCard {...currentRole} featured />
+              <ExperienceCard {...currentRole} />
             </div>
           </PresentationPanel>
         ) : null}

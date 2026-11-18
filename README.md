@@ -236,10 +236,17 @@ The repository includes automated checks for:
 - Vitest and Testing Library tests
 - Production builds
 - Dependabot dependency updates
-- Scheduled and pull-request-based `npm audit`
+- Scheduled and pull-request-based `npm audit` with a blocking production check
 - CodeQL analysis
 - Deployed route, security-header, CSP, and public-artifact verification
 - Netlify deployment-to-commit validation before GitHub release creation
+
+The production audit blocks every moderate-or-higher finding. The full audit can
+waive a reviewed development finding only for the exact advisory, locked paths
+and versions in the [exception registry](./main/scripts/npm-audit-exceptions.json).
+Each waived package appears in the log with its tracker and UTC expiry. The
+owner tracks the six affected development packages and upstream remediation in
+[issue #352](https://github.com/waffy1901/personalWebsite/issues/352).
 
 Keep GitHub-managed secret scanning and push protection enabled, and enable
 Dependabot vulnerability alerts and security updates in repository settings.
