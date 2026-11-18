@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import { currentEmployment, professionalIdentity, profileIdentity } from "../data/siteIdentity.js";
 import { createRouteIntentHandlers } from "../utils/routePrefetch.js";
@@ -14,6 +14,7 @@ const navItems = [
 
 const desktopNavMediaQuery = "(min-width: 640px)";
 const focusRingClearance = 6;
+const maxStickyHeaderFraction = 1 / 3;
 
 function revealNavItem(nav, link, behavior) {
   if (
@@ -50,7 +51,27 @@ function revealNavItem(nav, link, behavior) {
 
 function Navbar() {
   const location = useLocation();
+  const headerRef = useRef(null);
   const navRef = useRef(null);
+  const [canStaySticky, setCanStaySticky] = useState(false);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header || typeof ResizeObserver !== "function") return;
+
+    // Let enlarged or wrapped navigation scroll away when it crowds the page.
+    const updateStickiness = () => {
+      setCanStaySticky(header.offsetHeight <= window.innerHeight * maxStickyHeaderFraction);
+    };
+    const observer = new ResizeObserver(updateStickiness);
+    observer.observe(header, { box: "border-box" });
+    window.addEventListener("resize", updateStickiness);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateStickiness);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) {
@@ -78,7 +99,10 @@ function Navbar() {
 
   // Keep padding and gaps compact on narrow screens as the identity text grows.
   return (
-    <header className="relative top-0 z-50 border-b border-slate-900/10 bg-[#F4F1EA]/92 px-4 py-3 shadow-[0_12px_30px_rgba(11,18,32,0.08)] backdrop-blur max-sm:px-[16px] max-sm:py-[12px] sm:sticky">
+    <header
+      ref={headerRef}
+      className={`relative top-0 z-50 border-b border-slate-900/10 bg-[#F4F1EA]/92 px-4 py-3 shadow-[0_12px_30px_rgba(11,18,32,0.08)] backdrop-blur max-sm:px-[16px] max-sm:py-[12px] ${canStaySticky ? "sm:sticky" : ""}`}
+    >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 max-sm:gap-[12px] sm:flex-row sm:items-center sm:justify-between">
         <NavLink
           to="/"

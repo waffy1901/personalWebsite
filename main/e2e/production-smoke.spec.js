@@ -329,16 +329,24 @@ for (const width of [320, 390, 640, 1024, 1440]) {
   }
 }
 
-for (const width of [320, 390, 1440]) {
-  for (const textScale of [2, 4]) {
-    test(`current-role disclosure stays readable at ${width}px / ${textScale * 100}% text`, async ({ page }, testInfo) => {
+for (const [width, height, textScales] of [
+  [320, 1000, [2, 4]],
+  [390, 1000, [2, 4]],
+  [1440, 1000, [2, 4]],
+  [1440, 750, [4]],
+]) {
+  const viewport = height === 1000 ? `${width}px` : `${width}x${height}px`
+  for (const textScale of textScales) {
+    test(`current-role disclosure stays readable at ${viewport} / ${textScale * 100}% text`, async ({ page }, testInfo) => {
       test.skip(!useLocalPreview, "Disclosure layout checks use the isolated loopback build")
       test.skip(testInfo.project.metadata.viewportClass !== "desktop", "Explicit width profiles run once per browser engine")
-      await page.setViewportSize({ width, height: 1000 })
+      await page.setViewportSize({ width, height })
       await page.emulateMedia({ reducedMotion: textScale === 4 ? "reduce" : "no-preference" })
       await page.goto("/experience/#recent-engineering-work", { waitUntil: "domcontentloaded" })
+      const header = page.getByRole("banner")
       const card = page.getByRole("article", { name: "Software Engineer II", exact: true })
       await expect(card).toBeVisible()
+      if (width === 1440) await expect(header).toHaveCSS("position", "sticky")
       await page.evaluate(() => globalThis.document.fonts.ready)
       await page.evaluate((scale) => {
         const sizes = Array.from(globalThis.document.querySelectorAll("body *"), (element) =>
@@ -392,6 +400,16 @@ for (const width of [320, 390, 1440]) {
       await expectSummaryUnobscured()
       expect(page.url()).toBe(originalLocation)
       expect(await page.evaluate(() => globalThis.history.length)).toBe(originalHistoryLength)
+
+      if (width === 1440 && textScale === 4) {
+        await expect(header).toHaveCSS("position", "relative")
+        await page.evaluate(() => {
+          for (const element of globalThis.document.querySelectorAll("body *")) {
+            element.style.removeProperty("font-size")
+          }
+        })
+        await expect(header).toHaveCSS("position", "sticky")
+      }
     })
   }
 }
