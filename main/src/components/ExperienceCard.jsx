@@ -74,13 +74,13 @@ const ExperienceCard = ({
   return (
     <article
       aria-labelledby={`${cardId}-title`}
-      className="relative w-full min-w-0 rounded-2xl border border-white/10 bg-[#111827] p-5 text-white [overflow-wrap:anywhere]"
+      className="relative w-full min-w-0 rounded-2xl border border-white/10 bg-[#111827] px-[min(1.25rem,4vw,20px)] py-5 text-white [overflow-wrap:anywhere]"
       onKeyDown={handleKeyDown}
     >
       <div className={`absolute inset-x-0 top-0 h-1 rounded-t-2xl ${accentClass}`} aria-hidden="true" />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 basis-40">
-          <StatusBadge tone={isHomeDepot ? "orange" : "cyan"} surface="dark">
+          <StatusBadge tone={isHomeDepot ? "orange" : "cyan"} surface="dark" className="max-w-full">
             {isHomeDepot ? "Production platform" : "Engineering signal"}
           </StatusBadge>
           <h3 id={`${cardId}-title`} className="mt-4 text-2xl font-black leading-tight text-white">
@@ -112,8 +112,8 @@ const ExperienceCard = ({
           const study = highlightCaseStudies[index];
           const to = study ? `/case-studies/${study.slug}/` : null;
           return (
-            <li key={highlight} className="flex gap-3 text-sm leading-relaxed text-slate-200">
-              <span className={`mt-2 h-2 w-2 shrink-0 rounded-full ${accentClass}`} aria-hidden="true" />
+            <li key={highlight} className="flex gap-[min(0.75rem,12px)] text-sm leading-relaxed text-slate-200">
+              <span className={`mt-2 size-[min(0.5rem,8px)] shrink-0 rounded-full ${accentClass}`} aria-hidden="true" />
               <span className="min-w-0">
                 {study ? <span className={`mb-1 block font-black ${accentTextClass}`}>{study.label}</span> : null}
                 <span className="block">{highlight}</span>
@@ -129,25 +129,25 @@ const ExperienceCard = ({
       </ul>
 
       <details ref={disclosureRef} className="mt-6 border-t border-white/15 pt-4">
-        <summary ref={summaryRef} className="scroll-mb-3 cursor-pointer rounded-sm text-sm font-black text-[#93B4FF] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#111827]">
+        <summary ref={summaryRef} className="scroll-mb-[min(0.75rem,12px)] cursor-pointer rounded-sm text-sm leading-tight font-black text-[#93B4FF] focus:outline-hidden focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 focus:ring-offset-[#111827]">
           Full accomplishments for {title} at {company}
         </summary>
         <div role="region" aria-labelledby={`${cardId}-details-heading`} className="mt-5">
           <h4 id={`${cardId}-details-heading`} className="text-lg font-black">Full experience details</h4>
           <ul className="mt-4 space-y-4">
             {bullets.map((bullet) => (
-              <li key={bullet} className="flex gap-3 text-sm leading-relaxed text-slate-200">
-                <span className={`mt-2 h-2 w-2 shrink-0 rounded-full ${accentClass}`} aria-hidden="true" />
+              <li key={bullet} className="flex gap-[min(0.75rem,12px)] text-sm leading-relaxed text-slate-200">
+                <span className={`mt-2 size-[min(0.5rem,8px)] shrink-0 rounded-full ${accentClass}`} aria-hidden="true" />
                 <span className="min-w-0">{bullet}</span>
               </li>
             ))}
           </ul>
           <div className="mt-5 flex flex-wrap gap-3">
-            <button type="button" onClick={handleCopy} aria-label={`Copy full accomplishments for ${title} at ${company}`} className="mc-button-secondary max-w-full whitespace-normal">
-              {copyStatus === "success" ? <FaCheck className="mr-2 shrink-0" aria-hidden="true" /> : <FaClipboard className="mr-2 shrink-0" aria-hidden="true" />}
-              Copy full accomplishments
+            <button type="button" onClick={handleCopy} aria-label={`Copy full accomplishments for ${title} at ${company}`} className="mc-button-secondary max-w-full flex-wrap gap-x-2 whitespace-normal px-[min(1rem,16px)]">
+              {copyStatus === "success" ? <FaCheck className="shrink-0" aria-hidden="true" /> : <FaClipboard className="shrink-0" aria-hidden="true" />}
+              <span>Copy full accomplishments</span>
             </button>
-            <button type="button" onClick={collapseDetails} className="mc-button-secondary max-w-full whitespace-normal">
+            <button type="button" onClick={collapseDetails} className="mc-button-secondary max-w-full flex-wrap gap-x-2 whitespace-normal px-[min(1rem,16px)]">
               Collapse full accomplishments
             </button>
           </div>

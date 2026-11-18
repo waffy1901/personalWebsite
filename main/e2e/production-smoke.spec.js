@@ -7,8 +7,8 @@ const useLocalPreview = process.env.PLAYWRIGHT_LOCAL_PREVIEW === "1"
 
 // This is an automated discovery and containment check. Unaided human reading
 // within 60 seconds and conversion improvement remain separate evidence gaps.
-async function expectContentContained(container) {
-  const failures = await container.evaluate((element) => {
+async function expectContentContained(container, checkClippingAncestors = false) {
+  const failures = await container.evaluate((element, checkClip) => {
     const bounds = element.getBoundingClientRect()
     const failures = []
     const contained = (rect) =>
@@ -38,12 +38,25 @@ async function expectContentContained(container) {
       if (!node.textContent.trim() || hiddenByClosedDetails(node.parentElement) || node.parentElement.closest('[aria-hidden="true"], .sr-only, [role="group"]')) continue
       const range = globalThis.document.createRange()
       range.selectNodeContents(node)
+      let left = 0
+      let right = globalThis.innerWidth
+      if (checkClip) {
+        for (let parent = node.parentElement; parent; parent = parent.parentElement) {
+          if (!["clip", "hidden", "auto", "scroll"].includes(globalThis.getComputedStyle(parent).overflowX)) continue
+          const rect = parent.getBoundingClientRect()
+          const clipLeft = rect.left + parent.clientLeft
+          left = Math.max(left, clipLeft)
+          right = Math.min(right, clipLeft + parent.clientWidth)
+        }
+      }
       for (const rect of range.getClientRects()) {
-        if (!contained(rect)) failures.push(node.textContent.trim())
+        if (!contained(rect) || (checkClip && (rect.left < left - 1 || rect.right > right + 1))) {
+          failures.push(node.textContent.trim())
+        }
       }
     }
     return failures
-  })
+  }, checkClippingAncestors)
   expect(failures, "visible text and controls must fit their active container").toEqual([])
 }
 
@@ -329,15 +342,17 @@ for (const width of [320, 390, 640, 1024, 1440]) {
   }
 }
 
-for (const [width, height, textScales] of [
+for (const [width, height, textScales, rootFont = false] of [
   [320, 1000, [2, 4]],
   [390, 1000, [2, 4]],
   [1440, 1000, [2, 4]],
   [1440, 750, [4]],
+  [320, 900, [4], true],
+  [390, 900, [4], true],
 ]) {
   const viewport = height === 1000 ? `${width}px` : `${width}x${height}px`
   for (const textScale of textScales) {
-    test(`current-role disclosure stays readable at ${viewport} / ${textScale * 100}% text`, async ({ page }, testInfo) => {
+    test(`current-role disclosure stays readable at ${viewport} / ${textScale * 100}% ${rootFont ? "root font" : "text"}`, async ({ page }, testInfo) => {
       test.skip(!useLocalPreview, "Disclosure layout checks use the isolated loopback build")
       test.skip(testInfo.project.metadata.viewportClass !== "desktop", "Explicit width profiles run once per browser engine")
       await page.setViewportSize({ width, height })
@@ -348,12 +363,17 @@ for (const [width, height, textScales] of [
       await expect(card).toBeVisible()
       if (width === 1440) await expect(header).toHaveCSS("position", "sticky")
       await page.evaluate(() => globalThis.document.fonts.ready)
-      await page.evaluate((scale) => {
+      await page.evaluate(({ scale, rootFont }) => {
+        if (rootFont) {
+          globalThis.document.documentElement.style.setProperty("font-size", `${scale * 100}%`, "important")
+          return
+        }
         const sizes = Array.from(globalThis.document.querySelectorAll("body *"), (element) =>
           [element, parseFloat(globalThis.getComputedStyle(element).fontSize)]
         )
         for (const [element, size] of sizes) element.style.fontSize = `${size * scale}px`
-      }, textScale)
+      }, { scale: textScale, rootFont })
+      if (rootFont) await expect(page.locator("html")).toHaveCSS("font-size", "64px")
       const summary = card.locator("summary")
       const disclosure = card.locator("details")
       const expectSummaryUnobscured = async () => {
@@ -373,14 +393,19 @@ for (const [width, height, textScales] of [
       const originalHistoryLength = await page.evaluate(() => globalThis.history.length)
       await expect(disclosure).not.toHaveAttribute("open")
       await expect(card.getByRole("list", { name: "Recent engineering outcomes" }).getByRole("listitem")).toHaveCount(3)
-      await expectContentContained(card)
+      await expectContentContained(card, rootFont)
+      if (rootFont) {
+        for (const link of await card.getByRole("link").all()) await link.click({ trial: true })
+        await summary.click({ trial: true })
+      }
       await summary.focus()
       await page.keyboard.press("Enter")
       await expect(disclosure).toHaveAttribute("open")
       await expect(summary).toBeFocused()
       const details = card.getByRole("region", { name: "Full experience details" })
       await expect(details.getByRole("listitem")).toHaveCount(6)
-      await expectContentContained(card)
+      await expectContentContained(card, rootFont)
+      if (rootFont) await details.getByRole("button", { name: /^Copy full/ }).click({ trial: true })
       expect(await details.evaluate((element) => {
         const style = globalThis.getComputedStyle(element)
         return { overflowY: style.overflowY, clipped: element.scrollHeight > element.clientHeight + 1 }
