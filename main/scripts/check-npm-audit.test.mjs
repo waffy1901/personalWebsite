@@ -145,7 +145,26 @@ const knownDevChain = [
 ];
 
 function exceptionFixture() {
-  const exceptions = JSON.parse(readFileSync(join(import.meta.dirname, 'npm-audit-exceptions.json'), 'utf8'));
+  // Exercise the historical waiver as synthetic test data, not a live CI exception.
+  const exceptions = [{
+    package: 'picomatch',
+    advisory: picomatch.url,
+    affectedRange: picomatch.range,
+    severity: 'high',
+    owner: '@waffy1901',
+    tracker: 'https://github.com/waffy1901/personalWebsite/issues/352',
+    reason: 'Synthetic fixture for testing bounded exception enforcement.',
+    createdAt: '2026-11-18T00:31:39Z',
+    reviewedAt: '2026-11-18T00:31:39Z',
+    expiresAt: '2026-11-25T00:00:00Z',
+    nodes: Object.fromEntries(knownDevChain.map(([name, version, , fixAvailable]) => {
+      const path = name === 'fdir' ? 'node_modules/tinyglobby/node_modules/fdir' : 'node_modules/' + name;
+      const suggestions = ['picomatch', 'tinyglobby'].includes(name)
+        ? [viteDowngrade, vitestDowngrade]
+        : [fixAvailable];
+      return [path, { version, npmFixSuggestions: suggestions }];
+    })),
+  }];
   const lock = { lockfileVersion: 3, packages: {} };
   const full = report();
   for (const [name, version, via, fixAvailable] of knownDevChain) {
@@ -165,6 +184,19 @@ function exceptionFixture() {
 }
 
 describe('tracked development audit exception', () => {
+  it('ships an empty active registry and blocks the formerly waived development findings', () => {
+    const active = JSON.parse(readFileSync(join(import.meta.dirname, 'npm-audit-exceptions.json'), 'utf8'));
+    expect(active).toEqual([]);
+    const { full, policy } = exceptionFixture();
+    policy.exceptions = active;
+    const audit = vi.fn()
+      .mockReturnValueOnce(validateAuditResult(result()))
+      .mockReturnValueOnce(validateAuditResult(result(full, 1)));
+    expect(() => checkAudits(audit, () => {}, policy)).toThrow(
+      `picomatch (high): ${picomatch.url}`,
+    );
+  });
+
   it('prints each exact waived package with the advisory, issue and expiry', () => {
     const { log, run } = exceptionFixture();
     run();
