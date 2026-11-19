@@ -1,0 +1,5 @@
+[
+  {"entry": "A", "status": "complete"},
+  {"entry": "B", "status": "open"},
+  {"entry": "C", "status": "complete"}
+]
