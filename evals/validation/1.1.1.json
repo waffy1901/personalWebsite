@@ -1,0 +1,16 @@
+{
+  "version": "1.1.1",
+  "sha256": "646df5225466626ca2ea2208ab698ed6c02922e368643311ccbfa57d1cdcd732",
+  "reviewer": "benchmark-validator",
+  "role": "independent-validator",
+  "reviewed_at": "2026-11-19T22:02:12Z",
+  "setup": null,
+  "checks": {
+    "task_realism": true,
+    "held_out_integrity": true,
+    "isolation": false,
+    "shortcut_controls": true,
+    "fixed_scoring": true
+  },
+  "evidence": "A separate reviewer from the builder's model family verified the private pack commitment and confirmed that the six previously reviewed tasks and graders are unchanged. Public files and candidate exports exclude private grading material. All nine public calibration tests passed. On Node 22.22.3, 21 private tests passed, including shortcut and scoring controls. The freeze binds the exact environment digest and distinct route receipt for each model. Registration and loading recheck that approval. Import flags a missing or changed route receipt or a different environment digest as ineligible. Legacy and unscoped approvals fail closed. The real Docker test skipped, and neither contestant's isolated operating route was independently observed. Official freeze remains withheld."
+}

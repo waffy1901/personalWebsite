@@ -21,12 +21,13 @@ def freeze(file):
     snap = p.fingerprint()
     record = {**snap, "validation": att}
     p.validate_freeze(record, snap)
-    path = p.RESULTS / "freezes" / (snap["version"] + ".json")
-    if path.exists():
-        p.require(p.read_json(path) == record, "this version already has a different freeze")
-    else:
-        p.save_new(path, record)
-    return path
+    benchmark_path, approval_path = p.freeze_paths(snap, att["setup"])
+    for path, value in ((benchmark_path, snap), (approval_path, record)):
+        try:
+            p.save_new(path, value)
+        except FileExistsError:
+            p.require(p.read_json(path) == value, "an existing freeze pins different bytes or approval")
+    return approval_path
 
 
 def environment(data, official=False):
@@ -34,7 +35,7 @@ def environment(data, official=False):
     for key in p.ENV_FIELDS:
         p.text_value(data[key], key)
         if official:
-            p.require(data[key].lower() not in ("unknown", "unconfigured", "example"), f"record exact {key}")
+            p.require(data[key].strip().lower() not in ("unknown", "unconfigured", "example"), f"record exact {key}")
     image = data["image"]
     p.require((image is None and not official) or (isinstance(image, str) and re.fullmatch(r"sha256:[0-9a-f]{64}", image)),
               "official grading requires a locally provisioned immutable Node image ID")
@@ -49,7 +50,7 @@ def roster_key(benchmark, models):
     return benchmark + "-" + p.digest(p.canonical(sorted(models))) + ".json"
 
 
-def plan_campaign(campaign, env, seed, models, official=False):
+def plan_campaign(campaign, env, seed, models, official=False, routes=None):
     p.require(not official or p.DISTRIBUTION == "core", "official campaigns require the registered private core pack")
     path = p.RESULTS / "campaigns" / p.name(campaign) / "plan.json"
     p.require(not path.exists(), "campaign already registered")
@@ -59,11 +60,14 @@ def plan_campaign(campaign, env, seed, models, official=False):
         p.name(model)
     mode = "official" if official else "preview"
     spec, snap = p.suite(), p.fingerprint()
+    requested = {"models": models, "provider": p.PROVIDER, "effort": p.EFFORT, "environment": env}
+    if routes is not None:
+        requested["routes"] = routes
     frozen = None
     if official:
-        record = p.read_json(p.RESULTS / "freezes" / (spec["version"] + ".json"))
-        p.validate_freeze(record, snap)
-        frozen = p.digest(p.canonical(record))
+        frozen = p.digest(p.canonical(p.approved_freeze(snap, requested)))
+    elif routes is not None:
+        p.campaign_setup(requested)
     rng = random.Random(seed)
     slots, tasks = [], {}
     for tid in spec["tasks"]:
@@ -78,23 +82,22 @@ def plan_campaign(campaign, env, seed, models, official=False):
     plan = {"schema": 1, "campaign": campaign, "mode": mode, "distribution": p.DISTRIBUTION,
             "seed": seed, "created": p.now(),
             "version": spec["version"], "benchmark": snap["sha256"], "base": spec["base"],
-            "models": models, "provider": "OpenAI Codex", "effort": "max", "freeze": frozen,
-            "environment": env, "tasks": tasks, "slots": slots}
+            **requested, "freeze": frozen, "tasks": tasks, "slots": slots}
     if official:
         registration = p.RESULTS / "registrations" / roster_key(plan["benchmark"], models)
-        if registration.exists():
+        try:
+            p.save_new(registration, plan)
+        except FileExistsError:
             saved = p.read_json(registration)
-            p.require(saved["campaign"] == campaign and saved["environment"] == env and saved["seed"] == seed,
+            p.require(all(saved.get(k) == plan[k] for k in ("campaign", "seed", "freeze", *requested)),
                       "this frozen roster already has an official campaign")
             plan = saved  # Resume a registration interrupted before plan publication.
-        else:
-            p.save_new(registration, plan)
     p.save_new(path, plan)
     return path
 
 
 def evidence_template():
-    return {"status": None, "model": None, "provider": None, "effort": None, "route_source": None,
+    return {"status": None, "model": None, "provider": None, "effort": None, "route_source": None, "route_sha256": None,
             "initial_fixture": None, "initial_prompt": None,
             "environment": None, "started": None, "ended": None, "events": [],
             "usage": {"tokens": None, "cost_usd": None, "source": None},
@@ -163,6 +166,9 @@ def import_evidence(campaign, slot, evidence, tree=None):
     issued = p.read_json(run / "issued.json")
     p.require(issued["plan"] == p.digest(p.canonical(plan)), "registration changed after issue")
     p.check_secrets(evidence)
+    # Earlier preview observations did not record a route fingerprint.
+    if isinstance(evidence, dict) and "route_sha256" not in evidence:
+        evidence = {**evidence, "route_sha256": None}
     p.fields(evidence, evidence_template(), "run observation")
     status = evidence["status"]
     p.require(status in ("completed", "timeout", "aborted", "unavailable"), "invalid run status")
@@ -182,10 +188,9 @@ def import_evidence(campaign, slot, evidence, tree=None):
     for key in ("model", "effort", "provider", "route_source"):
         if evidence[key] is not None:
             p.text_value(evidence[key], key)
-    for key in ("initial_fixture", "initial_prompt"):
+    for key in ("initial_fixture", "initial_prompt", "route_sha256"):
         if evidence[key] is not None:
-            p.require(isinstance(evidence[key], str) and re.fullmatch(r"[a-f0-9]{64}", evidence[key]),
-                      f"invalid measured {key} SHA-256")
+            p.require(p.is_sha256(evidence[key]), f"invalid measured {key} SHA-256")
     if evidence["environment"] is not None:
         environment(evidence["environment"])
     if usage["source"] is not None:
@@ -214,10 +219,14 @@ def import_evidence(campaign, slot, evidence, tree=None):
     p.check_secrets(changes)
     meta = plan["tasks"][chosen["task"]]
     mismatches = [k for k, expected in (("model", chosen["model"]), ("provider", plan["provider"]),
-                  ("effort", plan["effort"]), ("environment", plan["environment"]),
+                  ("effort", plan["effort"]),
                   ("initial_fixture", meta["fixture"]), ("initial_prompt", meta["prompt"])) if evidence[k] != expected]
+    if p.environment_sha256(evidence["environment"]) != p.environment_sha256(plan["environment"]):
+        mismatches.append("environment")
     if events and events[0]["text"] != text:
         mismatches.append("transcript_prompt")
+    if "routes" in plan and evidence["route_sha256"] != plan["routes"][chosen["model"]]:
+        mismatches.append("route_sha256")
     out_of_scope = [path for path, content in changes.items() if path not in spec["editable"] or content is None]
     result = {"schema": 1, "slot": slot, "task": chosen["task"], "repeat": chosen["repeat"], "plan": issued["plan"],
               "benchmark": plan["benchmark"], "base": plan["base"], "fixture": meta["fixture"], "prompt": meta["prompt"],
@@ -226,6 +235,8 @@ def import_evidence(campaign, slot, evidence, tree=None):
               "requested_model": chosen["model"], "requested_effort": plan["effort"], "requested_provider": plan["provider"],
               "issued": issued["issued"], "observed": evidence, "seconds": seconds, "mismatches": mismatches,
               "out_of_scope": out_of_scope, "changes": changes, "patch": p.patch_text(before, changes)}
+    if "routes" in plan:
+        result["requested_route_sha256"] = plan["routes"][chosen["model"]]
     p.save_new(run / "record.json", result)
     return run / "record.json"
 
@@ -239,12 +250,16 @@ def main():
     commands.add_parser("calibrate")
     commands.add_parser("packet-fingerprint").add_argument("directory", type=Path)
     commands.add_parser("environment")
+    setup = commands.add_parser("validation-setup", help="describe the exact operating setup for independent review")
+    setup.add_argument("--environment", required=True, type=Path)
+    setup.add_argument("--routes", required=True, type=Path)
     commands.add_parser("freeze").add_argument("validation", type=Path)
     new = commands.add_parser("plan")
     new.add_argument("campaign")
     new.add_argument("--environment", required=True, type=Path)
     new.add_argument("--seed", required=True, type=int)
     new.add_argument("--official", action="store_true")
+    new.add_argument("--routes", type=Path, help="model IDs mapped to SHA-256 digests of the actual route configurations")
     new.add_argument("--model", action="append")
     for cmd in ("prepare", "import"):
         op = commands.add_parser(cmd)
@@ -269,10 +284,14 @@ def main():
         print(json.dumps(packet_fingerprint(a.directory), indent=2))
     elif a.cmd == "environment":
         print(json.dumps({**dict.fromkeys(p.ENV_FIELDS, "unconfigured"), "image": None, "token_budget": None, "usd_budget": None}, indent=2))
+    elif a.cmd == "validation-setup":
+        setup = p.operating_setup(environment(p.read_json(a.environment), official=True), p.read_json(a.routes))
+        print(json.dumps(setup, indent=2))
     elif a.cmd == "freeze":
         print(freeze(a.validation))
     elif a.cmd == "plan":
-        print(plan_campaign(a.campaign, p.read_json(a.environment), a.seed, a.model or p.DEFAULT_MODELS, a.official))
+        routes = p.read_json(a.routes) if a.routes is not None else None
+        print(plan_campaign(a.campaign, p.read_json(a.environment), a.seed, a.model or p.DEFAULT_MODELS, a.official, routes))
     elif a.cmd == "prepare":
         print(prepare(a.campaign, a.slot))
     else:

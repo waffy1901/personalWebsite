@@ -15,6 +15,7 @@
     "fixture": {"$ref":"#/$defs/hash"}, "prompt": {"$ref":"#/$defs/hash"},
     "minutes": {"type":"number","exclusiveMinimum":0}, "kind":{"type":"string"},
     "requested_model":{"type":"string"}, "requested_effort":{"const":"max"}, "requested_provider":{"const":"OpenAI Codex"},
+    "requested_route_sha256":{"$ref":"#/$defs/hash"},
     "issued": {"type":"string","format":"date-time"}, "seconds":{"type":["number","null"],"minimum":0},
     "observed":{"$ref":"#/$defs/observation"},
     "mismatches":{"type":"array","items":{"type":"string"}}, "out_of_scope":{"type":"array","items":{"type":"string"}},
@@ -40,7 +41,8 @@
       "properties":{
         "status":{"enum":["completed","timeout","aborted","unavailable"]},
         "model":{"$ref":"#/$defs/maybeText"},"provider":{"$ref":"#/$defs/maybeText"},"effort":{"$ref":"#/$defs/maybeText"},
-        "route_source":{"$ref":"#/$defs/maybeText"},"environment":{"anyOf":[{"$ref":"#/$defs/environment"},{"type":"null"}]},
+        "route_source":{"$ref":"#/$defs/maybeText"},"route_sha256":{"anyOf":[{"$ref":"#/$defs/hash"},{"type":"null"}]},
+        "environment":{"anyOf":[{"$ref":"#/$defs/environment"},{"type":"null"}]},
         "initial_fixture":{"anyOf":[{"$ref":"#/$defs/hash"},{"type":"null"}]},"initial_prompt":{"anyOf":[{"$ref":"#/$defs/hash"},{"type":"null"}]},
         "started":{"type":["string","null"],"format":"date-time"},"ended":{"type":["string","null"],"format":"date-time"},
         "events":{"type":"array","items":{"oneOf":[

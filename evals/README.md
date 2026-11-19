@@ -76,25 +76,33 @@ report or transcript can contain private assertions and answers.
    with the pack selected. The grader runs
    a bounded, unprivileged, offline container with a read-only root. Keep the
    Docker socket on the operator side.
-3. Verify the real candidate route can access only its disposable guest.
-   Test both requested model/effort selections, tool versions, time limits,
-   network restrictions and separation from host files and other sessions.
-   Supply the independent validator with the exact combined digest, pack,
-   calibration evidence and guest-boundary observations. Retain their
-   authenticated statement on the operator machine.
-4. The validation JSON records `version`, `sha256`, `reviewer`, `role`
-   (`independent-validator`), `reviewed_at`, `evidence` and five booleans
-   under `checks`: `task_realism`, `held_out_integrity`, `isolation`,
-   `shortcut_controls`, `fixed_scoring`. Each must be true to freeze.
-   Capture the combined digest again immediately before freezing.
-5. Archive the sources, pinned Git commit and accepted validation locally.
-   Save the environment template to private storage and fill in the actual
-   hardware, OS, tools, dependencies, permissions, isolation, network policy
-   and grading image. Declare any token or dollar budget before registration.
+3. Save `run.py environment` to a private `conditions.json`. Record the
+   actual guest hardware, OS, tools, dependencies, permissions, isolation,
+   network policy, immutable grading image ID and any token or dollar budget.
+   For each model, export a credential-free record of the effective provider,
+   model, effort, guest selection and tool-bridge configuration. Record the
+   SHA-256 of its exact bytes. Store a private `routes.json` object mapping
+   each model ID to that 64-character lowercase digest.
+4. Have the independent validator run the following command using the
+   conditions and route records they actually inspected. The output is the
+   `setup` for their attestation. They verify each route reaches only its
+   disposable guest and check the model settings, time limits, tool and
+   network restrictions and separation from other sessions.
+
+```sh
+python3 -B evals/run.py validation-setup --environment /private/path/conditions.json --routes /private/path/routes.json
+```
+
+5. The validator records the exact benchmark `version` and combined `sha256`,
+   `setup`, `reviewer`, `role` (`independent-validator`), `reviewed_at` and
+   `evidence`. All five `checks` must pass: `task_realism`, `held_out_integrity`,
+   `isolation`, `shortcut_controls` and `fixed_scoring`. A withheld isolation
+   signoff can record `setup` as null. Archive the authenticated statement,
+   pinned sources, environment and route records on the operator machine.
 
 ```sh
 python3 -B evals/run.py freeze /private/path/validation.json
-python3 -B evals/run.py plan sol-core --official --seed 353 --environment /private/path/conditions.json
+python3 -B evals/run.py plan sol-core --official --seed 353 --environment /private/path/conditions.json --routes /private/path/routes.json
 python3 -B evals/run.py prepare sol-core r001
 ```
 
@@ -102,7 +110,10 @@ The plan interleaves the models and randomizes task order within each of
 three repetitions. It binds each slot to the model, Max effort, base commit,
 prompt, initial tree, time budget and operating conditions. Complete the
 issued slot before preparing the next one. A frozen version and model roster
-have one official schedule.
+have one official schedule. A change to the environment or route map requires
+fresh independent signoff. Additional approvals keep the same frozen benchmark
+bytes and preserve earlier registrations. Official use requires a setup-bound
+approval. Read older campaigns with their archived harness and pack.
 
 ## Import a manual session
 
@@ -115,8 +126,11 @@ have one official schedule.
 2. Before the model sees the task, return a copy of the initial guest tree
    and run `python3 -B evals/run.py packet-fingerprint /path/to/initial-export`.
    Record the measured hashes. Deliver the exact bytes of `TASK.md`. Capture
-   the model, effort and provider from the actual session. Log the requested
-   commands, returned output and exit codes. Record an unavailable assignment
+   the model, effort and provider from the actual session. Independently hash
+   its effective route configuration into `route_sha256` and identify the
+   receipt or export in `route_source`. Keep that record with the observation.
+   A missing or different route digest makes the run ineligible for a decision.
+   Log the commands, output and exit codes. Record an unavailable assignment
    when its exact route cannot be used.
 3. Stop the guest on completion, deadline or prohibited action. Export the
    final text tree as data. Fill a copy of the slot's `evidence-template.json`
@@ -146,7 +160,8 @@ and dispersion. Source and synthetic-local evidence have distinct labels from
 browser, production and external-account verification. See the
 [run schema](run.schema.json) and [scoring rubric](rubric.md).
 
-To add a model, repeat `--model` with the baseline first at registration. Give
+To add a model, obtain signoff for the expanded route map, then repeat
+`--model` with the baseline first at registration. Give
 each contestant a fresh context. Builder familiarity is a limitation for a
 future Astra comparison. To add a core task, version its private manifest and
 inputs, supply calibrated assertions and blinded guidance, update the public

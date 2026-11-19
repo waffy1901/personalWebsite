@@ -23,6 +23,8 @@ EXTERNAL = os.environ.get("PORTFOLIO_EVALS_PACK")
 DISTRIBUTION = "core" if EXTERNAL is not None else "demo"
 RESULTS = Path(str(Path(EXTERNAL).resolve()) + "-results") if EXTERNAL else HERE / "results" / "demo"
 DEFAULT_MODELS = ["gpt-6.1-sol", "gpt-6.2-sol"]
+PROVIDER = "OpenAI Codex"
+EFFORT = "max"
 GATES = ("prohibited_action", "secret_or_provider_side_effect", "weakened_constraint", "fabricated_verification")
 VALIDATION = ("task_realism", "held_out_integrity", "isolation", "shortcut_controls", "fixed_scoring")
 ENV_FIELDS = ("hardware", "os", "tools", "dependencies", "tool_permissions", "network_policy", "isolation")
@@ -298,20 +300,72 @@ def patch_text(before, changes):
     return "".join(lines)
 
 
+def is_sha256(value):
+    return isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value) is not None
+
+
+def validate_setup(setup):
+    fields(setup, ("environment_sha256", "provider", "effort", "routes"), "validated operating setup")
+    require(is_sha256(setup["environment_sha256"]), "invalid operating environment digest")
+    require(setup["provider"] == PROVIDER and setup["effort"] == EFFORT, "unsupported provider or effort")
+    routes = setup["routes"]
+    require(isinstance(routes, dict) and len(routes) >= 2, "provide route digests for at least two models")
+    for model, route in routes.items():
+        name(model)
+        require(is_sha256(route), "each model route requires its configuration SHA-256")
+    require(len(set(routes.values())) == len(routes), "each model requires its own model-specific route receipt")
+    check_secrets(setup)
+    return setup
+
+
+def environment_sha256(env):
+    return digest(canonical(env))
+
+
+def operating_setup(env, routes, provider=PROVIDER, effort=EFFORT):
+    return validate_setup({"environment_sha256": environment_sha256(env), "provider": provider,
+                           "effort": effort, "routes": routes})
+
+
+def campaign_setup(plan):
+    setup = operating_setup(plan["environment"], plan.get("routes"), plan["provider"], plan["effort"])
+    models = plan["models"]
+    require(len(models) == len(setup["routes"]) and set(models) == set(setup["routes"]),
+            "the supplied routes must match the registered models")
+    return setup
+
+
 def validate_freeze(record, snap):
     require(DISTRIBUTION == "core", "official freezes require the registered private core pack")
     fields(record, (*snap, "validation"), "freeze record")
     require(all(record[k] == v for k, v in snap.items()), "freeze no longer matches the exact benchmark")
     att = record["validation"]
-    fields(att, ("version", "sha256", "reviewer", "role", "reviewed_at", "checks", "evidence"), "validation")
+    fields(att, ("version", "sha256", "reviewer", "role", "reviewed_at", "checks", "evidence", "setup"), "validation")
     require(att["version"] == snap["version"] and att["sha256"] == snap["sha256"], "validator reviewed different bytes")
     require(att["role"] == "independent-validator" and name(att["reviewer"]) not in suite()["builders"],
             "a non-builder validator is required")
     require(moment(att["reviewed_at"]) <= moment(now()), "invalid review time")
     fields(att["checks"], VALIDATION, "validation checks")
     require(all(v is True for v in att["checks"].values()), "all five independent checks require signoff")
+    validate_setup(att["setup"])
     text_value(att["evidence"], "validator evidence")
     check_secrets(att)
+
+
+def freeze_paths(snap, setup):
+    directory = RESULTS / "freezes" / name(snap["version"])
+    return directory / "benchmark.json", directory / (digest(canonical(setup)) + ".json")
+
+
+def approved_freeze(snap, plan):
+    setup = campaign_setup(plan)
+    benchmark_path, approval_path = freeze_paths(snap, setup)
+    require(approval_path.is_file(), "no independent signoff for this operating setup")
+    require(read_json(benchmark_path) == snap, "frozen benchmark version differs from the current bytes")
+    record = read_json(approval_path)
+    validate_freeze(record, snap)
+    require(record["validation"]["setup"] == setup, "official campaign differs from the validated operating setup")
+    return record
 
 
 def load_plan(campaign):
@@ -321,8 +375,7 @@ def load_plan(campaign):
     require(plan["distribution"] == DISTRIBUTION, "campaign belongs to a different distribution")
     require(plan["benchmark"] == snap["sha256"], "benchmark changed; restore the frozen package or bump the version and rerun")
     if plan["mode"] == "official":
-        frozen = read_json(RESULTS / "freezes" / (suite()["version"] + ".json"))
-        validate_freeze(frozen, snap)
+        frozen = approved_freeze(snap, plan)
         require(plan["freeze"] == digest(canonical(frozen)) and frozen["sha256"] == plan["benchmark"],
                 "official campaign freeze mismatch")
         key = plan["benchmark"] + "-" + digest(canonical(sorted(plan["models"]))) + ".json"
