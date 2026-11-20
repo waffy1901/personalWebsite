@@ -1,0 +1,8 @@
+{
+  "version": "demo-1.1.2",
+  "base": "dee76598bc5acda8232390959526ded3ff9d04f7",
+  "tasks": ["E00"],
+  "builders": ["benchmark-builder", "fixture-author", "integration-coordinator"],
+  "repetitions": 3,
+  "weights": {"functional": 35, "quality": 20, "contract": 15, "verification": 15, "correction": 10, "efficiency": 5}
+}

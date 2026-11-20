@@ -1,0 +1,14 @@
+/*
+!/.gitignore
+!/README.md
+!/rubric.md
+!/suite.json
+!/run.schema.json
+!/run.py
+!/score.py
+!/protocol.py
+!/test_demo.py
+!/demo/
+!/validation/
+__pycache__/
+*.py[cod]

@@ -1,0 +1,15 @@
+{
+  "version": "1.1.0",
+  "sha256": "2048d94380b58816340d03596ea12cbfbebabebe3c6bd1dd25f09d16e173f461",
+  "reviewer": "benchmark-validator",
+  "role": "independent-validator",
+  "reviewed_at": "2026-11-19T21:39:15Z",
+  "checks": {
+    "task_realism": true,
+    "held_out_integrity": true,
+    "isolation": false,
+    "shortcut_controls": true,
+    "fixed_scoring": true
+  },
+  "evidence": "A separate reviewer from the builder's model family verified six repository-specific work samples and independently reproduced the private pack commitment. The public files contain the shared harness and a separate demonstration. The candidate exports exclude private grading material, and core results stay outside the checkout. All five public calibration tests passed. On Node 22.22.3, 21 private calibration tests passed, covering incorrect and shortcut submissions, fixed scoring, blinded review, and attribution of comparable runs. The real Docker test skipped because the Mac lacked the required runtime and image. The segregated contestant route remains unverified. Official freeze is withheld. No contestant ran."
+}

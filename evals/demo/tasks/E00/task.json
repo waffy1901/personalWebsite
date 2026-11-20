@@ -1,0 +1,12 @@
+{
+  "id": "E00",
+  "version": "1",
+  "title": "Count completed entries in a sample ledger",
+  "kind": "investigation",
+  "difficulty": "demo",
+  "minutes": 5,
+  "skills": [],
+  "source_files": [],
+  "editable": [],
+  "prompt": "Read ledger.json and count the entries whose status is complete. Return the count in the integer field completed inside answer. Describe the check you used in summary. Leave the files as supplied."
+}
