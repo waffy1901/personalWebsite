@@ -46,10 +46,6 @@ def environment(data, official=False):
     return data
 
 
-def roster_key(benchmark, models):
-    return benchmark + "-" + p.digest(p.canonical(sorted(models))) + ".json"
-
-
 def plan_campaign(campaign, env, seed, models, official=False, routes=None):
     p.require(not official or p.DISTRIBUTION == "core", "official campaigns require the registered private core pack")
     path = p.RESULTS / "campaigns" / p.name(campaign) / "plan.json"
@@ -83,17 +79,7 @@ def plan_campaign(campaign, env, seed, models, official=False, routes=None):
             "seed": seed, "created": p.now(),
             "version": spec["version"], "benchmark": snap["sha256"], "base": spec["base"],
             **requested, "freeze": frozen, "tasks": tasks, "slots": slots}
-    if official:
-        registration = p.RESULTS / "registrations" / roster_key(plan["benchmark"], models)
-        try:
-            p.save_new(registration, plan)
-        except FileExistsError:
-            saved = p.read_json(registration)
-            p.require(all(saved.get(k) == plan[k] for k in ("campaign", "seed", "freeze", *requested)),
-                      "this frozen roster already has an official campaign")
-            plan = saved  # Resume a registration interrupted before plan publication.
-    p.save_new(path, plan)
-    return path
+    return p.publish_plan(path, plan)
 
 
 def evidence_template():
@@ -235,6 +221,8 @@ def import_evidence(campaign, slot, evidence, tree=None):
               "requested_model": chosen["model"], "requested_effort": plan["effort"], "requested_provider": plan["provider"],
               "issued": issued["issued"], "observed": evidence, "seconds": seconds, "mismatches": mismatches,
               "out_of_scope": out_of_scope, "changes": changes, "patch": p.patch_text(before, changes)}
+    if status == "timeout":
+        result["final_tree_observed"] = tree is not None
     if "routes" in plan:
         result["requested_route_sha256"] = plan["routes"][chosen["model"]]
     p.save_new(run / "record.json", result)

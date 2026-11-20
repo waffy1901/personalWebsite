@@ -8,10 +8,12 @@ import json
 import math
 import os
 import re
+import sqlite3
 import stat
 import subprocess
 import sys
 import tempfile
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import cache
@@ -368,6 +370,69 @@ def approved_freeze(snap, plan):
     return record
 
 
+def roster_key(plan):
+    return plan["benchmark"] + "-" + digest(canonical(sorted(plan["models"])))
+
+
+def legacy_claim(directory, campaign, roster):
+    matches = []
+    for file in directory.glob("*.json"):
+        prior = read_json(file)
+        if name(prior["campaign"]).lower() == campaign.lower() or file.stem == roster:
+            require(prior["mode"] == "official" and file.stem == roster_key(prior), "invalid legacy registration")
+            matches.append(prior)
+    require(len(matches) <= 1, "conflicting archived registrations claim this campaign name or roster")
+    return matches[0] if matches else None
+
+
+def publish_plan(path, plan):
+    """Reserve both unique keys and their exact schedule in one local transaction."""
+    directory = RESULTS / "registrations"
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with closing(sqlite3.connect(directory / "campaigns.sqlite3")) as db, db:
+        db.execute("BEGIN IMMEDIATE")
+        db.execute("CREATE TABLE IF NOT EXISTS campaigns "
+                   "(name TEXT COLLATE NOCASE PRIMARY KEY, roster TEXT UNIQUE, schedule BLOB NOT NULL)")
+        version = db.execute("PRAGMA user_version").fetchone()[0]
+        require(version in (0, 1), "unsupported campaign registry version")
+        if version == 0:
+            db.execute("PRAGMA user_version = 1")
+        roster = roster_key(plan) if plan["mode"] == "official" else None
+        row = db.execute("SELECT schedule FROM campaigns WHERE name = ? OR roster = ?",
+                         (plan["campaign"], roster)).fetchone()
+        saved = parse_json(row[0]) if row else legacy_claim(directory, plan["campaign"], roster) or plan
+        # Timestamps and random blind IDs belong to the original issuance.
+        keys = ("campaign", "mode", "benchmark", "seed", "freeze", "models", "routes", "provider", "effort", "environment")
+        require(all(canonical(saved.get(k)) == canonical(plan.get(k)) for k in keys),
+                "this campaign name is reserved or the frozen roster already has an official campaign")
+        if row is None:
+            db.execute("INSERT INTO campaigns VALUES (?, ?, ?)", (saved["campaign"], roster, canonical(saved)))
+        if path.exists():
+            require(read_json(path) == saved, "campaign already registered with a different schedule")
+    try:
+        save_new(path, saved)
+    except FileExistsError:
+        require(read_json(path) == saved, "published campaign differs from its registration")
+    return path
+
+
+def registered_official_plan(plan):
+    directory = RESULTS / "registrations"
+    database = directory / "campaigns.sqlite3"
+    if database.is_file():
+        with closing(sqlite3.connect(database.resolve().as_uri() + "?mode=ro", uri=True)) as db:
+            version = db.execute("PRAGMA user_version").fetchone()[0]
+            require(version in (0, 1), "unsupported campaign registry version")
+            if version == 1:
+                row = db.execute("SELECT schedule FROM campaigns WHERE name = ? AND roster = ?",
+                                 (plan["campaign"], roster_key(plan))).fetchone()
+                if row:
+                    return parse_json(row[0])
+    legacy = directory / (roster_key(plan) + ".json")
+    require(legacy.is_file(), "official registration is missing")
+    return read_json(legacy)
+
+
 def load_plan(campaign):
     snap = fingerprint()
     folder = RESULTS / "campaigns" / name(campaign)
@@ -378,8 +443,7 @@ def load_plan(campaign):
         frozen = approved_freeze(snap, plan)
         require(plan["freeze"] == digest(canonical(frozen)) and frozen["sha256"] == plan["benchmark"],
                 "official campaign freeze mismatch")
-        key = plan["benchmark"] + "-" + digest(canonical(sorted(plan["models"]))) + ".json"
-        require(read_json(RESULTS / "registrations" / key) == plan, "official schedule changed after registration")
+        require(registered_official_plan(plan) == plan, "official schedule changed after registration")
     return folder, plan
 
 

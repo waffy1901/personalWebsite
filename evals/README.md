@@ -115,6 +115,12 @@ fresh independent signoff. Additional approvals keep the same frozen benchmark
 bytes and preserve earlier registrations. Official use requires a setup-bound
 approval. Read older campaigns with their archived harness and pack.
 
+The operator registry reserves the case-insensitive campaign name and, for an
+official run, its model roster together. If registration stops before writing
+`plan.json`, rerun the command with the original spelling to recover its
+schedule and blind IDs. Include the `registrations/` directory in the private
+campaign archive.
+
 ## Import a manual session
 
 1. Copy only the contents of the slot's `candidate/` directory into a fresh,
@@ -154,7 +160,11 @@ python3 -B evals/score.py report sol-core
 Give the independent human only the opaque packet and matching blank form
 in blind-ID order. Check free text and file metadata for identifying details
 before handoff. The reviewer applies the fixed rubric, records the source for
-each gate, and measures review and repair time separately. Reports cover all
+each gate, and measures review and repair time separately. For a timeout the
+reviewer receives the partial transcript, whether a final tree was observed,
+any exported changes, and a gate-only form. A properly evidenced timeout
+scores zero. Adjudication waits for resolved gate decisions
+from both the operator and the blinded reviewer. Reports cover all
 scheduled runs, per-task failures and reversals, measured usage, human time
 and dispersion. Source and synthetic-local evidence have distinct labels from
 browser, production and external-account verification. See the

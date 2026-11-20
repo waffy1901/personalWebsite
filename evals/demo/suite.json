@@ -1,5 +1,5 @@
 {
-  "version": "demo-1.1.1",
+  "version": "demo-1.1.2",
   "base": "dee76598bc5acda8232390959526ded3ff9d04f7",
   "tasks": ["E00"],
   "builders": ["benchmark-builder", "fixture-author", "integration-coordinator"],

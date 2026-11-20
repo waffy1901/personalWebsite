@@ -3,12 +3,15 @@
 import csv
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from pathlib import Path
+from threading import Barrier
 from unittest.mock import patch
 
 import protocol
@@ -204,6 +207,91 @@ class OfficialSetupTests(unittest.TestCase):
         self.plan(self.env, expanded, "expanded", list(expanded))
         self.assertEqual(protocol.load_plan("expanded")[1]["models"], list(expanded))
 
+    def test_interrupted_claim_reserves_name_and_roster_across_modes(self):
+        self.freeze(self.att)
+        expanded = {**self.routes, "third-model": "c" * 64}
+        self.freeze({**self.att, "setup": protocol.operating_setup(self.env, expanded)})
+        with patch.object(protocol, "save_new", side_effect=OSError("interrupted before plan.json")) as write:
+            with self.assertRaises(OSError):
+                self.plan(self.env, self.routes)
+        original = write.call_args.args[1]
+        for alias in ("comparison", "Comparison"):
+            with self.subTest(campaign=alias):
+                with self.assertRaises(ValueError):
+                    run.plan_campaign(alias, self.env, 353, list(self.routes))
+                with self.assertRaises(ValueError):
+                    self.plan(self.env, expanded, campaign=alias, models=list(expanded))
+        with self.assertRaises(ValueError):
+            self.plan(self.env, self.routes, campaign="different-name")
+        self.assertEqual(protocol.read_json(self.plan(self.env, self.routes)), original)
+        self.plan(self.env, expanded, campaign="different-name", models=list(expanded))
+
+    def test_old_json_claim_is_preserved_when_registration_resumes(self):
+        self.freeze(self.att)
+        saved = protocol.read_json(self.plan(self.env, self.routes))
+        with patch.object(protocol, "RESULTS", self.root / "legacy"):
+            self.freeze(self.att)
+            protocol.save_new(protocol.RESULTS / "registrations" / (protocol.roster_key(saved) + ".json"), saved)
+            with self.assertRaises(ValueError):
+                run.plan_campaign("comparison", self.env, 353, list(self.routes))
+            self.assertEqual(protocol.read_json(self.plan(self.env, self.routes)), saved)
+            self.assertEqual(protocol.load_plan("comparison")[1], saved)
+
+    def test_conflicting_legacy_claims_only_block_the_affected_names_and_rosters(self):
+        self.freeze(self.att)
+        first = protocol.read_json(self.plan(self.env, self.routes))
+        expanded = {**self.routes, "third-model": "c" * 64}
+        self.freeze({**self.att, "setup": protocol.operating_setup(self.env, expanded)})
+        second = protocol.read_json(self.plan(self.env, expanded, "second", list(expanded)))
+        with patch.object(protocol, "RESULTS", self.root / "legacy"):
+            self.freeze(self.att)
+            for prior in (first, {**second, "campaign": "Comparison"}):
+                file = protocol.RESULTS / "registrations" / (protocol.roster_key(prior) + ".json")
+                protocol.save_new(file, prior)
+            with self.assertRaisesRegex(ValueError, "conflicting archived registrations"):
+                run.plan_campaign("comparison", self.env, 353, list(self.routes))
+            with self.assertRaisesRegex(ValueError, "already has an official campaign"):
+                self.plan(self.env, self.routes, "rename")
+            run.plan_campaign("unrelated", self.env, 353, list(self.routes))
+            protocol.save_new(protocol.RESULTS / "campaigns" / "comparison" / "plan.json", first)
+            self.assertEqual(protocol.load_plan("comparison")[1], first)
+
+    def test_competing_rosters_only_reserve_the_winning_pair(self):
+        self.freeze(self.att)
+        expanded = {**self.routes, "third-model": "c" * 64}
+        self.freeze({**self.att, "setup": protocol.operating_setup(self.env, expanded)})
+        both_ready = Barrier(2)
+
+        def compete(routes):
+            both_ready.wait(timeout=10)
+            try:
+                self.plan(self.env, routes, models=list(routes))
+                return True
+            except ValueError:
+                return False
+
+        candidates = [self.routes, expanded]
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            outcomes = list(pool.map(compete, candidates))
+        self.assertCountEqual(outcomes, [True, False])
+        losing = candidates[outcomes.index(False)]
+        self.assertEqual(protocol.load_plan("comparison")[1]["routes"], candidates[outcomes.index(True)])
+        self.plan(self.env, losing, "retry", list(losing))
+
+    def timeout_evidence(self, plan, slot):
+        issued = run.prepare("comparison", slot["id"])
+        started = protocol.read_json(issued / "issued.json")["issued"]
+        ended = (protocol.moment(started) + timedelta(minutes=plan["tasks"][slot["task"]]["minutes"])).isoformat()
+        guest = issued / "candidate"
+        return issued, {**run.evidence_template(), **run.packet_fingerprint(guest),
+                        "status": "timeout", "model": slot["model"], "provider": plan["provider"], "effort": plan["effort"],
+                        "route_sha256": self.routes[slot["model"]], "route_source": "synthetic session receipt",
+                        "environment": self.env, "started": started, "ended": ended,
+                        "usage": {"tokens": None, "cost_usd": 0, "source": "synthetic observation"},
+                        "events": [{"kind": "message", "role": "user", "text": (guest / "TASK.md").read_text()}],
+                        "notes": "Synthetic full-budget timeout.", "gates": dict.fromkeys(protocol.GATES, "pass"),
+                        "gate_evidence": "Synthetic isolated observation."}
+
     def test_only_the_observed_approved_route_can_score(self):
         self.env["usd_budget"] = 10
         self.att["setup"] = protocol.operating_setup(self.env, self.routes)
@@ -212,30 +300,62 @@ class OfficialSetupTests(unittest.TestCase):
         cases = {"different": ["route_sha256"], "missing": ["route_sha256"],
                  "different_environment_digest": ["environment"], "matching": []}
         for slot, (case, expected_mismatches) in zip(plan["slots"], cases.items()):
-            issued = run.prepare("comparison", slot["id"])
-            started = protocol.read_json(issued / "issued.json")["issued"]
-            ended = (protocol.moment(started) + timedelta(minutes=plan["tasks"][slot["task"]]["minutes"])).isoformat()
-            guest = issued / "candidate"
-            evidence = {**run.evidence_template(), **run.packet_fingerprint(guest),
-                        "status": "timeout", "model": slot["model"], "provider": plan["provider"], "effort": plan["effort"],
-                        "route_source": "synthetic session receipt", "environment": self.env, "started": started, "ended": ended,
-                        "usage": {"tokens": None, "cost_usd": 0, "source": "synthetic observation"},
-                        "events": [{"kind": "message", "role": "user", "text": (guest / "TASK.md").read_text()}],
-                        "notes": "Synthetic full-budget timeout.", "gates": dict.fromkeys(protocol.GATES, "pass"),
-                        "gate_evidence": "Synthetic isolated observation."}
-            evidence["route_sha256"] = self.routes[slot["model"]]
+            issued, evidence = self.timeout_evidence(plan, slot)
             if case == "different":
                 evidence["route_sha256"] = "f" * 64
             elif case == "missing":
                 del evidence["route_sha256"]
             elif case == "different_environment_digest":
                 evidence["environment"] = {**self.env, "usd_budget": 10.0}
-            with self.subTest(case=case), patch.object(protocol, "now", return_value=ended):
+            with self.subTest(case=case), patch.object(protocol, "now", return_value=evidence["ended"]):
                 record = protocol.read_json(run.import_evidence("comparison", slot["id"], evidence))
                 self.assertEqual(record["requested_route_sha256"], self.routes[slot["model"]])
                 self.assertEqual(record["mismatches"], expected_mismatches)
                 row = score.score_slot(issued.parent, plan, slot)
                 self.assertEqual(row["decision_score"], 0 if case == "matching" else None)
+
+    def test_timeouts_need_blinded_gates_to_adjudicate(self):
+        self.freeze(self.att)
+        plan = protocol.read_json(self.plan(self.env, self.routes))
+        for i, slot in enumerate(plan["slots"]):
+            issued, evidence = self.timeout_evidence(plan, slot)
+            tree = issued / "candidate" if i % 2 == 0 else None
+            with patch.object(protocol, "now", return_value=evidence["ended"]):
+                result = protocol.read_json(run.import_evidence("comparison", slot["id"], evidence, tree))
+            self.assertEqual(result["changes"], {})
+            self.assertIs(result["final_tree_observed"], tree is not None)
+        before = protocol.read_json(score.report("comparison") / "report.json")
+        self.assertTrue(all(row["decision_score"] == 0 and "awaiting_blind_review" in row["failures"] for row in before["runs"]))
+        self.assertEqual(before["decision"]["status"], "incomplete")
+        blinded = score.blind("comparison")
+        self.assertEqual(len(list(blinded.glob("*.form.json"))), len(plan["slots"]))
+        for i, slot in enumerate(plan["slots"]):
+            packet = protocol.read_json(blinded / (slot["blind"] + ".packet.json"))
+            self.assertEqual(packet["status"], "timeout")
+            self.assertEqual(packet["elapsed_seconds"], packet["task_minutes"] * 60)
+            self.assertIs(packet["final_tree_observed"], i % 2 == 0)
+            self.assertTrue(all(model not in json.dumps(packet) for model in plan["models"]))
+            form = protocol.read_json(blinded / (slot["blind"] + ".form.json"))
+            self.assertNotIn("quality", form)
+            self.assertNotIn("fixes", form)
+            form.update(reviewer="blind-reader", review_minutes=2, rationale="I inspected the bounded transcript.",
+                        gates=dict.fromkeys(protocol.GATES, "pass"))
+            if i == 0:
+                form["gates"]["fabricated_verification"] = "fail"
+            if i == len(plan["slots"]) - 1:
+                partial = protocol.read_json(score.report("comparison") / "report.json")
+                self.assertEqual(partial["decision"]["status"], "incomplete")
+                unresolved = {**form, "gates": dict.fromkeys(protocol.GATES, "unknown")}
+                copy = shutil.copytree(protocol.RESULTS, self.root / "unresolved-alternative")
+                with patch.object(protocol, "RESULTS", copy):
+                    score.accept_review("comparison", unresolved)
+                    self.assertEqual(protocol.read_json(score.report("comparison") / "report.json")["decision"]["status"], "incomplete")
+            score.accept_review("comparison", form)
+        result = protocol.read_json(score.report("comparison") / "report.json")
+        self.assertEqual(result["decision"]["status"], "adjudicated")
+        self.assertEqual(result["decision"]["disqualified"], [plan["slots"][0]["model"]])
+        self.assertTrue(all(row["decision_score"] == 0 and row["review_minutes"] == 2 and row["fix_minutes"] is None
+                            for row in result["runs"]))
 
 
 if __name__ == "__main__":

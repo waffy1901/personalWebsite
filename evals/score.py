@@ -40,7 +40,7 @@ def blind_packet(plan, slot, record):
         if isinstance(value, dict):
             return {k: conceal(v) for k, v in value.items()}
         return redact.sub("[model]", value) if isinstance(value, str) else value
-    return {"blind_id": slot["blind"], "task": slot["task"], "kind": record["kind"],
+    packet = {"blind_id": slot["blind"], "task": slot["task"], "kind": record["kind"], "status": record["observed"]["status"],
             "rubric": (p.HERE / "rubric.md").read_text(),
             "task_guidance": p.read_json(p.selected_pack().grading / "reviewer-notes.json")[slot["task"]],
             "starting_files": p.package(p.task(slot["task"])), "task_minutes": record["minutes"],
@@ -49,13 +49,19 @@ def blind_packet(plan, slot, record):
                          ("isolation", "tool_permissions", "network_policy")},
             "events": conceal(record["observed"]["events"]),
             "patch": conceal(record["patch"])}
+    if packet["status"] == "timeout":
+        packet["elapsed_seconds"] = record["seconds"]
+        packet["final_tree_observed"] = record.get("final_tree_observed")
+    return packet
 
 
 def review_template(packet):
-    return {"blind_id": packet["blind_id"], "packet": p.digest(p.canonical(packet)), "reviewer": None,
-            "quality": None, "contract": None, "verification": None, "review_minutes": None, "fix_minutes": None,
-            "fixes": {"minor": None, "major": None, "blocker": None},
-            "gates": dict.fromkeys(p.GATES, "unknown"), "prose_only_false_positives": None, "rationale": ""}
+    form = {"blind_id": packet["blind_id"], "packet": p.digest(p.canonical(packet)), "reviewer": None,
+            "review_minutes": None, "gates": dict.fromkeys(p.GATES, "unknown"), "rationale": ""}
+    if packet["status"] == "completed":
+        form.update(quality=None, contract=None, verification=None, fix_minutes=None,
+                    fixes={"minor": None, "major": None, "blocker": None}, prose_only_false_positives=None)
+    return form
 
 
 def blind(campaign):
@@ -66,7 +72,7 @@ def blind(campaign):
         if not record.exists():
             continue
         run = p.read_json(record)
-        if run["observed"]["status"] != "completed":
+        if run["observed"]["status"] not in ("completed", "timeout"):
             continue
         packet = blind_packet(plan, slot, run)
         for suffix, obj in (("packet", packet), ("form", review_template(packet))):
@@ -90,18 +96,19 @@ def accept_review(campaign, review):
     p.require(review["packet"] == p.digest(p.canonical(packet)), "review does not match packet")
     p.text_value(review["reviewer"], "human reviewer identifier")
     p.text_value(review["rationale"], "human review rationale")
-    for key in ("quality", "contract", "verification"):
-        p.require(p.number(review[key], key, True) <= 4, "rating must be between zero and four")
-    for key in ("review_minutes", "fix_minutes"):
-        p.number(review[key], key)
-    p.fields(review["fixes"], ("minor", "major", "blocker"), "fix counts")
-    for key, n in review["fixes"].items():
-        p.number(n, key, True)
-    prose_fp = review["prose_only_false_positives"]
-    if packet["kind"] == "review":
-        p.number(prose_fp, "unsupported prose-only findings", True)
-    else:
-        p.require(prose_fp is None, "prose-only review counts apply only to review tasks")
+    p.number(review["review_minutes"], "review_minutes")
+    if packet["status"] == "completed":
+        for key in ("quality", "contract", "verification"):
+            p.require(p.number(review[key], key, True) <= 4, "rating must be between zero and four")
+        p.number(review["fix_minutes"], "fix_minutes")
+        p.fields(review["fixes"], ("minor", "major", "blocker"), "fix counts")
+        for key, n in review["fixes"].items():
+            p.number(n, key, True)
+        prose_fp = review["prose_only_false_positives"]
+        if packet["kind"] == "review":
+            p.number(prose_fp, "unsupported prose-only findings", True)
+        else:
+            p.require(prose_fp is None, "prose-only review counts apply only to review tasks")
     p.fields(review["gates"], p.GATES, "reviewer gates")
     p.require(all(v in ("pass", "fail", "unknown") for v in review["gates"].values()), "invalid review gate")
     p.check_secrets(review)
@@ -174,30 +181,33 @@ def score_slot(folder, plan, slot):
     if obs["status"] != "completed":
         fail.append(obs["status"])
         row["reason"] = obs["notes"]
-        if obs["status"] == "timeout":
-            if not obs["events"] or run["seconds"] < meta["minutes"] * 60:
-                fail.append("insufficient_timeout_evidence")
-            if any(plan["environment"][budget] is not None and row[metric] is None
-                   for metric, budget in (("tokens", "token_budget"), ("cost_usd", "usd_budget"))):
-                fail.append("required_usage_unknown")
-            if "unknown" in obs["gates"].values():
-                fail.append("unresolved_gate")
-            if not run["mismatches"] and not {"insufficient_timeout_evidence", "required_usage_unknown", "unresolved_gate"}.intersection(fail):
-                row["decision_score"] = row["quality_points"] = 0
-        return row
-    if run["seconds"] > meta["minutes"] * 60:
-        fail.append("over_time_budget")
+        if obs["status"] != "timeout":
+            return row
     review_path = folder / "reviews" / (slot["blind"] + ".json")
     review = p.read_json(review_path) if review_path.exists() else None
     if review:
         p.require(review["packet"] == p.digest(p.canonical(blind_packet(plan, slot, run))), "review no longer bound to evidence")
         row.update(reviewer_gates=review["gates"], review_minutes=review["review_minutes"],
-                   fix_minutes=review["fix_minutes"], fixes=review["fixes"], prose_only_false_positives=review["prose_only_false_positives"])
+                   fix_minutes=review.get("fix_minutes"), fixes=review.get("fixes"),
+                   prose_only_false_positives=review.get("prose_only_false_positives"))
         fail.extend("gate:" + k for k, v in review["gates"].items() if v == "fail" and "gate:" + k not in fail)
-        if review["prose_only_false_positives"]:
+        if row["prose_only_false_positives"]:
             fail.append("unsupported_prose_findings")
     else:
         fail.append("awaiting_blind_review")
+    if "unknown" in obs["gates"].values() or (review and "unknown" in review["gates"].values()):
+        fail.append("unresolved_gate")
+    if obs["status"] == "timeout":
+        if not obs["events"] or run["seconds"] < meta["minutes"] * 60:
+            fail.append("insufficient_timeout_evidence")
+        if any(plan["environment"][budget] is not None and row[metric] is None
+               for metric, budget in (("tokens", "token_budget"), ("cost_usd", "usd_budget"))):
+            fail.append("required_usage_unknown")
+        if not run["mismatches"] and not {"insufficient_timeout_evidence", "required_usage_unknown", "unresolved_gate"}.intersection(fail):
+            row["decision_score"] = row["quality_points"] = 0
+        return row
+    if run["seconds"] > meta["minutes"] * 60:
+        fail.append("over_time_budget")
     try:
         checks, counts, valid_format = objective(tid, run, plan["environment"])
     except RuntimeError as exc:
@@ -221,8 +231,6 @@ def score_slot(folder, plan, slot):
         row["raw_score"] = round(sum(row["categories"].values()), 2)
     elif ratios["efficiency"] is None:
         fail.append("required_usage_unknown")
-    if review and any("unknown" in gates.values() for gates in (obs["gates"], review["gates"])):
-        fail.append("unresolved_gate")
     if run["mismatches"] or row["raw_score"] is None or "unresolved_gate" in fail:
         return row
     if any(f.startswith("gate:") or f in ("out_of_scope", "over_time_budget") for f in fail):
@@ -277,8 +285,7 @@ def decision(plan, rows):
         return {"status": "NON-COMPARATIVE PREVIEW", "answer": "Preview evidence cannot select a workhorse."}
     if any(r["decision_score"] is None or r["status"] in ("aborted", "unavailable", "missing")
            or not r["operator_gates"] or any(v == "unknown" for v in r["operator_gates"].values())
-           or (r["status"] == "completed" and (not r["reviewer_gates"] or
-               any(v == "unknown" for v in r["reviewer_gates"].values()))) or
+           or not r["reviewer_gates"] or any(v == "unknown" for v in r["reviewer_gates"].values()) or
            any(f.startswith("conditions:") or f in ("awaiting_blind_review", "required_usage_unknown",
                "insufficient_timeout_evidence", "grader_unavailable") for f in r["failures"]) for r in rows):
         return {"status": "incomplete", "answer": "The registered comparison still lacks comparable evidence."}

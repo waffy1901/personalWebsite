@@ -1,0 +1,16 @@
+{
+  "version": "1.1.2",
+  "sha256": "4fe6175acff4d8841b7593d375b68a3f96fab9c8dd7e46cfeab18ae74c7e7594",
+  "reviewer": "benchmark-validator",
+  "role": "independent-validator",
+  "reviewed_at": "2026-11-20T03:05:38Z",
+  "setup": null,
+  "checks": {
+    "task_realism": true,
+    "held_out_integrity": true,
+    "isolation": false,
+    "shortcut_controls": true,
+    "fixed_scoring": true
+  },
+  "evidence": "A separate reviewer from the builder's model family verified that the six repository-specific tasks and private graders retain their previously reviewed contents. The public package and candidate exports exclude private grading material. All 14 public calibration tests passed. On Node 22.22.3, 21 private tests passed and the real Docker test skipped. An independent interruption check confirmed that a differently capitalized campaign name could not displace the original schedule. Blinded timeout packets distinguish an unchanged final export from a missing export and identify unknown historical evidence. Missing or unresolved reviewer gates block adjudication, and a confirmed gate failure disqualifies the model. The Mac lacked a verified Docker runtime and isolated contestant routes. Official freeze remains withheld. No contestant ran."
+}

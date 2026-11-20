@@ -17,7 +17,7 @@
     "requested_model":{"type":"string"}, "requested_effort":{"const":"max"}, "requested_provider":{"const":"OpenAI Codex"},
     "requested_route_sha256":{"$ref":"#/$defs/hash"},
     "issued": {"type":"string","format":"date-time"}, "seconds":{"type":["number","null"],"minimum":0},
-    "observed":{"$ref":"#/$defs/observation"},
+    "observed":{"$ref":"#/$defs/observation"}, "final_tree_observed":{"type":"boolean"},
     "mismatches":{"type":"array","items":{"type":"string"}}, "out_of_scope":{"type":"array","items":{"type":"string"}},
     "changes":{"type":"object","additionalProperties":{"type":["string","null"]}}, "patch":{"type":"string"}
   },

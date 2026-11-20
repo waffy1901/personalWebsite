@@ -1,9 +1,9 @@
 {
-  "version": "1.1.1",
+  "version": "1.1.2",
   "base": "dee76598bc5acda8232390959526ded3ff9d04f7",
   "tasks": ["E03", "E05", "E07", "E08", "E11", "E12"],
   "builders": ["benchmark-builder", "fixture-author", "integration-coordinator"],
   "repetitions": 3,
   "weights": {"functional": 35, "quality": 20, "contract": 15, "verification": 15, "correction": 10, "efficiency": 5},
-  "operator_pack_sha256": "afe3e29d32be9a6f7a2254b07fb68eb236d375f018552bfbf8cb64fc81b7680a"
+  "operator_pack_sha256": "4a0d6e54c39ca65f1c61cf06de9daf8def05e1d27e8c5038b901e432f355fbf2"
 }
