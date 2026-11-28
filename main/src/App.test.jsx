@@ -45,7 +45,9 @@ const curatedCaseStudySlugs = [
   "ai-assisted-payment-triage",
   "legacy-deployment-recovery",
   "cdc-data-reconciliation",
+  "verified-deployment-pipeline",
 ]
+const deferredCaseStudies = caseStudies.filter(({ narrativeDeferred }) => narrativeDeferred)
 
 const formspreeSubmitMock = vi.hoisted(() =>
   vi.fn((event) => event?.preventDefault?.())
@@ -733,6 +735,10 @@ describe("App routes", () => {
     expect(autoscaling).toHaveTextContent("lower mean latency")
     expect(autoscaling).toHaveTextContent("fewer errors (reported)")
     expect(autoscaling).toHaveTextContent("weekly requests")
+
+    const deploymentPipeline = within(screen.getByRole("article", { name: /verified deployment pipeline/i }))
+    expect(deploymentPipeline.getByText("Personal project / 2026")).toBeVisible()
+    expect(deploymentPipeline.queryByRole("list", { name: "Outcomes" })).not.toBeInTheDocument()
   })
 
   it("reports booking production CVE removal separately from the final build-gate result", async () => {
@@ -757,20 +763,25 @@ describe("App routes", () => {
     ).toBeInTheDocument()
   })
 
-  it.each(recentCaseStudies)("renders the complete $slug story with an ordered diagram and illustrative artifact", async (caseStudy) => {
+  it.each(deferredCaseStudies)("renders the complete $slug story with an ordered diagram", async (caseStudy) => {
     renderRoute(`/case-studies/${caseStudy.slug}/`)
     expect(await screen.findByRole("heading", { name: caseStudy.title, level: 1 })).toBeInTheDocument()
     const sequence = screen.getByRole("list", { name: caseStudy.causalDiagram.sequenceLabel })
     expect(within(sequence).getAllByRole("listitem").map((step) => within(step).getByRole("heading").textContent)).toEqual(caseStudy.causalDiagram.steps.map((step) => step.title))
-    expect(screen.getByRole("heading", { name: caseStudy.configurationExample.title })).toBeInTheDocument()
-    expect(screen.getByText(caseStudy.configurationExample.description)).toBeInTheDocument()
+    if (caseStudy.configurationExample) {
+      expect(screen.getByRole("heading", { name: caseStudy.configurationExample.title })).toBeInTheDocument()
+      expect(screen.getByText(caseStudy.configurationExample.description)).toBeInTheDocument()
+    }
     for (const section of caseStudy.sections) {
       expect(screen.getByRole("heading", { name: section.heading })).toBeInTheDocument()
       for (const paragraph of section.paragraphs) expect(screen.getByText(paragraph)).toBeInTheDocument()
+      for (const { label, href } of section.sources ?? []) {
+        expect(screen.getByRole("link", { name: label })).toHaveAttribute("href", href)
+      }
     }
     expect(document.querySelector('link[rel="canonical"]')).toHaveAttribute("href", `https://waffy.dev/case-studies/${caseStudy.slug}/`)
     expect(document.title).toBe(`${caseStudy.title} | Waffy Ahmed`)
-    for (const link of caseStudy.links) expect(screen.getByRole("link", { name: link.label })).toHaveAttribute("href", link.to)
+    for (const link of caseStudy.links) expect(screen.getByRole("link", { name: link.label })).toHaveAttribute("href", link.to ?? link.href)
   })
 
   it("navigates between deferred stories and an existing full story", async () => {
@@ -1992,7 +2003,7 @@ describe("App routes", () => {
     }
   })
 
-  it.each(recentCaseStudies)("preserves full $slug evidence and qualifications in generated discovery", (selected) => {
+  it.each(deferredCaseStudies)("preserves full $slug evidence and qualifications in generated discovery", (selected) => {
     const mirrored = readJsonFile("public/portfolio.json").caseStudies.find((item) => item.slug === selected.slug)
     const aiSummary = readFileSync("public/ai-summary.txt", "utf8").replace(/\s+/g, " ")
     expect(mirrored.sections).toEqual(selected.sections)
@@ -2000,7 +2011,7 @@ describe("App routes", () => {
     expect(mirrored.causalDiagram.sequenceLabel).toBe(selected.causalDiagram.sequenceLabel)
     for (const section of selected.sections) for (const paragraph of section.paragraphs) expect(aiSummary).toContain(paragraph)
     for (const metric of selected.metrics) expect(aiSummary).toContain(metric.detail)
-    for (const example of selected.configurationExample.examples) expect(aiSummary).toContain(example.code.replace(/\s+/g, " "))
+    for (const example of selected.configurationExample?.examples ?? []) expect(aiSummary).toContain(example.code.replace(/\s+/g, " "))
   })
 
   it("renders the resume route", async () => {

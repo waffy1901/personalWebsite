@@ -892,6 +892,95 @@ CDC Data Reconciliation Platform:
 * Stack: Python, FastAPI, SQLite, React, Tailwind CSS, Data reconciliation,
   Stakeholder demos
 
+Engineering a Verified Deployment Pipeline for waffy.dev:
+* URL: https://waffy.dev/case-studies/verified-deployment-pipeline/
+* Organization: Personal project
+* Timeframe: 2026
+* Summary: I use GitHub Actions and Netlify to verify which portfolio commit
+  is live and test its HTTP contracts before recording a deployment release.
+* Stack: GitHub Actions, Netlify, Vite, CodeQL, Python, Playwright
+* What a green build leaves unanswered:
+A successful Vite build tells me the portfolio compiles. To record a release,
+I also need to know which commit Netlify is serving and whether its routes,
+security headers, and public discovery files match that revision's contract. I
+built the pipeline around evidence I can inspect for a specific deployment.
+
+* Deployment and verification flow: The release record follows publication and
+  verification of the serving deployment.
+1. Open a pull request: Propose and review a change to the portfolio.
+2. Check the change: GitHub Actions checks the app, dependencies, workflows,
+   and generated content before merge.
+3. Publish on Netlify: On the successful delivery path, Netlify builds and
+   publishes the static site from the merged main commit.
+4. Verify what is serving: Match the published deploy ID and commit, then
+   check routes, headers, and public files.
+5. Record the deployment: Recheck the published pointer and write the deploy
+   tag and GitHub release with the deploy permalink.
+On its own daily schedule, Production health resolves the latest published
+revision and compares the public domain with that revision's expected routes,
+headers, and artifacts.
+
+* Where each check runs:
+I use Netlify to build and serve the static site, including route-specific
+metadata shells. That removes the need to operate an application runtime and
+makes the provider's routing and publication semantics part of the design.
+GitHub Actions orchestrates verification and records the release after
+publication.
+
+Pull requests run app tests, bundle budgets, browser smoke, portfolio
+integrity, dependency audit, CodeQL, and workflow linting. The
+deployment-release workflow starts with read-only repository access and grants
+write access to the release job. Netlify credentials come from GitHub Secrets
+for the provider lookups.
+
+* When Netlify skips or fails a deploy:
+The resolver selects a production attempt for the exact commit and follows its
+deploy ID. A skip signal for that attempt, including Netlify's exact
+no-content cancellation, ends the workflow successfully with no deployment
+release. A genuine terminal failure fails the resolver and blocks release
+creation. Offline fixtures exercise both branches of the workflow.
+
+* When a ready build differs from production:
+The workflow requires Netlify's site-level published pointer to identify the
+same ready production deploy ID and full commit SHA. A valid but different
+pointer waits within a bounded polling window. Missing or malformed identity
+fails the job. One fixture holds the commit constant and changes the published
+deploy ID, causing the resolver to time out.
+
+After comparing routes, headers, and artifacts on the deploy permalink and the
+public domain, the release job reads the pointer again. If publication has
+moved, even to a replacement deploy of the same commit, the final guard blocks
+the release. The provider read and GitHub write are separate requests, so a
+publication change can still occur between them.
+
+* The release record and the evidence behind it:
+A timestamped deploy tag links a commit, a workflow run, and the immutable
+Netlify deployment URL. The repository keeps these GitHub records as
+historical entries by convention. The example release is editable, and another
+successful automatic attempt can write a new timestamped record. A separate
+workflow publishes curated SemVer milestones for the currently published
+commit after verifying its deployment record. It reuses an existing published
+milestone when the requested tag and commit already match.
+
+For commit ccb414e, the linked workflow run passed the HTTP checks on both
+URLs, rechecked the published deployment, and created the deployment release.
+The tag resolves to that commit. The run documents what passed for that
+deployment at the time of release.
+
+* What the checks cover:
+Production health samples routes, headers, and public files daily. Uptime
+between runs, real-user latency, and provider security remain outside that
+evidence. The weekly route performance report runs Lighthouse against a local
+production build under controlled browser settings. Audit and CodeQL findings
+describe dependencies and source, while the HTTP checks observe selected
+responses from the public site.
+
+Operating the pipeline means rotating credentials, investigating failures, and
+keeping checks aligned with changes to routes and hosting rules. CI logs and
+artifacts can expire. I would retain a compact verification summary with each
+release so readers can still see which contracts passed alongside the commit
+and permalink.
+
 Featured Portfolio Projects:
 
 CDC Data Reconciliation:
@@ -1038,6 +1127,8 @@ Professional Portfolio Pages:
   https://waffy.dev/case-studies/legacy-deployment-recovery/
 * CDC Data Reconciliation Platform:
   https://waffy.dev/case-studies/cdc-data-reconciliation/
+* Engineering a Verified Deployment Pipeline for waffy.dev:
+  https://waffy.dev/case-studies/verified-deployment-pipeline/
 * Experience: https://waffy.dev/experience/
 * Projects: https://waffy.dev/projects/
 * Resume: https://waffy.dev/resume/

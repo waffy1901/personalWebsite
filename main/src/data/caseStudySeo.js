@@ -49,8 +49,15 @@ export const jfrogOidcSeo = {
     "Drove a move from shared Maven and Docker credentials to short-lived, job-scoped authentication across two teams and approximately 20 repositories.",
 }
 
+export const verifiedDeploymentPipelineSeo = {
+  slug: "verified-deployment-pipeline",
+  title: "Engineering a Verified Deployment Pipeline for waffy.dev",
+  summary:
+    "I use GitHub Actions and Netlify to verify which portfolio commit is live and test its HTTP contracts before recording a deployment release.",
+}
+
 // Lead with recent security and delivery ownership, paired with measured production
-// reliability. Follow with current production and CI work, then earlier evidence.
+// reliability. Follow with current production and CI work, earlier evidence, and personal work.
 export const caseStudySeoItems = [
   bookingSecuritySeo,
   kubernetesAutoscalingSeo,
@@ -59,6 +66,7 @@ export const caseStudySeoItems = [
   paymentTriageSeo,
   legacyDeploymentRecoverySeo,
   cdcDataReconciliationSeo,
+  verifiedDeploymentPipelineSeo,
 ]
 
 const currentRoleLinkLabels = {

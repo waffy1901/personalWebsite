@@ -3,12 +3,22 @@ import {
   bookingSecuritySeo,
   paymentTriageSeo,
   jfrogOidcSeo,
+  verifiedDeploymentPipelineSeo,
 } from "./caseStudySeo.js"
 import { bookingSecurityImpact, orderReconciliationImpact, paymentTriageImpact } from "./impactMetrics.js"
 import hdLogo from "../images/hdLogo.png"
 import hdLogoWebp from "../images/hdLogo.webp"
 
 // Shared card metadata; detailed narratives load only on a new detail route.
+export const verifiedDeploymentPipelineSummary = {
+  ...verifiedDeploymentPipelineSeo,
+  organization: "Personal project",
+  timeframe: "2026",
+  category: "Platform Engineering",
+  metrics: [],
+  narrativeDeferred: true,
+}
+
 export const recentCaseStudySummaries = [
   {
     ...orderReconciliationSeo,
@@ -53,3 +63,4 @@ export const recentCaseStudySummaries = [
     ],
   },
 ].map((item) => ({ ...item, organization: "The Home Depot", logo: hdLogo, logoWebp: hdLogoWebp, logoTheme: "home-depot", narrativeDeferred: true }))
+  .concat(verifiedDeploymentPipelineSummary)
