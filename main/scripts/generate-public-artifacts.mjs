@@ -280,11 +280,13 @@ const buildStructuredPortfolio = (model) => {
           steps: caseStudy.causalDiagram.steps,
           feedback: caseStudy.causalDiagram.feedback,
         },
-        configurationExample: {
-          title: caseStudy.configurationExample.title,
-          description: caseStudy.configurationExample.description,
-          examples: caseStudy.configurationExample.examples,
-        },
+        ...(caseStudy.configurationExample ? {
+          configurationExample: {
+            title: caseStudy.configurationExample.title,
+            description: caseStudy.configurationExample.description,
+            examples: caseStudy.configurationExample.examples,
+          },
+        } : {}),
       } : {}),
     })),
     projects: projects.map((project) => ({
@@ -537,7 +539,9 @@ const buildAiSummary = (model, portfolio) => {
     add(...bullet(`Organization: ${caseStudy.organization}`))
     add(...bullet(`Timeframe: ${caseStudy.timeframe}`))
     add(...bullet(`Summary: ${caseStudy.summary}`))
-    add(...bullet(`Metrics: ${caseStudy.metrics.map(metricLabel).join("; ")}`))
+    if (caseStudy.metrics.length) {
+      add(...bullet(`Metrics: ${caseStudy.metrics.map(metricLabel).join("; ")}`))
+    }
     if (caseStudy.causalDiagram) {
       for (const metric of caseStudy.metrics) {
         add(...bullet(`${metric.value} ${metric.label}: ${metric.detail}`))
@@ -667,7 +671,7 @@ const buildRootReadmeBlock = (model, portfolio, packageJson) => {
     "",
     ...portfolio.caseStudies.map(
       (caseStudy) =>
-        `- ${markdownLink(caseStudy.title, caseStudy.url)} - ${caseStudy.summary} Metrics: ${caseStudy.metrics.join("; ")}.`
+        `- ${markdownLink(caseStudy.title, caseStudy.url)} - ${caseStudy.summary}${caseStudy.metrics.length ? ` Metrics: ${caseStudy.metrics.join("; ")}.` : ""}`
     ),
     "",
     "**Featured projects:**",

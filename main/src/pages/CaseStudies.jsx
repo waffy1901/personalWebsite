@@ -18,7 +18,7 @@ const logoFrameClassByTheme = {
 };
 
 function CaseStudyCard({ caseStudy, primary = false }) {
-  const { featured, metricsLabel, slug, title } = caseStudy;
+  const { featured, metrics, metricsLabel, slug, title } = caseStudy;
   const Heading = featured ? "h2" : "h3";
   const headingId = `${slug}-heading`;
   const to = `/case-studies/${slug}/`;
@@ -42,21 +42,23 @@ function CaseStudyCard({ caseStudy, primary = false }) {
               {caseStudy.organization} / {caseStudy.timeframe}
             </p>
           </div>
-          <span
-            className={`flex size-11 shrink-0 items-center justify-center rounded-md border p-1 ${logoFrameClassByTheme[caseStudy.logoTheme]}`}
-          >
-            <picture>
-              <source srcSet={caseStudy.logoWebp} type="image/webp" />
-              <img
-                src={caseStudy.logo}
-                alt=""
-                aria-hidden="true"
-                loading="lazy"
-                decoding="async"
-                className="max-h-full max-w-full object-contain"
-              />
-            </picture>
-          </span>
+          {caseStudy.logo && (
+            <span
+              className={`flex size-11 shrink-0 items-center justify-center rounded-md border p-1 ${logoFrameClassByTheme[caseStudy.logoTheme]}`}
+            >
+              <picture>
+                <source srcSet={caseStudy.logoWebp} type="image/webp" />
+                <img
+                  src={caseStudy.logo}
+                  alt=""
+                  aria-hidden="true"
+                  loading="lazy"
+                  decoding="async"
+                  className="max-h-full max-w-full object-contain"
+                />
+              </picture>
+            </span>
+          )}
         </div>
 
         <Heading
@@ -65,21 +67,23 @@ function CaseStudyCard({ caseStudy, primary = false }) {
         >
           {title}
         </Heading>
-        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.065] px-3 py-2">
-          {metricsLabel ? (
-            <p className="mb-1 text-xs font-bold text-slate-400">{metricsLabel}</p>
-          ) : null}
-          <ul role="list" aria-label={metricsLabel ?? "Outcomes"} className="space-y-1">
-            {caseStudy.metrics.slice(0, featured ? 3 : 2).map((metric) => (
-              <li key={metric.label} className="flex items-baseline gap-2 text-sm">
-                <span className="shrink-0 text-lg font-black leading-tight text-[#93B4FF]">
-                  {metric.value}
-                </span>
-                <span className="leading-snug text-slate-200">{metric.label}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {metrics.length > 0 && (
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.065] px-3 py-2">
+            {metricsLabel ? (
+              <p className="mb-1 text-xs font-bold text-slate-400">{metricsLabel}</p>
+            ) : null}
+            <ul role="list" aria-label={metricsLabel ?? "Outcomes"} className="space-y-1">
+              {metrics.slice(0, featured ? 3 : 2).map((metric) => (
+                <li key={metric.label} className="flex items-baseline gap-2 text-sm">
+                  <span className="shrink-0 text-lg font-black leading-tight text-[#93B4FF]">
+                    {metric.value}
+                  </span>
+                  <span className="leading-snug text-slate-200">{metric.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="mt-3 text-sm leading-relaxed text-slate-300">
           {caseStudy.summary}
         </p>

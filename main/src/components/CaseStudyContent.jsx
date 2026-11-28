@@ -46,6 +46,11 @@ function buildDetailNodes(caseStudy) {
 }
 
 function CaseStudyContent({ caseStudy }) {
+  const { causalDiagram, flow, logo, metrics } = caseStudy;
+  const headerColumns = causalDiagram
+    ? logo && "lg:grid-cols-[minmax(0,1fr)_6rem]"
+    : "lg:grid-cols-[minmax(0,0.95fr)_minmax(22rem,1.05fr)]";
+
   return (
     <PageShell>
       <PageContainer>
@@ -59,15 +64,15 @@ function CaseStudyContent({ caseStudy }) {
         </Link>
 
         <PresentationPanel as="header" className="p-5 text-white sm:p-7">
-          <div className={`relative z-10 grid gap-7 lg:items-start ${caseStudy.causalDiagram ? "lg:grid-cols-[minmax(0,1fr)_6rem]" : "lg:grid-cols-[minmax(0,0.95fr)_minmax(22rem,1.05fr)]"}`}>
-            <div className={caseStudy.causalDiagram ? "min-w-0" : undefined}>
+          <div className={`relative z-10 grid gap-7 lg:items-start ${headerColumns ?? ""}`}>
+            <div className={causalDiagram ? "min-w-0" : undefined}>
               <StatusBadge
                 tone={caseStudy.logoTheme === "home-depot" ? "orange" : "cyan"}
                 surface="dark"
               >
                 {caseStudy.category}
               </StatusBadge>
-              <h1 className={`mt-5 max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl ${caseStudy.causalDiagram ? "wrap-break-word" : ""}`}>
+              <h1 className={`mt-5 max-w-4xl text-4xl font-black leading-tight text-white sm:text-5xl ${causalDiagram ? "wrap-break-word" : ""}`}>
                 {caseStudy.title}
               </h1>
               <p className="mt-3 text-base font-bold text-[#93B4FF]">
@@ -78,73 +83,78 @@ function CaseStudyContent({ caseStudy }) {
               </p>
             </div>
 
-            <div className="grid gap-4">
-              <span
-                className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border p-2 ${logoFrameClassByTheme[caseStudy.logoTheme]}`}
-              >
-                <picture>
-                  <source srcSet={caseStudy.logoWebp} type="image/webp" />
-                  <img
-                    src={caseStudy.logo}
-                    alt=""
-                    aria-hidden="true"
-                    loading="lazy"
-                    decoding="async"
-                    className="max-h-full max-w-full object-contain"
+            {(logo || !causalDiagram) && (
+              <div className="grid gap-4">
+                {logo && (
+                  <span
+                    className={`flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border p-2 ${logoFrameClassByTheme[caseStudy.logoTheme]}`}
+                  >
+                    <picture>
+                      <source srcSet={caseStudy.logoWebp} type="image/webp" />
+                      <img
+                        src={logo}
+                        alt=""
+                        aria-hidden="true"
+                        loading="lazy"
+                        decoding="async"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    </picture>
+                  </span>
+                )}
+                {!causalDiagram && (
+                  <SystemDiagram
+                    centerLabel={caseStudy.category}
+                    centerDetail={caseStudy.organization}
+                    nodes={buildDetailNodes(caseStudy)}
+                    caption="The writeup keeps system context, rollout path, and measured evidence in the same frame."
                   />
-                </picture>
-              </span>
-              {!caseStudy.causalDiagram && (
-                <SystemDiagram
-                  centerLabel={caseStudy.category}
-                  centerDetail={caseStudy.organization}
-                  nodes={buildDetailNodes(caseStudy)}
-                  caption="The writeup keeps system context, rollout path, and measured evidence in the same frame."
-                />
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </PresentationPanel>
 
-        <section
-          aria-labelledby="case-study-metrics"
-          className="mt-5"
-        >
-          <h2 id="case-study-metrics" className="sr-only">
-            Case study metrics
-          </h2>
-          <ImpactBand
-            items={caseStudy.metrics.map((metric, index) => ({
-              value: metric.value,
-              label: metric.label,
-              detail: metric.detail,
-              tone: index === 1 ? "orange" : undefined,
-            }))}
-          />
-        </section>
+        {metrics.length > 0 && (
+          <section aria-labelledby="case-study-metrics" className="mt-5">
+            <h2 id="case-study-metrics" className="sr-only">
+              Case study metrics
+            </h2>
+            <ImpactBand
+              items={metrics.map((metric, index) => ({
+                value: metric.value,
+                label: metric.label,
+                detail: metric.detail,
+                tone: index === 1 ? "orange" : undefined,
+              }))}
+            />
+          </section>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className={caseStudy.causalDiagram ? "min-w-0 space-y-6 wrap-break-word" : "space-y-6"}>
-            <section aria-labelledby="case-study-flow" className="mc-panel p-5">
-              <h2 id="case-study-flow" className="text-2xl font-black text-[#0B1220]">
-                Engineering path
-              </h2>
-              <div className="mt-5 grid gap-4 md:grid-cols-3">
-                {caseStudy.flow.map((step, index) => (
-                  <div key={step.title} className="rounded-lg border border-slate-200 bg-[#E8EDF2] p-4">
-                    <p className="text-xs font-black uppercase text-[#1D4ED8]">
-                      Step {index + 1}
-                    </p>
-                    <h3 className="mt-3 text-lg font-black text-[#0B1220]">
-                      {step.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                      {step.detail}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
+          <div className={causalDiagram ? "min-w-0 space-y-6 wrap-break-word" : "space-y-6"}>
+            {flow && (
+              <section aria-labelledby="case-study-flow" className="mc-panel p-5">
+                <h2 id="case-study-flow" className="text-2xl font-black text-[#0B1220]">
+                  Engineering path
+                </h2>
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                  {flow.map((step, index) => (
+                    <div key={step.title} className="rounded-lg border border-slate-200 bg-[#E8EDF2] p-4">
+                      <p className="text-xs font-black uppercase text-[#1D4ED8]">
+                        Step {index + 1}
+                      </p>
+                      <h3 className="mt-3 text-lg font-black text-[#0B1220]">
+                        {step.title}
+                      </h3>
+                      <p className="mt-3 text-sm leading-relaxed text-slate-600">
+                        {step.detail}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {caseStudy.sections.map((section) => (
               <React.Fragment key={section.heading}>
@@ -155,9 +165,23 @@ function CaseStudyContent({ caseStudy }) {
                       <p key={paragraph}>{paragraph}</p>
                     ))}
                   </div>
+                  {section.sources && (
+                    <ul role="list" aria-label={`Sources for ${section.heading}`} className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
+                      {section.sources.map(({ label, href }) => (
+                        <li key={href} className="min-w-0 text-sm">
+                          <a
+                            href={href}
+                            className="font-bold text-[#1D4ED8] underline underline-offset-2 hover:text-[#1E3A8A] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
+                          >
+                            {label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </section>
-                {caseStudy.causalDiagram?.afterSection === section.heading && (
-                  <CausalDiagram diagram={caseStudy.causalDiagram} />
+                {causalDiagram?.afterSection === section.heading && (
+                  <CausalDiagram diagram={causalDiagram} />
                 )}
                 {caseStudy.configurationExample?.afterSection === section.heading && (
                   <section aria-labelledby="case-study-config-example" className="mc-panel min-w-0 px-[12px] py-5 sm:p-5">

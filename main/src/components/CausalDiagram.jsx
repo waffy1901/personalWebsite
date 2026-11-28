@@ -14,7 +14,7 @@ export default function CausalDiagram({ diagram }) {
           {diagram.description}
         </p>
       </figcaption>
-      <ol aria-label={diagram.sequenceLabel ?? "Autoscaling causal sequence"} className="mt-5 space-y-4">
+      <ol role="list" aria-label={diagram.sequenceLabel ?? "Autoscaling causal sequence"} className="mt-5 space-y-4">
         {diagram.steps.map((step, index) => (
           <li key={step.title} className="min-w-0">
             <div className="rounded-lg border border-slate-200 bg-[#E8EDF2] px-[12px] py-4 sm:p-4">
@@ -33,6 +33,9 @@ export default function CausalDiagram({ diagram }) {
                 <FaArrowDown aria-hidden="true" className="mr-2 inline" />
                 {step.relationship}: {step.title} to {diagram.steps[index + 1].title}.
               </p>
+            )}
+            {!step.relationship && index < diagram.steps.length - 1 && (
+              <FaArrowDown aria-hidden="true" className="mx-auto mt-3 text-[#1D4ED8]" />
             )}
           </li>
         ))}

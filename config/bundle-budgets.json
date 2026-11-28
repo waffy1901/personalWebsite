@@ -21,6 +21,16 @@
         "gzip": 1000
       }
     },
+    "src/data/verifiedDeploymentPipeline.js": {
+      "js": {
+        "raw": 24000,
+        "gzip": 9500
+      },
+      "css": {
+        "raw": 2000,
+        "gzip": 1000
+      }
+    },
     "src/pages/CaseStudies.jsx": {
       "js": {
         "raw": 19000,

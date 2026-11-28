@@ -43,7 +43,7 @@ export const routeMetadata = [
     path: "/case-studies",
     title: "Case Studies | Waffy Ahmed",
     description:
-      "Engineering case studies on Kubernetes autoscaling, production reconciliation, release security, AI-assisted payment triage, CI authentication, deployment recovery, and public health data.",
+      "Engineering case studies on Kubernetes, production reconciliation, secure delivery, AI-assisted triage, public health data, and deployment verification.",
   },
   ...caseStudySeoItems.map((caseStudy) => ({
     path: `/case-studies/${caseStudy.slug}`,
